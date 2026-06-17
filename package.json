@@ -1,16 +1,27 @@
 {
-  "name": "wdp101-project",
+  "name": "wdp101-project-backend",
   "version": "1.0.0",
   "private": true,
+  "main": "src/server.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "dev:backend": "npm run dev --prefix backend",
-    "dev:frontend": "npm run dev --prefix frontend",
-    "start": "npm run start --prefix backend",
-    "build": "npm run build --prefix frontend",
-    "install:all": "npm install --prefix backend && npm install --prefix frontend"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^latest",
+    "cookie-parser": "^latest",
+    "cors": "^latest",
+    "dotenv": "^latest",
+    "express": "^latest",
+    "express-validator": "^latest",
+    "helmet": "^latest",
+    "http-errors": "^latest",
+    "jsonwebtoken": "^latest",
+    "mongoose": "^latest",
+    "morgan": "^latest",
+    "multer": "^latest"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "nodemon": "^latest"
   }
 }
