@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotelify — Trải nghiệm đặt phòng khách sạn tối giản & tinh tế</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter with only 400 and 500 weights -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons for premium visual feeling -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Custom Tailwind config to strictly respect the Hotelify palette
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#F9FAFB',
+                            card: '#FFFFFF',
+                            border: '#E5E7EB',
+                            primary: '#2563EB',
+                            primaryHover: '#1D4ED8',
+                            secondary: '#EEFF41',
+                            secondaryHover: '#D6E635',
+                            textHead: '#111827',
+                            textBody: '#6B7280',
+                            hoverTint: '#EFF6FF',
+                            successText: '#059669',
+                            successBg: '#D1FAE5',
+                            errorText: '#DC2626',
+                            errorBg: '#FEF2F2',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Strict adherence to weights 400 and 500 only */
+        body {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            background-color: #F9FAFB;
+            color: #6B7280;
+        }
+        h1, h2, h3, h4, .font-medium {
+            font-weight: 500 !important;
+            color: #111827;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Custom Success/Warning Notification Toast (No alert() used!) -->
+    <div id="notification-toast" class="fixed top-6 right-6 z-50 transform translate-y-[-150%] transition-transform duration-300 ease-out max-w-sm w-full p-4 rounded-xl border shadow-lg flex items-start gap-3 hidden">
+        <div id="toast-icon-container" class="p-1 rounded-lg">
+            <!-- Icon will be inserted dynamically -->
+        </div>
+        <div class="flex-1">
+            <h4 id="toast-title" class="text-sm font-medium mb-1"></h4>
+            <p id="toast-message" class="text-xs text-brand-textBody"></p>
+        </div>
+        <button onclick="closeNotification()" class="text-brand-textBody hover:text-brand-textHead">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- Section 1: Navigation Bar -->
+    <header class="bg-brand-card/90 backdrop-blur-md border-b border-brand-border sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Elegant Logo matching the Herittage aesthetic in image_e578c8.png -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-primary p-2 rounded-lg text-white">
+                        <i data-lucide="hotel" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-lg font-medium tracking-widest text-brand-textHead uppercase">Hotelify</span>
+                        <span class="text-[9px] text-brand-textBody uppercase tracking-widest -mt-1">Hotel & Stay</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Links matching image_e578c8.png precisely -->
+                <nav class="hidden md:flex items-center gap-10">
+                    <a href="#" class="text-xs tracking-widest font-medium text-brand-textHead hover:text-brand-primary transition-colors">HOME</a>
+                    <a href="#" class="text-xs tracking-widest font-medium text-brand-textBody hover:text-brand-textHead transition-colors">ABOUT</a>
+                    <a href="#featured-rooms" class="text-xs tracking-widest font-medium text-brand-textBody hover:text-brand-textHead transition-colors">ROOMS</a>
+                    <a href="#" class="text-xs tracking-widest font-medium text-brand-textBody hover:text-brand-textHead transition-colors">PAGES</a>
+                    <a href="#support" class="text-xs tracking-widest font-medium text-brand-textBody hover:text-brand-textHead transition-colors">CONTACT</a>
+                </nav>
+
+                <!-- Premium Icons Toolbar on the right matching image_e578c8.png -->
+                <div class="flex items-center gap-6">
+                    <!-- Search Icon Trigger -->
+                    <button onclick="triggerSearchFocus()" class="text-brand-textHead hover:text-brand-primary transition-colors p-1" title="Tìm kiếm">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </button>
+                    <!-- Menu / Hamburger Trigger -->
+                    <button onclick="toggleMobileMenu()" class="text-brand-textHead hover:text-brand-primary transition-colors p-1" title="Menu">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <!-- Rounded scan/focus target icon -->
+                    <div onclick="showPromoCodeInfo()" class="w-10 h-10 rounded-full bg-white shadow-sm border border-brand-border flex items-center justify-center text-brand-primary hover:bg-brand-hoverTint transition-all cursor-pointer transform active:scale-95" title="Ưu đãi quét">
+                        <i data-lucide="scan" class="w-4 h-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Minimal Mobile Menu Drawer -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-brand-border bg-brand-card px-4 py-4 space-y-3">
+            <a href="#" class="block text-xs tracking-widest font-medium text-brand-textHead py-2">HOME</a>
+            <a href="#" class="block text-xs tracking-widest font-medium text-brand-textBody py-2">ABOUT</a>
+            <a href="#featured-rooms" class="block text-xs tracking-widest font-medium text-brand-textBody py-2">ROOMS</a>
+            <a href="#" class="block text-xs tracking-widest font-medium text-brand-textBody py-2">PAGES</a>
+            <a href="#support" class="block text-xs tracking-widest font-medium text-brand-textBody py-2">CONTACT</a>
+        </div>
+    </header>
+
+    <!-- Hero Section: Full Premium Architectural Background Image (Unobstructed & Clean) -->
+    <section class="relative h-[450px] md:h-[580px] w-full overflow-hidden border-b border-brand-border">
+        <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&q=80&w=1920" 
+             alt="Hotelify Premium Resort Showcase" 
+             class="w-full h-full object-cover">
+        <!-- Minimal subtle overlay to harmonize with the bright aesthetic -->
+        <div class="absolute inset-0 bg-white/5 pointer-events-none"></div>
+    </section>
+
+    <!-- Search & Filter Section (Positioned cleanly below the hero banner) -->
+    <section class="relative -mt-16 z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mb-12">
+        <div class="w-full bg-brand-card border border-brand-border rounded-xl shadow-lg p-6 sm:p-8 max-w-4xl mx-auto transform hover:translate-y-[-2px] transition-transform duration-300">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Location Select -->
+                <div class="flex flex-col space-y-2">
+                    <label class="text-xs text-brand-textBody font-medium flex items-center gap-1.5">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-primary"></i> Điểm đến
+                    </label>
+                    <select id="search-location" class="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textHead focus:outline-none focus:border-brand-primary transition-colors font-medium">
+                        <option value="all">Tất cả địa điểm</option>
+                        <option value="Hà Nội">Hà Nội, Việt Nam</option>
+                        <option value="Đà Nẵng">Đà Nẵng, Việt Nam</option>
+                        <option value="Phú Quốc">Phú Quốc, Việt Nam</option>
+                    </select>
+                </div>
+
+                <!-- Room Category Select -->
+                <div class="flex flex-col space-y-2">
+                    <label class="text-xs text-brand-textBody font-medium flex items-center gap-1.5">
+                        <i data-lucide="layout" class="w-3.5 h-3.5 text-brand-primary"></i> Loại phòng
+                    </label>
+                    <select id="search-type" class="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textHead focus:outline-none focus:border-brand-primary transition-colors font-medium">
+                        <option value="all">Tất cả loại phòng</option>
+                        <option value="suite">Suite cao cấp</option>
+                        <option value="deluxe">Deluxe tinh tế</option>
+                        <option value="studio">Studio tối giản</option>
+                    </select>
+                </div>
+
+                <!-- Date Selection -->
+                <div class="flex flex-col space-y-2">
+                    <label class="text-xs text-brand-textBody font-medium flex items-center gap-1.5">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand-primary"></i> Ngày nhận - trả
+                    </label>
+                    <input type="date" id="search-date" value="2026-06-25" class="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-textHead focus:outline-none focus:border-brand-primary transition-colors font-medium">
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex items-end">
+                    <button onclick="handleSearch()" class="w-full bg-brand-primary hover:bg-brand-primaryHover text-white py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-md shadow-blue-500/10">
+                        <i data-lucide="search" class="w-4 h-4"></i> Tìm kiếm ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Featured Rooms -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full" id="featured-rooms">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <span class="text-xs text-brand-primary font-medium tracking-widest uppercase block mb-2">Độc quyền tại Hotelify</span>
+            <h2 class="text-3xl font-medium text-brand-textHead">Khám phá các căn phòng đặc trưng</h2>
+            <p class="text-sm text-brand-textBody mt-2">Được tinh tuyển tỉ mỉ từ những kiến trúc sư hàng đầu với phong cách hiện đại và ngập tràn năng lượng.</p>
+        </div>
+
+        <!-- Room Type Filter Tabs -->
+        <div class="flex flex-wrap justify-center gap-2 mb-8">
+            <button onclick="filterRooms('all')" id="tab-all" class="px-4 py-2 text-xs font-medium rounded-lg border border-brand-border transition-all bg-brand-primary text-white">
+                Tất cả phòng
+            </button>
+            <button onclick="filterRooms('suite')" id="tab-suite" class="px-4 py-2 text-xs font-medium rounded-lg border border-brand-border transition-all bg-brand-card text-brand-textBody hover:bg-brand-hoverTint hover:text-brand-primary">
+                Phòng Suite
+            </button>
+            <button onclick="filterRooms('deluxe')" id="tab-deluxe" class="px-4 py-2 text-xs font-medium rounded-lg border border-brand-border transition-all bg-brand-card text-brand-textBody hover:bg-brand-hoverTint hover:text-brand-primary">
+                Phòng Deluxe
+            </button>
+            <button onclick="filterRooms('studio')" id="tab-studio" class="px-4 py-2 text-xs font-medium rounded-lg border border-brand-border transition-all bg-brand-card text-brand-textBody hover:bg-brand-hoverTint hover:text-brand-primary">
+                Phòng Studio
+            </button>
+        </div>
+
+        <!-- Room Listing Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="rooms-grid">
+            <!-- Room Card 1 (Suite) -->
+            <div class="room-card bg-brand-card border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300" data-type="suite" data-location="Đà Nẵng">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&q=80&w=600" 
+                         alt="Ocean Grand Suite" 
+                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/FFFFFF/2563EB?text=Ocean+Grand+Suite';">
+                    <span class="absolute top-4 left-4 bg-brand-successBg text-brand-successText text-xs font-medium px-2.5 py-1 rounded-lg border border-emerald-200">
+                        Còn trống
+                    </span>
+                    <span class="absolute top-4 right-4 bg-white/95 text-brand-textHead text-xs font-medium px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-primary"></i> Đà Nẵng
+                    </span>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-brand-primary uppercase tracking-wider">Suite Cao Cấp</span>
+                        <div class="flex items-center gap-1 text-xs text-brand-textHead">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                            <span class="font-medium">4.9</span> (86 đánh giá)
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-medium text-brand-textHead mb-2">The Ocean Grand Suite</h3>
+                    <p class="text-xs text-brand-textBody line-clamp-2 mb-4">Căn phòng hướng toàn cảnh biển Mỹ Khê tuyệt đẹp, phòng tắm lát đá marble tự nhiên cao cấp và ban công riêng biệt rộng thoáng.</p>
+                    
+                    <div class="flex flex-wrap items-center gap-3 mb-6 border-t border-brand-border pt-4">
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i> 2 Khách
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="bed" class="w-3.5 h-3.5"></i> King Bed
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 55 m²
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="wifi" class="w-3.5 h-3.5"></i> Free Wifi
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div>
+                            <span class="text-xs text-brand-textBody block">Giá mỗi đêm</span>
+                            <span class="text-lg font-medium text-brand-textHead">1.800.000đ</span>
+                        </div>
+                        <button onclick="openBookingModal('The Ocean Grand Suite', '1.800.000đ', 'Suite')" 
+                                class="bg-brand-secondary hover:bg-brand-secondaryHover text-brand-textHead text-xs font-medium px-5 py-3 rounded-lg transition-colors border border-lime-400/35 shadow-sm">
+                            Đặt ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Card 2 (Studio) -->
+            <div class="room-card bg-brand-card border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300" data-type="studio" data-location="Hà Nội">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=600" 
+                         alt="Minimalist Loft Studio" 
+                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/FFFFFF/2563EB?text=Minimalist+Loft+Studio';">
+                    <span class="absolute top-4 left-4 bg-brand-successBg text-brand-successText text-xs font-medium px-2.5 py-1 rounded-lg border border-emerald-200">
+                        Còn trống
+                    </span>
+                    <span class="absolute top-4 right-4 bg-white/95 text-brand-textHead text-xs font-medium px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-primary"></i> Hà Nội
+                    </span>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-brand-primary uppercase tracking-wider">Studio Tối Giản</span>
+                        <div class="flex items-center gap-1 text-xs text-brand-textHead">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                            <span class="font-medium">4.8</span> (42 đánh giá)
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-medium text-brand-textHead mb-2">Urban Minimalist Loft</h3>
+                    <p class="text-xs text-brand-textBody line-clamp-2 mb-4">Studio hiện đại tối giản ngay tại trung tâm thủ đô. Đầy đủ ánh sáng tự nhiên với trần cao và nội thất gỗ óc chó cao cấp.</p>
+                    
+                    <div class="flex flex-wrap items-center gap-3 mb-6 border-t border-brand-border pt-4">
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i> 1 Khách
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="bed" class="w-3.5 h-3.5"></i> Queen Bed
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 32 m²
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="coffee" class="w-3.5 h-3.5"></i> Coffee Maker
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div>
+                            <span class="text-xs text-brand-textBody block">Giá mỗi đêm</span>
+                            <span class="text-lg font-medium text-brand-textHead">1.100.000đ</span>
+                        </div>
+                        <button onclick="openBookingModal('Urban Minimalist Loft', '1.100.000đ', 'Studio')" 
+                                class="bg-brand-secondary hover:bg-brand-secondaryHover text-brand-textHead text-xs font-medium px-5 py-3 rounded-lg transition-colors border border-lime-400/35 shadow-sm">
+                            Đặt ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Card 3 (Deluxe) -->
+            <div class="room-card bg-brand-card border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300" data-type="deluxe" data-location="Phú Quốc">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=600" 
+                         alt="Tropical Premium Deluxe" 
+                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/FFFFFF/2563EB?text=Tropical+Premium+Deluxe';">
+                    <span class="absolute top-4 left-4 bg-brand-errorBg text-brand-errorText text-xs font-medium px-2.5 py-1 rounded-lg border border-red-200">
+                        Chỉ còn 1 phòng duy nhất
+                    </span>
+                    <span class="absolute top-4 right-4 bg-white/95 text-brand-textHead text-xs font-medium px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-primary"></i> Phú Quốc
+                    </span>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-brand-primary uppercase tracking-wider">Deluxe Tinh Tế</span>
+                        <div class="flex items-center gap-1 text-xs text-brand-textHead">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                            <span class="font-medium">4.7</span> (112 đánh giá)
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-medium text-brand-textHead mb-2">Tropical Premium Deluxe</h3>
+                    <p class="text-xs text-brand-textBody line-clamp-2 mb-4">Hòa mình vào thiên nhiên hoang sơ đảo Ngọc. Deluxe Garden view đi kèm bể sục ngoài trời riêng tư và hệ thống rèm thông minh tự động.</p>
+                    
+                    <div class="flex flex-wrap items-center gap-3 mb-6 border-t border-brand-border pt-4">
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i> 2-3 Khách
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="bed" class="w-3.5 h-3.5"></i> 2 Queen Bed
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 45 m²
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="droplet" class="w-3.5 h-3.5"></i> Bể Sục Jacuzzi
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div>
+                            <span class="text-xs text-brand-textBody block">Giá mỗi đêm</span>
+                            <span class="text-lg font-medium text-brand-textHead">2.200.000đ</span>
+                        </div>
+                        <button onclick="openBookingModal('Tropical Premium Deluxe', '2.200.000đ', 'Deluxe')" 
+                                class="bg-brand-secondary hover:bg-brand-secondaryHover text-brand-textHead text-xs font-medium px-5 py-3 rounded-lg transition-colors border border-lime-400/35 shadow-sm">
+                            Đặt ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Card 4 (Suite Extra) -->
+            <div class="room-card bg-brand-card border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300" data-type="suite" data-location="Hà Nội">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1582719478250-c89cae4db85b?auto=format&fit=crop&q=80&w=600" 
+                         alt="Classic Heritage Suite" 
+                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/FFFFFF/2563EB?text=Classic+Heritage+Suite';">
+                    <span class="absolute top-4 left-4 bg-brand-successBg text-brand-successText text-xs font-medium px-2.5 py-1 rounded-lg border border-emerald-200">
+                        Còn trống
+                    </span>
+                    <span class="absolute top-4 right-4 bg-white/95 text-brand-textHead text-xs font-medium px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-primary"></i> Hà Nội
+                    </span>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-brand-primary uppercase tracking-wider">Suite Cao Cấp</span>
+                        <div class="flex items-center gap-1 text-xs text-brand-textHead">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                            <span class="font-medium">4.9</span> (65 đánh giá)
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-medium text-brand-textHead mb-2">Heritage Executive Suite</h3>
+                    <p class="text-xs text-brand-textBody line-clamp-2 mb-4">Sự pha trộn tuyệt hảo giữa nét cổ xưa thủ đô và cơ sở vật chất đương đại 5 sao. Không gian làm việc tích hợp đầy chuyên nghiệp.</p>
+                    
+                    <div class="flex flex-wrap items-center gap-3 mb-6 border-t border-brand-border pt-4">
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i> 2 Khách
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="bed" class="w-3.5 h-3.5"></i> King Bed
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 60 m²
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="briefcase" class="w-3.5 h-3.5"></i> Bàn Làm Việc
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div>
+                            <span class="text-xs text-brand-textBody block">Giá mỗi đêm</span>
+                            <span class="text-lg font-medium text-brand-textHead">2.400.000đ</span>
+                        </div>
+                        <button onclick="openBookingModal('Heritage Executive Suite', '2.400.000đ', 'Suite')" 
+                                class="bg-brand-secondary hover:bg-brand-secondaryHover text-brand-textHead text-xs font-medium px-5 py-3 rounded-lg transition-colors border border-lime-400/35 shadow-sm">
+                            Đặt ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Card 5 (Studio Extra) -->
+            <div class="room-card bg-brand-card border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300" data-type="studio" data-location="Đà Nẵng">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&q=80&w=600" 
+                         alt="Breeze Ocean Studio" 
+                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/FFFFFF/2563EB?text=Breeze+Ocean+Studio';">
+                    <span class="absolute top-4 left-4 bg-brand-successBg text-brand-successText text-xs font-medium px-2.5 py-1 rounded-lg border border-emerald-200">
+                        Còn trống
+                    </span>
+                    <span class="absolute top-4 right-4 bg-white/95 text-brand-textHead text-xs font-medium px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-primary"></i> Đà Nẵng
+                    </span>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-brand-primary uppercase tracking-wider">Studio Tối Giản</span>
+                        <div class="flex items-center gap-1 text-xs text-brand-textHead">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                            <span class="font-medium">4.8</span> (51 đánh giá)
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-medium text-brand-textHead mb-2">Ocean Breeze Studio</h3>
+                    <p class="text-xs text-brand-textBody line-clamp-2 mb-4">Mở toang cửa kính lớn đón làn gió biển Đà Nẵng mát rượi. Đầy đủ bếp mini tiện nghi cho một kỳ nghỉ dưỡng tự do tự tại.</p>
+                    
+                    <div class="flex flex-wrap items-center gap-3 mb-6 border-t border-brand-border pt-4">
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i> 2 Khách
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="bed" class="w-3.5 h-3.5"></i> Queen Bed
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 38 m²
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="utensils" class="w-3.5 h-3.5"></i> Bếp Mini
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div>
+                            <span class="text-xs text-brand-textBody block">Giá mỗi đêm</span>
+                            <span class="text-lg font-medium text-brand-textHead">1.250.000đ</span>
+                        </div>
+                        <button onclick="openBookingModal('Ocean Breeze Studio', '1.250.000đ', 'Studio')" 
+                                class="bg-brand-secondary hover:bg-brand-secondaryHover text-brand-textHead text-xs font-medium px-5 py-3 rounded-lg transition-colors border border-lime-400/35 shadow-sm">
+                            Đặt ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Card 6 (Deluxe Extra) -->
+            <div class="room-card bg-brand-card border border-brand-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300" data-type="deluxe" data-location="Phú Quốc">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&q=80&w=600" 
+                         alt="Sunset Panorama Deluxe" 
+                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                         onerror="this.onerror=null; this.src='https://placehold.co/600x400/FFFFFF/2563EB?text=Sunset+Panorama+Deluxe';">
+                    <span class="absolute top-4 left-4 bg-brand-successBg text-brand-successText text-xs font-medium px-2.5 py-1 rounded-lg border border-emerald-200">
+                        Còn trống
+                    </span>
+                    <span class="absolute top-4 right-4 bg-white/95 text-brand-textHead text-xs font-medium px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-primary"></i> Phú Quốc
+                    </span>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-brand-primary uppercase tracking-wider">Deluxe Tinh Tế</span>
+                        <div class="flex items-center gap-1 text-xs text-brand-textHead">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                            <span class="font-medium">4.8</span> (94 đánh giá)
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-medium text-brand-textHead mb-2">Sunset Panorama Deluxe</h3>
+                    <p class="text-xs text-brand-textBody line-clamp-2 mb-4">Chiêm ngưỡng hoàng hôn vàng rực tại Phú Quốc ngay tại giường ngủ. Trang bị dàn loa không dây cao cấp thỏa mãn mọi giác quan.</p>
+                    
+                    <div class="flex flex-wrap items-center gap-3 mb-6 border-t border-brand-border pt-4">
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i> 2 Khách
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="bed" class="w-3.5 h-3.5"></i> King Bed
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> 40 m²
+                        </span>
+                        <span class="text-xs text-brand-textBody flex items-center gap-1">
+                            <i data-lucide="music" class="w-3.5 h-3.5"></i> Audio Sound
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div>
+                            <span class="text-xs text-brand-textBody block">Giá mỗi đêm</span>
+                            <span class="text-lg font-medium text-brand-textHead">1.950.000đ</span>
+                        </div>
+                        <button onclick="openBookingModal('Sunset Panorama Deluxe', '1.950.000đ', 'Deluxe')" 
+                                class="bg-brand-secondary hover:bg-brand-secondaryHover text-brand-textHead text-xs font-medium px-5 py-3 rounded-lg transition-colors border border-lime-400/35 shadow-sm">
+                            Đặt ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No search results placeholder -->
+        <div id="no-rooms-placeholder" class="hidden text-center py-16 bg-brand-card rounded-xl border border-brand-border max-w-lg mx-auto">
+            <div class="bg-brand-errorBg text-brand-errorText p-3 rounded-full inline-flex mb-4">
+                <i data-lucide="search-x" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-medium text-brand-textHead mb-2">Không tìm thấy phòng phù hợp</h3>
+            <p class="text-sm text-brand-textBody">Hãy thử thay đổi địa điểm hoặc thể loại phòng trong bộ lọc để tìm thấy các lựa chọn khác nhé!</p>
+            <button onclick="resetSearchFilters()" class="mt-4 inline-flex text-xs font-medium text-brand-primary border-b border-brand-primary pb-0.5 hover:opacity-85">
+                Thiết lập lại bộ lọc
+            </button>
+        </div>
+    </main>
+
+    <!-- Section 3: Customer Feedback -->
+    <section class="bg-white border-t border-b border-brand-border py-20 animate-fade-in" id="feedbacks">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-xs text-brand-primary font-medium tracking-widest uppercase block mb-2">Ghi nhận từ khách hàng</span>
+                <h2 class="text-3xl font-medium text-brand-textHead">Trải nghiệm nghỉ dưỡng thực tế</h2>
+                <p class="text-sm text-brand-textBody mt-2">Đọc những lời nhận xét chân thực từ những du khách đã tìm thấy sự bình yên cùng Hotelify.</p>
+            </div>
+
+            <!-- Testimonials Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feedback 1 -->
+                <div class="bg-brand-bg p-6 rounded-xl border border-brand-border flex flex-col justify-between hover:shadow-sm transition-shadow">
+                    <div>
+                        <div class="flex items-center gap-1 mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                        </div>
+                        <p class="text-sm text-brand-textHead font-medium mb-1">“Thiết kế tối giản và ngập tràn ánh sáng”</p>
+                        <p class="text-xs text-brand-textBody leading-relaxed">
+                            Mọi thứ từ bộ ga giường đến các chi tiết trang trí nhỏ đều vô cùng tinh tế. Tôi đã có 3 đêm yên tĩnh trọn vẹn tại Ocean Grand Suite để sạc lại năng lượng làm việc.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-6 pt-4 border-t border-brand-border">
+                        <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Customer Ava" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <span class="text-xs font-medium text-brand-textHead block">Nguyễn Mai Phương</span>
+                            <span class="text-[10px] text-brand-textBody">Nhà thiết kế nội thất</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback 2 -->
+                <div class="bg-brand-bg p-6 rounded-xl border border-brand-border flex flex-col justify-between hover:shadow-sm transition-shadow">
+                    <div>
+                        <div class="flex items-center gap-1 mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                        </div>
+                        <p class="text-sm text-brand-textHead font-medium mb-1">“Định nghĩa đúng của sự thoải mái”</p>
+                        <p class="text-xs text-brand-textBody leading-relaxed">
+                            Quy trình nhận phòng hoàn toàn tự động, vô cùng nhanh chóng. Bạn nhân viên hỗ trợ trực tuyến qua ứng dụng rất nhiệt tình và chu đáo trong suốt quá trình lưu trú.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-6 pt-4 border-t border-brand-border">
+                        <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" alt="Customer Ava" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <span class="text-xs font-medium text-brand-textHead block">Lê Đăng Khoa</span>
+                            <span class="text-[10px] text-brand-textBody">Lập trình viên phần mềm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback 3 -->
+                <div class="bg-brand-bg p-6 rounded-xl border border-brand-border flex flex-col justify-between hover:shadow-sm transition-shadow">
+                    <div>
+                        <div class="flex items-center gap-1 mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                        </div>
+                        <p class="text-sm text-brand-textHead font-medium mb-1">“Phòng cực sạch và thông minh”</p>
+                        <p class="text-xs text-brand-textBody leading-relaxed">
+                            Căn phòng Sunset Panorama ở Phú Quốc thực sự xuất sắc. Tôi thích sự tiện dụng của dàn âm thanh và hệ thống đèn thông minh điều chỉnh theo thời gian trong ngày.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-6 pt-4 border-t border-brand-border">
+                        <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" alt="Customer Ava" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <span class="text-xs font-medium text-brand-textHead block">Trần Thu Hà</span>
+                            <span class="text-[10px] text-brand-textBody">Chuyên viên tư vấn tài chính</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Bottom Bar (Footer) -->
+    <footer class="bg-brand-card border-t border-brand-border pt-16 pb-8 text-xs" id="support">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-brand-border">
+                
+                <!-- Brand Columns and Info -->
+                <div class="md:col-span-5 flex flex-col space-y-4">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-brand-primary p-2 rounded-lg text-white">
+                            <i data-lucide="hotel" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-lg font-medium text-brand-textHead">Hotelify</span>
+                    </div>
+                    <p class="text-brand-textBody leading-relaxed max-w-sm">
+                        Hotelify là chuỗi khách sạn và không gian sống tối giản, mang lại sự kết hợp tuyệt đối giữa thiết kế tinh tế và trải nghiệm lưu trú hiện đại hàng đầu.
+                    </p>
+                    <!-- Newsletter Signup Form -->
+                    <div class="pt-2">
+                        <h4 class="text-xs font-medium text-brand-textHead mb-2 uppercase tracking-wider">Đăng ký nhận ưu đãi độc quyền</h4>
+                        <form onsubmit="handleSubscribe(event)" class="flex max-w-sm">
+                            <input type="email" id="subscriber-email" placeholder="Địa chỉ email của bạn..." required 
+                                   class="flex-1 px-3 py-2 border border-brand-border rounded-l-lg text-xs bg-brand-bg text-brand-textHead focus:outline-none focus:border-brand-primary">
+                            <button type="submit" class="bg-brand-primary hover:bg-brand-primaryHover text-white px-4 rounded-r-lg font-medium transition-colors flex items-center justify-center">
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick links Column 1 -->
+                <div class="md:col-span-2 md:col-start-7 space-y-3">
+                    <h4 class="font-medium text-brand-textHead uppercase tracking-wider text-[10px] text-brand-primary">Dịch vụ chính</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#featured-rooms" class="text-brand-textBody hover:text-brand-textHead transition-colors">Suite Cao cấp</a></li>
+                        <li><a href="#featured-rooms" class="text-brand-textBody hover:text-brand-textHead transition-colors">Deluxe Gia đình</a></li>
+                        <li><a href="#featured-rooms" class="text-brand-textBody hover:text-brand-textHead transition-colors">Studio Làm việc</a></li>
+                        <li><a href="#featured-rooms" class="text-brand-textBody hover:text-brand-textHead transition-colors">Ưu đãi dài ngày</a></li>
+                    </ul>
+                </div>
+
+                <!-- Quick links Column 2 -->
+                <div class="md:col-span-2 space-y-3">
+                    <h4 class="font-medium text-brand-textHead uppercase tracking-wider text-[10px] text-brand-primary">Về Hotelify</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-brand-textBody hover:text-brand-textHead transition-colors">Câu chuyện thương hiệu</a></li>
+                        <li><a href="#" class="text-brand-textBody hover:text-brand-textHead transition-colors">Tuyển dụng</a></li>
+                        <li><a href="#" class="text-brand-textBody hover:text-brand-textHead transition-colors">Hệ thống khách sạn</a></li>
+                        <li><a href="#" class="text-brand-textBody hover:text-brand-textHead transition-colors">Liên hệ báo chí</a></li>
+                    </ul>
+                </div>
+
+                <!-- Quick links Column 3 (Contact) -->
+                <div class="md:col-span-2 space-y-3">
+                    <h4 class="font-medium text-brand-textHead uppercase tracking-wider text-[10px] text-brand-primary">Trụ sở & Hỗ trợ</h4>
+                    <ul class="space-y-2 text-brand-textBody">
+                        <li class="flex items-center gap-1.5">
+                            <i data-lucide="phone" class="w-3.5 h-3.5 text-brand-primary"></i> 1900 6825
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <i data-lucide="mail" class="w-3.5 h-3.5 text-brand-primary"></i> hello@hotelify.vn
+                        </li>
+                        <li class="leading-relaxed">
+                            96 Phố Bà Triệu, Hoàn Kiếm, Hà Nội
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Bottom Copyright bar -->
+            <div class="flex flex-col sm:flex-row items-center justify-between pt-8 gap-4">
+                <p class="text-brand-textBody">
+                    © 2026 Hotelify International Co., Ltd. Bảo lưu mọi quyền lợi.
+                </p>
+                <div class="flex items-center gap-6">
+                    <a href="#" class="text-brand-textBody hover:text-brand-textHead transition-colors">Chính sách bảo mật</a>
+                    <a href="#" class="text-brand-textBody hover:text-brand-textHead transition-colors">Điều khoản sử dụng</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- Booking Interactive Modal (Clean Hotelify Style) -->
+    <div id="booking-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/35 backdrop-blur-sm hidden">
+        <div class="bg-brand-card w-full max-w-md rounded-xl border border-brand-border shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-300 ease-out" id="modal-content">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-brand-border flex items-center justify-between">
+                <div>
+                    <span id="modal-room-badge" class="text-[10px] text-brand-primary bg-brand-hoverTint px-2 py-0.5 rounded-md font-medium uppercase tracking-wide">Suite</span>
+                    <h3 id="modal-room-title" class="text-base font-medium text-brand-textHead mt-1">Căn hộ mẫu</h3>
+                </div>
+                <button onclick="closeBookingModal()" class="text-brand-textBody hover:text-brand-textHead">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form onsubmit="confirmReservation(event)" class="p-6 space-y-4">
+                <!-- User Information -->
+                <div class="space-y-1">
+                    <label class="text-[10px] text-brand-textBody font-medium uppercase tracking-wider block">Họ và tên khách hàng</label>
+                    <input type="text" id="guest-name" required placeholder="Ví dụ: Nguyễn Văn A" 
+                           class="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-textHead focus:outline-none focus:border-brand-primary">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-brand-textBody font-medium uppercase tracking-wider block">Số điện thoại</label>
+                        <input type="tel" id="guest-phone" required placeholder="0901234567" 
+                               class="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-textHead focus:outline-none focus:border-brand-primary">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-brand-textBody font-medium uppercase tracking-wider block">Mã giảm giá (nếu có)</label>
+                        <input type="text" id="guest-promo" placeholder="COZY20" 
+                               class="w-full bg-brand-bg border border-brand-border rounded-lg px-3 py-2 text-xs text-brand-textHead focus:outline-none focus:border-brand-primary uppercase font-medium">
+                    </div>
+                </div>
+
+                <!-- Custom selection details -->
+                <div class="grid grid-cols-2 gap-4 bg-brand-bg p-3.5 rounded-lg border border-brand-border">
+                    <div>
+                        <span class="text-[10px] text-brand-textBody block">Đơn giá/đêm</span>
+                        <span id="modal-room-price" class="text-sm font-medium text-brand-textHead">0đ</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-brand-textBody block flex items-center gap-1">
+                            <i data-lucide="sparkles" class="w-3 h-3 text-brand-primary"></i> Dịch vụ thêm
+                        </span>
+                        <span class="text-xs text-brand-successText font-medium bg-brand-successBg px-1.5 py-0.5 rounded">Ăn sáng free</span>
+                    </div>
+                </div>
+
+                <!-- Booking rules & warnings warning block -->
+                <div class="bg-brand-hoverTint p-3 rounded-lg border border-blue-100 flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5"></i>
+                    <p class="text-[10px] text-brand-textBody leading-relaxed">
+                        Bạn có thể hủy phòng hoàn tiền đầy đủ chậm nhất 24 giờ trước ngày nhận phòng theo quy định của Hotelify.
+                    </p>
+                </div>
+
+                <!-- Book action -->
+                <div class="pt-4 flex items-center gap-3">
+                    <button type="button" onclick="closeBookingModal()" class="w-1/3 border border-brand-border hover:bg-brand-bg text-brand-textHead text-xs font-medium py-3 rounded-lg transition-colors">
+                        Quay lại
+                    </button>
+                    <!-- Vibrant secondary action button using Hotelify #EEFF41 yellow-green -->
+                    <button type="submit" class="w-2/3 bg-brand-secondary hover:bg-brand-secondaryHover text-brand-textHead text-xs font-medium py-3 rounded-lg transition-colors border border-lime-400/35 shadow-sm text-center">
+                        Xác nhận đặt phòng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        // Load & Render Icons
+        lucide.createIcons();
+
+        // Active filters state
+        let currentFilter = 'all';
+
+        // Filter Rooms Logic
+        function filterRooms(category) {
+            currentFilter = category;
+            
+            // Update Tab active styling
+            const categories = ['all', 'suite', 'deluxe', 'studio'];
+            categories.forEach(cat => {
+                const tab = document.getElementById(`tab-${cat}`);
+                if (cat === category) {
+                    tab.className = "px-4 py-2 text-xs font-medium rounded-lg border border-brand-border transition-all bg-brand-primary text-white";
+                } else {
+                    tab.className = "px-4 py-2 text-xs font-medium rounded-lg border border-brand-border transition-all bg-brand-card text-brand-textBody hover:bg-brand-hoverTint hover:text-brand-primary";
+                }
+            });
+
+            // Perform filtering
+            applyFilters();
+        }
+
+        // Apply filters combination (Category, Destination and Room type selects)
+        function applyFilters() {
+            const searchLoc = document.getElementById('search-location').value;
+            const searchType = document.getElementById('search-type').value;
+
+            const cards = document.querySelectorAll('.room-card');
+            let hasResults = false;
+
+            cards.forEach(card => {
+                const type = card.getAttribute('data-type');
+                const location = card.getAttribute('data-location');
+
+                // Filter flags
+                const matchesCategory = (currentFilter === 'all' || type === currentFilter);
+                const matchesSearchLoc = (searchLoc === 'all' || location === searchLoc);
+                const matchesSearchType = (searchType === 'all' || type === searchType);
+
+                if (matchesCategory && matchesSearchLoc && matchesSearchType) {
+                    card.classList.remove('hidden');
+                    hasResults = true;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            // Handle Placeholder logic if no rooms matching
+            const placeholder = document.getElementById('no-rooms-placeholder');
+            if (hasResults) {
+                placeholder.classList.add('hidden');
+            } else {
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        // Search engine triggers
+        function handleSearch() {
+            applyFilters();
+            
+            showNotification(
+                'Tìm kiếm hoàn tất', 
+                'Đã đồng bộ kết quả phù hợp với tiêu chí tìm kiếm của bạn.', 
+                'success'
+            );
+        }
+
+        // Reset Filter function
+        function resetSearchFilters() {
+            document.getElementById('search-location').value = 'all';
+            document.getElementById('search-type').value = 'all';
+            filterRooms('all');
+            
+            showNotification(
+                'Đặt lại bộ lọc', 
+                'Đã khôi phục tất cả bộ lọc tìm kiếm ban đầu.', 
+                'success'
+            );
+        }
+
+        // Toggle Mobile Menu Drawer
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Focus search form
+        function triggerSearchFocus() {
+            const searchWidget = document.getElementById('search-location');
+            if (searchWidget) {
+                searchWidget.focus();
+                showNotification(
+                    'Tìm kiếm thông tin', 
+                    'Hãy chọn điểm đến và bấm Tìm kiếm phòng tốt nhất!', 
+                    'success'
+                );
+            }
+        }
+
+        // Show Promo Info Custom Alert Action
+        function showPromoCodeInfo() {
+            showNotification(
+                'Mã giảm giá kích hoạt!', 
+                'Nhập COZY20 tại cổng thanh toán để nhận ngay 20% giảm giá cho kỳ lưu trú của bạn.', 
+                'success'
+            );
+        }
+
+        // Handle Newsletter Subscription
+        function handleSubscribe(e) {
+            e.preventDefault();
+            const email = document.getElementById('subscriber-email').value;
+            if (email) {
+                showNotification(
+                    'Đăng ký thành công!', 
+                    `Bản tin ưu đãi độc quyền của Hotelify sẽ gửi định kỳ về địa chỉ: ${email}`, 
+                    'success'
+                );
+                document.getElementById('subscriber-email').value = '';
+            }
+        }
+
+        // Booking Modal Management
+        function openBookingModal(roomName, roomPrice, roomType) {
+            document.getElementById('modal-room-title').innerText = roomName;
+            document.getElementById('modal-room-price').innerText = roomPrice;
+            document.getElementById('modal-room-badge').innerText = roomType;
+            
+            // Clear inputs
+            document.getElementById('guest-name').value = '';
+            document.getElementById('guest-phone').value = '';
+            document.getElementById('guest-promo').value = '';
+
+            const modal = document.getElementById('booking-modal');
+            const content = document.getElementById('modal-content');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 50);
+        }
+
+        function closeBookingModal() {
+            const modal = document.getElementById('booking-modal');
+            const content = document.getElementById('modal-content');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Confirm Reservation Action (No alert allowed!)
+        function confirmReservation(e) {
+            e.preventDefault();
+            const name = document.getElementById('guest-name').value;
+            const phone = document.getElementById('guest-phone').value;
+            const promo = document.getElementById('guest-promo').value.trim().toUpperCase();
+            const roomName = document.getElementById('modal-room-title').innerText;
+
+            closeBookingModal();
+
+            // Calculate mock price discount message
+            let successMessage = `Cảm ơn ${name} (${phone}), yêu cầu đặt phòng "${roomName}" đã được ghi nhận. Tổng đài viên sẽ gọi lại sau 5 phút để xác nhận.`;
+            if (promo === 'COZY20') {
+                successMessage = `Mã giảm giá COZY20 áp dụng thành công! Cảm ơn ${name}, yêu cầu đặt phòng "${roomName}" giảm giá 20% đã được gửi thành công.`;
+            }
+
+            // Trigger notification
+            setTimeout(() => {
+                showNotification(
+                    'Đặt phòng thành công!', 
+                    successMessage, 
+                    'success'
+                );
+            }, 350);
+        }
+
+        // High Quality custom Notification Toast (Semantic colors based on Prompt specs)
+        function showNotification(title, message, type = 'success') {
+            const toast = document.getElementById('notification-toast');
+            const iconContainer = document.getElementById('toast-icon-container');
+            const titleEl = document.getElementById('toast-title');
+            const messageEl = document.getElementById('toast-message');
+
+            titleEl.innerText = title;
+            messageEl.innerText = message;
+
+            if (type === 'success') {
+                // Semantic success styling (Green #059669 on #D1FAE5 bg)
+                toast.style.borderColor = '#A7F3D0';
+                toast.style.backgroundColor = '#D1FAE5';
+                titleEl.style.color = '#059669';
+                
+                iconContainer.className = "p-1 rounded-lg bg-emerald-500 text-white";
+                iconContainer.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i>';
+            } else {
+                // Semantic error/warning styling (Red #DC2626 on #FEF2F2 bg)
+                toast.style.borderColor = '#FFCACA';
+                toast.style.backgroundColor = '#FEF2F2';
+                titleEl.style.color = '#DC2626';
+
+                iconContainer.className = "p-1 rounded-lg bg-red-600 text-white";
+                iconContainer.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4"></i>';
+            }
+
+            lucide.createIcons();
+
+            // Slide in animation
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-[-150%]');
+                toast.classList.add('translate-y-0');
+            }, 50);
+
+            // Auto dismiss after 6 seconds
+            setTimeout(() => {
+                closeNotification();
+            }, 6000);
+        }
+
+        function closeNotification() {
+            const toast = document.getElementById('notification-toast');
+            toast.classList.remove('translate-y-0');
+            toast.classList.add('translate-y-[-150%]');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+</body>
+</html>
