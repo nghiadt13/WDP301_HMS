@@ -25,15 +25,10 @@ const roomSchema = new mongoose.Schema(
       },
       default: 'Available',
     },
-    totalRooms: {
+    price: {
       type: Number,
-      required: [true, 'Total rooms is required'],
-      min: [0, 'Total rooms cannot be negative'],
-    },
-    occupiedRooms: {
-      type: Number,
-      default: 0,
-      min: [0, 'Occupied rooms cannot be negative'],
+      required: [true, 'Price is required'],
+      min: [0, 'Price cannot be negative'],
     },
     images: {
       type: [String],
@@ -62,16 +57,6 @@ const roomSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
-
-// ─── Virtual fields ───────────────────────────────────────────
-roomSchema.virtual('availableRooms').get(function () {
-  return this.totalRooms - this.occupiedRooms;
-});
-
-roomSchema.virtual('occupancyRate').get(function () {
-  if (this.totalRooms === 0) return 0;
-  return Math.round((this.occupiedRooms / this.totalRooms) * 100);
-});
 
 // ─── Indexes ──────────────────────────────────────────────────
 roomSchema.index({ room_type_id: 1 });

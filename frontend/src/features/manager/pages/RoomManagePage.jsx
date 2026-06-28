@@ -47,18 +47,14 @@ const fmtPrice = (v) => {
 
 // ─── Room Card ─────────────────────────────────────────────────
 function RoomCard({ room, selected, onClick, onEdit, onDelete }) {
-  const occupied = room.occupiedRooms ?? 0;
-  const total = room.totalRooms ?? 0;
-  const pct = room.occupancyRate ?? (total ? Math.round((occupied / total) * 100) : 0);
-  const booked = occupied >= total;
   const img = toFullUrl(room.images?.[0]) || fallbackImages[0];
+  const isAvailable = room.status === 'Available';
 
   // Populated from room_type_id
   const rt = room.room_type_id;
   const typeName = typeof rt === 'object' ? rt?.name : '';
   const bedType = typeof rt === 'object' ? rt?.bed_type : '';
   const capacity = typeof rt === 'object' ? rt?.capacity : '';
-  const basePrice = typeof rt === 'object' ? rt?.base_price : '';
 
   return (
     <div onClick={onClick} className={`rm-room-card${selected ? ' is-selected' : ''}`}>
@@ -67,7 +63,7 @@ function RoomCard({ room, selected, onClick, onEdit, onDelete }) {
         <div className="rm-room-card-top">
           <h3>{room.roomName} <span className="rm-room-type-tag">{typeName}</span></h3>
           <div className="rm-room-card-status-wrap">
-            <span className={`rm-status-badge${booked ? ' is-booked' : ' is-available'}`}>{booked ? 'Fully Booked' : 'Available'}</span>
+            <span className={`rm-status-badge${isAvailable ? ' is-available' : ' is-booked'}`}>{room.status}</span>
           </div>
         </div>
         <p className="rm-room-card-desc">{room.description}</p>
@@ -75,11 +71,9 @@ function RoomCard({ room, selected, onClick, onEdit, onDelete }) {
           <div className="rm-room-card-meta">
             {bedType && <span><BedDouble size={12} />{bedType}</span>}
             {capacity && <span><Users size={12} />{capacity} guests</span>}
-            <span><DollarSign size={12} />{fmtPrice(basePrice)}đ</span>
-            <span>{occupied}/{total} – {pct}%</span>
+            <span><DollarSign size={12} />{fmtPrice(room.price)}đ</span>
           </div>
           <div className="rm-room-card-actions">
-            <span className="rm-room-card-status-text">{room.status}</span>
             <div className="rm-room-card-btns">
               <button type="button" className="rm-icon-btn rm-icon-edit" onClick={(e) => { e.stopPropagation(); onEdit(room); }} title="Edit">
                 <Pencil size={13} />
@@ -112,17 +106,12 @@ function Section({ title, items }) {
 
 // ─── Room Detail ───────────────────────────────────────────────
 function RoomDetail({ room, onEdit, onDelete }) {
-  const occupied = room.occupiedRooms ?? 0;
-  const total = room.totalRooms ?? 0;
-  const pct = room.occupancyRate ?? (total ? Math.round((occupied / total) * 100) : 0);
-  const booked = occupied >= total;
   const images = room.images?.length > 0 ? room.images.map(toFullUrl) : fallbackImages;
 
   const rt = room.room_type_id;
   const typeName = typeof rt === 'object' ? rt?.name : '';
   const bedType = typeof rt === 'object' ? rt?.bed_type : '';
   const capacity = typeof rt === 'object' ? rt?.capacity : '';
-  const basePrice = typeof rt === 'object' ? rt?.base_price : '';
   const typeDesc = typeof rt === 'object' ? rt?.description : '';
 
   const amenityNames = (room.amenity_ids || [])
@@ -147,11 +136,7 @@ function RoomDetail({ room, onEdit, onDelete }) {
         </div>
       </div>
       <div className="rm-detail-status-row">
-        <span className={`rm-status-badge${booked ? ' is-booked' : ' is-available'}`}>{booked ? 'Fully Booked' : 'Available'}</span>
-      </div>
-      <p className="rm-detail-occ">{occupied} / {total} Rooms – {pct}% Occupied</p>
-      <div className="rm-progress-track">
-        <div className="rm-progress-bar" style={{ width: `${pct}%` }} />
+        <span className={`rm-status-badge${room.status === 'Available' ? ' is-available' : ' is-booked'}`}>{room.status}</span>
       </div>
       <div className="rm-detail-main-img">
         <img src={images[0]} alt="room main" />
@@ -164,7 +149,7 @@ function RoomDetail({ room, onEdit, onDelete }) {
       <div className="rm-detail-stats">
         {bedType && <span><BedDouble size={12} />{bedType}</span>}
         {capacity && <span><Users size={12} />{capacity} guests</span>}
-        <span><DollarSign size={12} />{fmtPrice(basePrice)}đ /đêm</span>
+        <span><DollarSign size={12} />{fmtPrice(room.price)}đ /đêm</span>
       </div>
       <p className="rm-detail-desc">{room.description || typeDesc}</p>
       <Section title="Amenities" items={amenityNames} />

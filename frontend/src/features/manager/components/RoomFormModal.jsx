@@ -16,7 +16,7 @@ const defaultValues = {
   roomName: '',
   room_type_id: '',
   description: '',
-  totalRooms: '',
+  price: '',
   status: 'Available',
   images: [],
   amenity_ids: [],
@@ -44,7 +44,7 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
         roomName: room.roomName || '',
         room_type_id: room.room_type_id?._id || room.room_type_id || '',
         description: room.description || '',
-        totalRooms: room.totalRooms ?? '',
+        price: room.price ?? '',
         status: room.status || 'Available',
         images: room.images || [],
         amenity_ids: (room.amenity_ids || []).map((a) => typeof a === 'string' ? a : a._id),
@@ -122,7 +122,7 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
     const errs = {};
     if (!form.roomName.trim()) errs.roomName = 'Room name is required';
     if (!form.room_type_id) errs.room_type_id = 'Room type is required';
-    if (!form.totalRooms || Number(form.totalRooms) < 0) errs.totalRooms = 'Valid total rooms required';
+    if (!form.price || Number(form.price) < 0) errs.price = 'Valid price required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -135,7 +135,7 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
       roomName: form.roomName.trim(),
       room_type_id: form.room_type_id,
       description: form.description.trim(),
-      totalRooms: Number(form.totalRooms),
+      price: Number(form.price),
       status: form.status,
       images: form.images,
       amenity_ids: form.amenity_ids,
@@ -178,11 +178,11 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
               {errors.room_type_id && <span className="rm-form-error">{errors.room_type_id}</span>}
             </div>
 
-            {/* Total Rooms */}
+            {/* Price */}
             <div className="rm-form-group">
-              <label>Total Rooms *</label>
-              <input name="totalRooms" type="number" min="0" value={form.totalRooms} onChange={handleChange} placeholder="25" />
-              {errors.totalRooms && <span className="rm-form-error">{errors.totalRooms}</span>}
+              <label>Price (VND) *</label>
+              <input name="price" type="number" min="0" step="1000" value={form.price} onChange={handleChange} placeholder="e.g. 800000" />
+              {errors.price && <span className="rm-form-error">{errors.price}</span>}
             </div>
 
             {/* Status — only show when editing */}

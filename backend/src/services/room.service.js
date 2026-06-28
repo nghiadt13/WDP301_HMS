@@ -20,9 +20,11 @@ const roomService = {
 
     const filter = {};
 
+    // Default: only show active rooms
+    filter.isActive = isActive !== undefined ? isActive === 'true' : true;
+
     if (roomTypeId) filter.room_type_id = roomTypeId;
     if (status) filter.status = status;
-    if (isActive !== undefined) filter.isActive = isActive === 'true';
 
     const skip = (Number(page) - 1) * Number(limit);
 

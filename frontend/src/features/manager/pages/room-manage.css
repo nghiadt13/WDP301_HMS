@@ -67,7 +67,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  background: #facc15;
+  background: #d4ed31;
   color: #111827;
   border: 0;
   border-radius: 8px;
@@ -78,14 +78,14 @@
 }
 
 .rm-add-btn:hover {
-  background: #eab308;
+  background: #bef264;
 }
 
 .rm-sort-btn {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: #facc15;
+  background: #d4ed31;
   border: 0;
   display: grid;
   place-items: center;
@@ -95,7 +95,7 @@
 }
 
 .rm-sort-btn:hover {
-  background: #eab308;
+  background: #bef264;
 }
 
 .rm-list-cards {
@@ -493,12 +493,6 @@
 .rm-room-card-btns {
   display: flex;
   gap: 4px;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.rm-room-card:hover .rm-room-card-btns {
-  opacity: 1;
 }
 
 .rm-detail-actions {
@@ -654,7 +648,7 @@
   padding: 8px 16px;
   border-radius: 8px;
   border: none;
-  background: #facc15;
+  background: #d4ed31;
   font-size: 13px;
   font-weight: 600;
   color: #111827;
@@ -663,7 +657,7 @@
 }
 
 .rm-btn-save:hover {
-  background: #eab308;
+  background: #bef264;
 }
 
 .rm-btn-save:disabled {
