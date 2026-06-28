@@ -11,12 +11,12 @@ function Kill-PortProcess {
     $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
     if ($connections) {
         $pids = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($pid in $pids) {
-            if ($pid -ne 0) {
-                $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+        foreach ($procId in $pids) {
+            if ($procId -ne 0) {
+                $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
                 if ($proc) {
-                    Write-Host "[KILL] Port $Port -> PID $pid ($($proc.ProcessName))" -ForegroundColor Yellow
-                    Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+                    Write-Host "[KILL] Port $Port -> PID $procId ($($proc.ProcessName))" -ForegroundColor Yellow
+                    Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
                 }
             }
         }
