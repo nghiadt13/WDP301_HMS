@@ -30,6 +30,10 @@ const roomSchema = new mongoose.Schema(
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative'],
     },
+    bed_type: {
+      type: String,
+      default: '',
+    },
     images: {
       type: [String],
       default: [],
