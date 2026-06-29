@@ -1,0 +1,173 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Bell, Building2, CalendarDays, Search } from 'lucide-react';
+
+const readStoredUser = () => {
+  try {
+    const storedUser = localStorage.getItem('hotelify_user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    return null;
+  }
+};
+
+const AppHeader = () => {
+  const [user, setUser] = useState(readStoredUser);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  useEffect(() => {
+    const syncUser = () => {
+      setUser(readStoredUser());
+      setIsProfileMenuOpen(false);
+    };
+
+    window.addEventListener('hotelify-auth-change', syncUser);
+    window.addEventListener('storage', syncUser);
+
+    return () => {
+      window.removeEventListener('hotelify-auth-change', syncUser);
+      window.removeEventListener('storage', syncUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) {
+      return undefined;
+    }
+
+    const closeProfileMenu = (event) => {
+      if (event.key === 'Escape') {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    const handleOutsideClick = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', closeProfileMenu);
+    document.addEventListener('mousedown', handleOutsideClick);
+
+    return () => {
+      document.removeEventListener('keydown', closeProfileMenu);
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isProfileMenuOpen]);
+
+  const initials = user?.full_name
+    ? user.full_name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase()
+    : 'GU';
+
+  const handleLogout = () => {
+    localStorage.removeItem('hotelify_token');
+    localStorage.removeItem('hotelify_user');
+    setUser(null);
+    setIsProfileMenuOpen(false);
+    window.dispatchEvent(new Event('hotelify-auth-change'));
+  };
+
+  return (
+    <header className="app-header">
+      <Link className="header-brand" to="/" aria-label="Hotelify home">
+        <Building2 size={28} strokeWidth={2.2} />
+        <span>Hotelify</span>
+      </Link>
+
+      <nav className="header-nav" aria-label="Main navigation">
+        <Link to="/">Trang chủ</Link>
+        <Link to="/listRoom">Danh sách phòng</Link>
+        <Link to="/booking">Đặt phòng</Link>
+      </nav>
+
+      <div className="header-actions">
+        <label className="header-search">
+          <Search size={18} />
+          <input type="search" placeholder="Search placeholder" />
+        </label>
+
+        <Link className="header-icon-button has-dot" to="/booking" aria-label="Đặt phòng">
+          <CalendarDays size={20} />
+        </Link>
+
+        <button className="header-icon-button" type="button" aria-label="Notifications">
+          <Bell size={20} />
+        </button>
+
+        {user ? (
+          <div className="header-profile-menu" ref={profileMenuRef}>
+            <button
+              className="header-profile"
+              type="button"
+              onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
+              aria-haspopup="menu"
+              aria-expanded={isProfileMenuOpen}
+            >
+              <span className="header-avatar-wrap">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.full_name} />
+                ) : (
+                  <span className="header-avatar" aria-hidden="true">
+                    {initials}
+                  </span>
+                )}
+              </span>
+              <span className="header-profile-copy">
+                <strong>{user.full_name}</strong>
+                <span>{user.role?.name || 'Guest'}</span>
+              </span>
+            </button>
+
+            {isProfileMenuOpen ? (
+              <div className="header-profile-dropdown" role="menu">
+                <div className="header-profile-summary">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.full_name} />
+                  ) : (
+                    <span className="header-avatar" aria-hidden="true">
+                      {initials}
+                    </span>
+                  )}
+                  <div>
+                    <strong>{user.full_name}</strong>
+                    <span>{user.email || user.role?.name || 'Guest'}</span>
+                  </div>
+                </div>
+                <Link
+                  className="header-profile-menu-item"
+                  to="/profile"
+                  role="menuitem"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                >
+                  My Profile
+                </Link>
+                <button
+                  className="header-profile-menu-item"
+                  type="button"
+                  role="menuitem"
+                  onClick={handleLogout}
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <Link className="header-login-link" to="/login">
+            Đăng nhập
+          </Link>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default AppHeader;

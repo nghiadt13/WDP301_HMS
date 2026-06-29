@@ -1,0 +1,2410 @@
+{
+  "paragraph_count": 81,
+  "table_count": 22,
+  "paragraphs": [
+    {
+      "index": 10,
+      "style": "normal",
+      "text": "Hotel Management System"
+    },
+    {
+      "index": 11,
+      "style": "normal",
+      "text": "Software Requirement Specification"
+    },
+    {
+      "index": 21,
+      "style": "normal",
+      "text": "– Hanoi,May 2026 –"
+    },
+    {
+      "index": 23,
+      "style": "normal",
+      "text": "Record of changes"
+    },
+    {
+      "index": 24,
+      "style": "normal",
+      "text": "*A - Added M - Modified D - Deleted"
+    },
+    {
+      "index": 26,
+      "style": "normal",
+      "text": "Table of Contents"
+    },
+    {
+      "index": 28,
+      "style": "Heading 1",
+      "text": "I. Overview"
+    },
+    {
+      "index": 29,
+      "style": "Heading 2",
+      "text": "1. Introduction"
+    },
+    {
+      "index": 30,
+      "style": "normal",
+      "text": "The Hotel Management System (HMS) is a software project designed to provide a complete digital platform for managing the daily operations of a 4-star hotel. The main purpose of this project is to replace many manual hotel management processes with a more organized, efficient, and user-friendly system. Through this platform, the hotel can manage reservations, room availability, guest information, housekeeping activities, service requests, billing, payments, and reports in one centralized system."
+    },
+    {
+      "index": 31,
+      "style": "normal",
+      "text": "The platform supports multiple types of users, including Receptionists, Staff, Managers, and Admins. Each actor has specific functions based on their role in the hotel. Guests can register an account, log in, search for available rooms, view room details, make online reservations, cancel bookings, request additional services, report room issues, view their current bill, and submit reviews after their stay. This helps improve the guest experience by allowing customers to interact with the hotel more easily through an online system."
+    },
+    {
+      "index": 32,
+      "style": "normal",
+      "text": "For hotel employees, the system provides useful tools to support daily work. Receptionists can manage booking lists, create walk-in reservations, modify or cancel reservations, check guests in and out, generate invoices, process payments, add extra charges, and view real-time room status. Staff members, especially housekeeping employees, can view assigned tasks, update room cleaning status, report room issues, and process guest service requests. These features help hotel operations become faster, clearer, and easier to track."
+    },
+    {
+      "index": 33,
+      "style": "normal",
+      "text": "The platform also provides management and administration features. Managers can manage room information, room types, room pricing, maintenance blocks, housekeeping assignments, staff task progress, occupancy reports, revenue summaries, and reservation overviews. Admins can manage internal user accounts, configure system settings, view system activity logs, manage service and amenity catalogs, and access full revenue reports for higher-level decision-making."
+    },
+    {
+      "index": 34,
+      "style": "normal",
+      "text": "Overall, the HMS platform is capable of supporting both customer-facing services and internal hotel operations. It improves communication between guests and hotel staff, reduces manual paperwork, keeps room and booking information updated in real time, and provides useful reports for monitoring hotel performance. With its use case–driven design, this project creates a clear foundation for further system analysis, design diagrams, database design, and future software development."
+    },
+    {
+      "index": 38,
+      "style": "Heading 2",
+      "text": "2. System Functions"
+    },
+    {
+      "index": 39,
+      "style": "Heading 3",
+      "text": "a. Screen Flow"
+    },
+    {
+      "index": 43,
+      "style": "Heading 3",
+      "text": "b. Screen Details"
+    },
+    {
+      "index": 44,
+      "style": "Heading 4",
+      "text": "b.1. Public Screen"
+    },
+    {
+      "index": 47,
+      "style": "Heading 4",
+      "text": "b.2. Customer"
+    },
+    {
+      "index": 50,
+      "style": "Heading 4",
+      "text": "b.3. Receptionist"
+    },
+    {
+      "index": 53,
+      "style": "Heading 4",
+      "text": "b.4. Housekeeping"
+    },
+    {
+      "index": 56,
+      "style": "Heading 4",
+      "text": "b.5. Technical Staff"
+    },
+    {
+      "index": 59,
+      "style": "Heading 4",
+      "text": "b.6. Manager"
+    },
+    {
+      "index": 62,
+      "style": "Heading 4",
+      "text": "b.7. Admin"
+    },
+    {
+      "index": 65,
+      "style": "Heading 2",
+      "text": "c. User Authorization"
+    },
+    {
+      "index": 69,
+      "style": "normal",
+      "text": "In which:"
+    },
+    {
+      "index": 70,
+      "style": "normal",
+      "text": "Role 1: <<Customer: A customer who has registered an account on the system can book rooms, request services, make payments, and manage their personal information.>>"
+    },
+    {
+      "index": 71,
+      "style": "normal",
+      "text": "Role 2: <<Housekeeping: Room attendants receive assigned cleaning tasks and update room status upon completion of duties.>>"
+    },
+    {
+      "index": 72,
+      "style": "normal",
+      "text": "Role 3:<<Technical Staff: Technical staff who receive and process maintenance and repair requests for hotel facilities, and update the progress of these requests on the system.>>"
+    },
+    {
+      "index": 73,
+      "style": "normal",
+      "text": "Role 4: <<Receptionist: A front desk staff member responsible for receiving and processing reservation requests, handling check-in/check-out procedures, processing payments, and assisting guests throughout their stay.>>"
+    },
+    {
+      "index": 74,
+      "style": "normal",
+      "text": "Role 5:<<Manager: Manages the hotel, oversees all operational activities, reviews revenue and activity reports, manages staff, and handles customer feedback.>>"
+    },
+    {
+      "index": 75,
+      "style": "normal",
+      "text": "Role 6:<<Admin: System administrator, with full authority to manage user accounts, assign roles and permissions, and configure the system.>>"
+    },
+    {
+      "index": 76,
+      "style": "Heading 2",
+      "text": "d. Non-Screen Functions"
+    },
+    {
+      "index": 79,
+      "style": "Heading 2",
+      "text": "3. Entity Relationship Diagram"
+    },
+    {
+      "index": 80,
+      "style": "normal",
+      "text": "3.1 Conceptual ERD (Chen Notation)"
+    },
+    {
+      "index": 84,
+      "style": "normal",
+      "text": "3.2"
+    },
+    {
+      "index": 88,
+      "style": "normal",
+      "text": "Entities Description"
+    },
+    {
+      "index": 91,
+      "style": "Heading 2",
+      "text": "4. Use Case Diagram"
+    },
+    {
+      "index": 92,
+      "style": "Heading 4",
+      "text": "a. Customer use case diagram"
+    },
+    {
+      "index": 95,
+      "style": "Heading 4",
+      "text": "b. Receptionist use case diagram"
+    },
+    {
+      "index": 98,
+      "style": "Heading 4",
+      "text": "c. Housekeeping use case diagram"
+    },
+    {
+      "index": 100,
+      "style": "Heading 4",
+      "text": "d. Technical staff use case diagram"
+    },
+    {
+      "index": 102,
+      "style": "Heading 4",
+      "text": "e. Manager use case diagram"
+    },
+    {
+      "index": 105,
+      "style": "Heading 4",
+      "text": "f. Admin use case diagram"
+    },
+    {
+      "index": 110,
+      "style": "Heading 2",
+      "text": "5. Use Case Description"
+    },
+    {
+      "index": 112,
+      "style": "Heading 2",
+      "text": "6. Business workflow"
+    },
+    {
+      "index": 113,
+      "style": "Heading 4",
+      "text": "a. Booking process"
+    },
+    {
+      "index": 114,
+      "style": "Heading 4",
+      "text": "b. CheckIn process"
+    },
+    {
+      "index": 116,
+      "style": "Heading 4",
+      "text": "c. CheckOut process"
+    },
+    {
+      "index": 122,
+      "style": "Heading 1",
+      "text": "II. Functional Requirements"
+    },
+    {
+      "index": 123,
+      "style": "Heading 2",
+      "text": "1. Authentication Feature"
+    },
+    {
+      "index": 124,
+      "style": "Heading 3",
+      "text": "1.1. Login"
+    },
+    {
+      "index": 128,
+      "style": "Heading 3",
+      "text": "1.2. Register"
+    },
+    {
+      "index": 131,
+      "style": "Heading 2",
+      "text": "2. Receptionist"
+    },
+    {
+      "index": 132,
+      "style": "Heading 3",
+      "text": "2.1. View Booking List"
+    },
+    {
+      "index": 136,
+      "style": "Heading 3",
+      "text": "2.2. View Booking Detail"
+    },
+    {
+      "index": 139,
+      "style": "Heading 3",
+      "text": "2.3. Create Walk-in Booking"
+    },
+    {
+      "index": 143,
+      "style": "Heading 3",
+      "text": "2.4. Modify Booking"
+    },
+    {
+      "index": 147,
+      "style": "Heading 3",
+      "text": "2.5. Cancel Booking"
+    },
+    {
+      "index": 150,
+      "style": "Heading 3",
+      "text": "2.6. Record Deposit Payment"
+    },
+    {
+      "index": 153,
+      "style": "Heading 3",
+      "text": "2.7. Process Check-in"
+    },
+    {
+      "index": 156,
+      "style": "Heading 3",
+      "text": "2.8. Assign Room"
+    },
+    {
+      "index": 158,
+      "style": "Heading 3",
+      "text": "2.9. Process Check-out"
+    },
+    {
+      "index": 161,
+      "style": "Heading 3",
+      "text": "2.10. Create Room Inspection Request"
+    },
+    {
+      "index": 165,
+      "style": "Heading 3",
+      "text": "2.11. View Inspection Result"
+    },
+    {
+      "index": 169,
+      "style": "Heading 3",
+      "text": "2.12. Add Charge to Bill"
+    },
+    {
+      "index": 173,
+      "style": "Heading 3",
+      "text": "2.13. Generate Invoice"
+    },
+    {
+      "index": 177,
+      "style": "Heading 3",
+      "text": "2.14. Process Final Payment"
+    },
+    {
+      "index": 181,
+      "style": "Heading 3",
+      "text": "2.15. Manage Customer Profile"
+    },
+    {
+      "index": 185,
+      "style": "Heading 3",
+      "text": "2.16. View Room Status Board"
+    },
+    {
+      "index": 189,
+      "style": "Heading 3",
+      "text": "2.17. Handle Customer Service Request"
+    },
+    {
+      "index": 194,
+      "style": "Heading 2",
+      "text": "3. Housekeeping Feature"
+    },
+    {
+      "index": 195,
+      "style": "Heading 3",
+      "text": "3.1. View Assigned Cleaning Tasks"
+    },
+    {
+      "index": 196,
+      "style": "Heading 3",
+      "text": "3.2.Update Cleaning Task Status"
+    },
+    {
+      "index": 199,
+      "style": "Heading 3",
+      "text": "3.3. View Service Request List"
+    },
+    {
+      "index": 201,
+      "style": "Heading 3",
+      "text": "3.4. Process Service Request"
+    },
+    {
+      "index": 203,
+      "style": "Heading 3",
+      "text": "3.5. Inspect Room After Check-out"
+    },
+    {
+      "index": 205,
+      "style": "Heading 3",
+      "text": "3.6.Report Room Issue"
+    },
+    {
+      "index": 207,
+      "style": "Heading 2",
+      "text": "4. Technical Staff Feature"
+    },
+    {
+      "index": 208,
+      "style": "Heading 3",
+      "text": "4.1.Update Maintenance Task Status"
+    },
+    {
+      "index": 210,
+      "style": "Heading 3",
+      "text": "4.2.Report Unresolved Maintenance Issue"
+    },
+    {
+      "index": 212,
+      "style": "Heading 3",
+      "text": "4.3.Update Maintenance Task Status"
+    }
+  ],
+  "tables": [
+    {
+      "index": 1,
+      "rows": [
+        [
+          "Date",
+          "A*\nM, D",
+          "In charge",
+          "Change Description"
+        ],
+        [
+          "20/5/2026",
+          "A",
+          "NghiaDT",
+          ""
+        ],
+        [
+          "20/5/2026",
+          "",
+          "Tinnvt",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 2,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "Screen",
+          "Description"
+        ],
+        [
+          "1",
+          "Account Access",
+          "User Register",
+          "Allows a new customer to create an account before logging in to the system."
+        ],
+        [
+          "2",
+          "Authentication",
+          "User Login",
+          "Allows users to log in with an email and password. The system validates credentials and grants access based on role."
+        ],
+        [
+          "3",
+          "Authentication",
+          "Logout",
+          "Allows authenticated users to log out of the current session securely."
+        ],
+        [
+          "4",
+          "Authentication",
+          "Forgot / Reset Password",
+          "Allows a customer to reset a forgotten password from the login flow."
+        ],
+        [
+          "5",
+          "Access Control",
+          "System Role Determination",
+          "Determines the authenticated user's role and redirects the user to the corresponding dashboard."
+        ]
+      ]
+    },
+    {
+      "index": 3,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "Screen",
+          "Description"
+        ],
+        [
+          "6",
+          "Customer Home",
+          "Customer Dashboard",
+          "Displays the main customer functions after login, including profile, room reservation, service requests, issue reporting, and feedback."
+        ],
+        [
+          "7",
+          "Profile Management",
+          "Profile and Password",
+          "Allows the customer to manage profile information and change the account password when permitted."
+        ],
+        [
+          "8",
+          "Room Discovery",
+          "View Room List",
+          "Allows the customer to view room types or available rooms displayed by the hotel."
+        ],
+        [
+          "9",
+          "Room Discovery",
+          "Search Available Rooms",
+          "Allows the customer to search for available rooms by check-in date, check-out date, room type, number of guests, and filters."
+        ],
+        [
+          "10",
+          "Room Discovery",
+          "View Room Detail",
+          "Allows the customer to view detailed room information, including description, images, amenities, capacity, bed type, and nightly price."
+        ],
+        [
+          "11",
+          "Reservation Management",
+          "Make Online Reservation",
+          "Allows the customer to create an online reservation by selecting an available room or room type and confirming booking details."
+        ],
+        [
+          "12",
+          "Reservation Management",
+          "Pay Reservation Deposit",
+          "Allows the customer to pay a reservation deposit after creating an online reservation."
+        ],
+        [
+          "13",
+          "Reservation Management",
+          "Cancel Reservation",
+          "Allows the customer to cancel a previously created reservation before check-in according to hotel policy."
+        ],
+        [
+          "14",
+          "Reservation Management",
+          "View Reservation History",
+          "Allows the customer to view all personal reservations, including pending, active, completed, and canceled bookings."
+        ],
+        [
+          "15",
+          "Guest Services",
+          "Request Service",
+          "Allows the customer to request additional services during the stay, such as extra towels, urgent cleaning, laundry, food ordering, or taxi booking."
+        ],
+        [
+          "16",
+          "Room Issue Management",
+          "Report Room Issue",
+          "Allows the customer to report a room issue during the stay, such as broken equipment, air-conditioning problems, or water leakage."
+        ],
+        [
+          "17",
+          "Feedback",
+          "Send Feedback",
+          "Allows the customer to submit a rating and feedback about room quality, service quality, and overall hotel experience after check-out."
+        ]
+      ]
+    },
+    {
+      "index": 4,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "Screen",
+          "Description"
+        ],
+        [
+          "18",
+          "Receptionist Home",
+          "Receptionist Dashboard",
+          "Displays receptionist functions for booking management, check-in, check-out, billing, customer records, and service operations."
+        ],
+        [
+          "19",
+          "Reservation Management",
+          "View Booking List",
+          "Allows the receptionist to view the daily booking list, including upcoming arrivals, current stays, and expected check-outs."
+        ],
+        [
+          "20",
+          "Reservation Management",
+          "View Booking Detail",
+          "Allows the receptionist to view full details of a selected booking, including guest information, stay dates, deposit status, payment status, and booking status."
+        ],
+        [
+          "21",
+          "Reservation Management",
+          "Search Booking",
+          "Allows the receptionist to search bookings by booking code, guest name, phone number, email, ID card number, passport number, date, or status."
+        ],
+        [
+          "22",
+          "Reservation Management",
+          "Create Walk-in Booking",
+          "Allows the receptionist to create a reservation at the front desk for a walk-in guest."
+        ],
+        [
+          "23",
+          "Reservation Management",
+          "Modify Booking",
+          "Allows the receptionist to modify an existing reservation if availability and hotel policy permit."
+        ],
+        [
+          "24",
+          "Reservation Management",
+          "Cancel Booking",
+          "Allows the receptionist to cancel a reservation based on the guest's request or hotel policy."
+        ],
+        [
+          "25",
+          "Billing and Payment",
+          "Record Deposit Payment",
+          "Allows the receptionist to record a reservation deposit payment for front-desk or offline bookings."
+        ],
+        [
+          "26",
+          "Front Desk Operations",
+          "Process Check-in",
+          "Allows the receptionist to check in a guest by verifying booking information, confirming stay details, assigning a room, and updating room status."
+        ],
+        [
+          "27",
+          "Front Desk Operations",
+          "Assign Room",
+          "Allows the receptionist to assign a specific available room to a guest based on reserved room type and availability."
+        ],
+        [
+          "28",
+          "Front Desk Operations",
+          "Process Check-out",
+          "Allows the receptionist to check out a guest, create inspection request, finalize the bill, process payment, and update room status."
+        ],
+        [
+          "29",
+          "Room Inspection",
+          "Create Room Inspection Request",
+          "Allows the receptionist to create a room inspection request after guest check-out and send it to housekeeping staff."
+        ],
+        [
+          "30",
+          "Room Inspection",
+          "View Inspection Result",
+          "Allows the receptionist to view inspection results, including room condition, damage report, lost items, and additional charges."
+        ],
+        [
+          "31",
+          "Billing and Payment",
+          "Add Charge to Bill",
+          "Allows the receptionist to manually add charges such as minibar usage, damage fee, late check-out fee, or special service fee."
+        ],
+        [
+          "32",
+          "Billing and Payment",
+          "Generate Invoice",
+          "Allows the receptionist to generate the official final invoice, including room charges, service fees, deposits, and final payable amount."
+        ],
+        [
+          "33",
+          "Billing and Payment",
+          "Process Final Payment",
+          "Allows the receptionist to record final payment and update invoice status to Paid."
+        ],
+        [
+          "34",
+          "Customer Management",
+          "Manage Customer Profile",
+          "Allows the receptionist to manage guest profile records, including searching, viewing, creating, and editing customer information when required."
+        ],
+        [
+          "35",
+          "Room Operations",
+          "View Room Status Board",
+          "Allows the receptionist to view a real-time room status board, including Available, Occupied, Dirty, Cleaning, and Maintenance."
+        ],
+        [
+          "36",
+          "Guest Services",
+          "Handle Customer Service Request",
+          "Allows the receptionist to receive, review, assign, track, and update customer service requests."
+        ]
+      ]
+    },
+    {
+      "index": 5,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "Screen",
+          "Description"
+        ],
+        [
+          "37",
+          "Housekeeping Home",
+          "Housekeeping Dashboard",
+          "Displays housekeeping functions for assigned cleaning tasks, service requests, room inspection, and issue reporting."
+        ],
+        [
+          "38",
+          "Staff Tasks",
+          "View Assigned Cleaning Tasks",
+          "Allows housekeeping staff to view assigned cleaning tasks, including room number, task type, priority level, deadline, and task status."
+        ],
+        [
+          "39",
+          "Staff Tasks",
+          "Update Cleaning Task Status",
+          "Allows housekeeping staff to update cleaning task status and update room status after cleaning is completed."
+        ],
+        [
+          "40",
+          "Guest Services",
+          "View Service Request List",
+          "Allows housekeeping staff to view pending service requests assigned to them."
+        ],
+        [
+          "41",
+          "Guest Services",
+          "Process Service Request",
+          "Allows housekeeping staff to process additional service requests from guests and update the request status after completion."
+        ],
+        [
+          "42",
+          "Room Inspection",
+          "Inspect Room After Check-out",
+          "Allows housekeeping staff to inspect room condition after guest check-out and record minibar use, lost items, or damaged items."
+        ],
+        [
+          "43",
+          "Room Issue Management",
+          "Report Room Issue",
+          "Allows housekeeping staff to report issues or damage found in a room. The system may change room status to Maintenance and notify responsible staff."
+        ]
+      ]
+    },
+    {
+      "index": 6,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "Screen",
+          "Description"
+        ],
+        [
+          "44",
+          "Technical Home",
+          "Technical Staff Dashboard",
+          "Displays technical staff functions for viewing maintenance tasks and updating maintenance progress."
+        ],
+        [
+          "45",
+          "Staff Tasks",
+          "View Assigned Maintenance Task",
+          "Allows technical staff to view assigned maintenance tasks, including room number, issue description, priority level, deadline, and task status."
+        ],
+        [
+          "46",
+          "Maintenance Management",
+          "Update Maintenance Task Status",
+          "Allows technical staff to update maintenance task status, such as Not Started, In Progress, Completed, or Cannot Resolve."
+        ],
+        [
+          "47",
+          "Maintenance Management",
+          "Report Unresolved Maintenance Issue",
+          "Allows technical staff to report an unresolved maintenance issue when it requires replacement parts or manager approval."
+        ]
+      ]
+    },
+    {
+      "index": 7,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "Screen",
+          "Description"
+        ],
+        [
+          "48",
+          "Manager Home",
+          "Manager Dashboard",
+          "Displays manager functions for room management, staff tasks, minibar items, reservation and revenue overview, and customer feedback management."
+        ],
+        [
+          "49",
+          "Room Management",
+          "Manage Room",
+          "Allows the manager to manage hotel room records using CRUD-style operations, including adding, viewing, editing, pricing-related room information, maintenance status, and deactivation."
+        ],
+        [
+          "50",
+          "Room Type Management",
+          "Manage Room Type",
+          "Allows the manager to manage system-wide room type categories, including name, capacity, bed type, base price, amenities, and active status."
+        ],
+        [
+          "51",
+          "Staff Task Management",
+          "Manage Staff Task",
+          "Allows the manager to create, assign, view, update, reassign, cancel, or close tasks for housekeeping or technical staff."
+        ],
+        [
+          "52",
+          "Minibar Management",
+          "Manage Minibar Item",
+          "Allows the manager to manage minibar items, including adding, viewing, editing, deleting or deactivating item information such as name, category, price, and stock status."
+        ],
+        [
+          "53",
+          "Reservation Monitoring",
+          "View Reservation Overview",
+          "Allows the manager to view reservation overview, including new bookings, current stays, upcoming arrivals, and upcoming check-outs by day or week."
+        ],
+        [
+          "54",
+          "Reporting",
+          "View Revenue Summary",
+          "Allows the manager to view operational revenue summaries by day, week, or month, including room revenue, service revenue, minibar revenue, and total revenue."
+        ],
+        [
+          "55",
+          "Feedback Management",
+          "Manage Customer Feedback",
+          "Allows the manager to manage customer feedback records, including viewing, filtering, responding, updating response status, and retaining feedback history."
+        ]
+      ]
+    },
+    {
+      "index": 8,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "Screen",
+          "Description"
+        ],
+        [
+          "56",
+          "Admin Home",
+          "Admin Dashboard",
+          "Displays administrator functions for profile, internal account management, role management, and staff password reset."
+        ],
+        [
+          "57",
+          "Profile Management",
+          "Manage Profile",
+          "Allows the admin to manage personal profile information and change account password when permitted."
+        ],
+        [
+          "58",
+          "User Account Management",
+          "Manage Internal Account",
+          "Allows the admin to manage internal employee accounts using CRUD-style operations, including creating, viewing, editing, and deactivating accounts."
+        ],
+        [
+          "59",
+          "Access Control",
+          "Manage Role",
+          "Allows the admin to manage user roles and permissions, including creating roles, editing permission sets, assigning roles, and deactivating unused roles."
+        ],
+        [
+          "60",
+          "User Account Management",
+          "Reset Staff Password",
+          "Allows the admin to reset passwords for internal staff accounts when employees forget their passwords or account access must be restored securely."
+        ]
+      ]
+    },
+    {
+      "index": 9,
+      "rows": [
+        [
+          "Screen",
+          "Customer",
+          "Receptionist",
+          "Housekeeping",
+          "Technical Staff",
+          "Manager",
+          "Admin"
+        ],
+        [
+          "HomePage",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "Login",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "Logout",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "Forget Password",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Forgot Password Request",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Reset Password",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Manage Profile",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "View Profile",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "Update Profile",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "Change Password",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "View Room List",
+          "X",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "View Room Detail",
+          "X",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Search Available Rooms",
+          "X",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "View Rating",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X",
+          "X"
+        ],
+        [
+          "Make Online Reservation",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Pay Reservation",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Cancel Reservation",
+          "X",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "View Reservation History",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "View Booking List",
+          "",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "View Booking Detail",
+          "",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Create Walk-in Reservation",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Create Customer Reservation",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Check-in Process",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Check-out Process",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Extend Customer Stay",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Change Customer Room",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Generate Invoice",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Add Charge to Bill",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Search Customer Profile",
+          "",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "View Customer Profile Detail",
+          "",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Request Service",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Cancel Service",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "View Customer Service Request",
+          "",
+          "X",
+          "X",
+          "",
+          "",
+          ""
+        ],
+        [
+          "View Room Status Board",
+          "",
+          "X",
+          "X",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Report Room Issue",
+          "X",
+          "",
+          "X",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Send Inspection Request",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "View Inspection Result",
+          "",
+          "X",
+          "X",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Inspect Room After Check-out",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          ""
+        ],
+        [
+          "View Assigned Cleaning Tasks",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Update Cleaning Task Report",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Assign Task",
+          "",
+          "X",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Assign Housekeeping Task",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "View Staff Task Overview",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "View Assigned Technical Requests",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        [
+          "View Technical Request Detail",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        [
+          "Update Technical Work Progress",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        [
+          "Report Technical Work Result",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        [
+          "Update Room Technical Status",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        [
+          "Send Feedback",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "View Revenue Summary",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Add New Room",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Edit Room Information",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Deactivate Room",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Block Room for Maintenance",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "View Manager Account",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        [
+          "Account Management",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "X"
+        ],
+        [
+          "Deactivate Account",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "X"
+        ]
+      ]
+    },
+    {
+      "index": 10,
+      "rows": [
+        [
+          "#",
+          "Feature",
+          "System Function",
+          "Description"
+        ],
+        [
+          "1",
+          "Authentication",
+          "Google OAuth 2.0 API",
+          "The API authenticates users via Google Account, returning a token to create a login session for the customer."
+        ],
+        [
+          "2",
+          "Notification",
+          "Email Notification Service",
+          "The service automatically sends emails (via Email Service) confirming bookings, payments, or system notifications to the Customer."
+        ],
+        [
+          "3",
+          "Payment",
+          "Payment Gateway Integration API",
+          "The API communicates with the Payment Gateway to process top-ups, confirm transactions, and return payment information to the receptionist."
+        ],
+        [
+          "4",
+          "Housekeeping Task",
+          "Housekeeping Task Assignment Job",
+          "Batch jobs automatically assign Housekeeping Task Information to the Housekeeping department based on room status (check-out, dirty, etc.)."
+        ],
+        [
+          "5",
+          "Room Management",
+          "Room Status Auto-Update Job",
+          "Cron jobs periodically update room status (available/occupied/cleaning) based on booking data and Housekeeping Update Information."
+        ],
+        [
+          "6",
+          "Maintenance",
+          "Maintenance Request Dispatch Service",
+          "The service listens for maintenance requests, automatically sends Maintenance Requests to Technical Staff, and updates Maintenance Information in the system."
+        ],
+        [
+          "7",
+          "Reporting",
+          "Scheduled Report Generation Job",
+          "Cron jobs run periodically (daily/weekly/monthly) to automatically compile and generate Activity Reports and Revenue Reports for managers."
+        ],
+        [
+          "8",
+          "Booking",
+          "Booking Confirmation Notification Service",
+          "The system automatically sends booking confirmation information (Booking Management Information, Room Information) to customers after successful payment."
+        ],
+        [
+          "9",
+          "Technical staff task",
+          "Technical staff Task Assignment Job",
+          "Automated tasks are assigned to technicians in the technical department based on job information and room status (checkout, malfunction, etc.)."
+        ]
+      ]
+    },
+    {
+      "index": 11,
+      "rows": [
+        [
+          "#",
+          "Entity",
+          "Description"
+        ],
+        [
+          "1",
+          "User",
+          "Stores information for all system accounts including Customer, Receptionist, Manager, Admin, Housekeeping, and Technical Staff. Differentiated by the Role attribute."
+        ],
+        [
+          "2",
+          "Room_Type",
+          "Contains information about different categories of rooms, including capacity, standard amenities, images, and base pricing."
+        ],
+        [
+          "3",
+          "Room_Pricing",
+          "Manages dynamic pricing rules for room types based on specific periods (e.g., peak seasons, holidays)."
+        ],
+        [
+          "4",
+          "Room",
+          "Represents physical hotel rooms, including their room number, floor, associated room type, and current operational status (Available, Occupied, Dirty, etc.)."
+        ],
+        [
+          "5",
+          "Maintenance_Block",
+          "Records periods when specific rooms are blocked from reservations due to long-term maintenance or repairs."
+        ],
+        [
+          "6",
+          "Reservation",
+          "Stores booking details made by customers, including stay dates, guest count, assigned room, and booking status."
+        ],
+        [
+          "7",
+          "Invoice",
+          "Represents the main bill for a reservation, aggregating room charges, taxes, discounts, and the total amount due."
+        ],
+        [
+          "8",
+          "Invoice_Item",
+          "Contains line-item charges added to an invoice, such as room rates, minibar usage, damage fees, or additional services."
+        ],
+        [
+          "9",
+          "Payment",
+          "Records financial transactions made by customers to settle deposits or final invoices, including the payment method and transaction status."
+        ],
+        [
+          "10",
+          "Service",
+          "A catalog of all extra hotel services available for guests to request (e.g., laundry, spa, in-room dining, taxi)."
+        ],
+        [
+          "11",
+          "ServiceRequest",
+          "Tracks specific services requested by guests during their stay, including request details, quantity, and staff processing status."
+        ],
+        [
+          "12",
+          "HousekeepingTask",
+          "Manages cleaning and inspection assignments allocated to housekeeping staff, including priority, deadlines, and completion status."
+        ],
+        [
+          "13",
+          "TechnicalRequest",
+          "Records reports of room issues or damage submitted by customers or staff, assigning them to technical personnel for resolution."
+        ],
+        [
+          "14",
+          "Feedback",
+          "Stores reviews and ratings submitted by customers after their stay, reflecting on room quality and hotel services."
+        ]
+      ]
+    },
+    {
+      "index": 12,
+      "rows": [
+        [
+          "ID",
+          "Use Case",
+          "Actors",
+          "Use Case Description"
+        ],
+        [
+          "UC-001",
+          "Login",
+          "Customer, Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff",
+          "Allows users to log in with an email and password. The system validates the credentials and grants access based on the user's role."
+        ],
+        [
+          "UC-002",
+          "Logout",
+          "Customer, Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff",
+          "Allows authenticated users to log out of the current session securely."
+        ],
+        [
+          "UC-003",
+          "Manage Profile",
+          "Customer, Admin",
+          "Allows the user to manage personal profile information. This includes viewing profile details, updating personal information such as full name, phone number, address, avatar, and email, and changing the account password when permitted."
+        ],
+        [
+          "UC-004",
+          "View Room List",
+          "Customer",
+          "Allows the customer to view the list of room types or available rooms displayed by the hotel, including basic information such as room name, capacity, amenities, and price range."
+        ],
+        [
+          "UC-005",
+          "Search Available Rooms",
+          "Customer",
+          "Allows the customer to search for available rooms by check-in date, check-out date, room type, number of guests, and other filters."
+        ],
+        [
+          "UC-006",
+          "View Room Detail",
+          "Customer",
+          "Allows the customer to view detailed room information, including description, images, amenities, capacity, bed type, and nightly price."
+        ],
+        [
+          "UC-007",
+          "Make Online Reservation",
+          "Customer",
+          "Allows the customer to make an online reservation by selecting an available room or room type, entering guest and contact information, reviewing booking details, and confirming the reservation."
+        ],
+        [
+          "UC-008",
+          "Pay Reservation Deposit",
+          "Customer",
+          "Allows the customer to pay a reservation deposit after creating an online reservation. The system records the deposit and updates the booking payment status."
+        ],
+        [
+          "UC-009",
+          "Cancel Reservation",
+          "Customer",
+          "Allows the customer to cancel a previously created reservation before check-in according to the hotel's cancellation policy."
+        ],
+        [
+          "UC-010",
+          "View Reservation History",
+          "Customer",
+          "Allows the customer to view all personal reservations, including pending, active, completed, and canceled bookings."
+        ],
+        [
+          "UC-011",
+          "Request Service",
+          "Customer",
+          "Allows the customer to request additional services during the stay. This may include extra towels, pillows, urgent cleaning, laundry, food ordering, taxi booking, or other available service catalog items. The customer may also cancel a pending service request if it has not been processed yet."
+        ],
+        [
+          "UC-012",
+          "Report Room Issue",
+          "Customer",
+          "Allows the customer to report a room issue during the stay, such as broken equipment, air-conditioning problems, water leakage, or damaged amenities. The system records the issue and notifies responsible staff."
+        ],
+        [
+          "UC-013",
+          "Send Feedback",
+          "Customer",
+          "Allows the customer to submit a rating and feedback about room quality, service quality, and overall hotel experience after check-out."
+        ],
+        [
+          "UC-014",
+          "View Booking List",
+          "Receptionist",
+          "Allows the receptionist to view the daily booking list, including upcoming arrivals, current stays, and expected check-outs."
+        ],
+        [
+          "UC-015",
+          "View Booking Detail",
+          "Receptionist",
+          "Allows the receptionist to view full details of a selected booking, including guest information, reserved room type, stay dates, deposit status, payment status, special requests, and booking status."
+        ],
+        [
+          "UC-016",
+          "Search Booking",
+          "Receptionist",
+          "Allows the receptionist to search bookings by booking code, guest name, phone number, email, ID card number, passport number, date, or booking status."
+        ],
+        [
+          "UC-017",
+          "Create Walk-in Booking",
+          "Receptionist",
+          "Allows the receptionist to create a reservation at the front desk for a walk-in guest. The system records guest information, stay dates, room type, and deposit status."
+        ],
+        [
+          "UC-018",
+          "Modify Booking",
+          "Receptionist",
+          "Allows the receptionist to modify an existing reservation, such as changing stay dates, room type, special requests, or guest information if availability and hotel policy permit."
+        ],
+        [
+          "UC-019",
+          "Cancel Booking",
+          "Receptionist",
+          "Allows the receptionist to cancel a reservation based on the guest's request or guest not come to process check-in. The system updates the booking status and handles deposit or cancellation rules if applicable."
+        ],
+        [
+          "UC-020",
+          "Record Deposit Payment",
+          "Receptionist",
+          "Allows the receptionist to record a reservation deposit payment for bookings made at the front desk or through offline payment channels."
+        ],
+        [
+          "UC-021",
+          "Process Check-in",
+          "Receptionist",
+          "Allows the receptionist to check in a guest by finding the booking, verifying guest information, confirming stay details, assigning a room, and changing the room status to Occupied."
+        ],
+        [
+          "UC-022",
+          "Assign Room",
+          "Receptionist",
+          "Allows the receptionist to assign a specific available room to a guest based on the reserved room type, stay dates, room availability, and guest requirements."
+        ],
+        [
+          "UC-023",
+          "Process Check-out",
+          "Receptionist",
+          "Allows the receptionist to check out a guest by confirming the stay completion, creating an inspection request, finalizing the bill, processing payment, and changing the room status to Dirty for cleaning."
+        ],
+        [
+          "UC-024",
+          "Create Room Inspection Request",
+          "Receptionist",
+          "Allows the receptionist to create a room inspection request after a guest checks out. The request is sent to housekeeping staff to inspect the room, check minibar or paid items, report damage, and prepare the room for cleaning."
+        ],
+        [
+          "UC-025",
+          "View Inspection Result",
+          "Receptionist",
+          "Allows the receptionist to view the result of a room inspection, including room condition, damage report, minibar or paid item usage, lost items, and whether additional charges should be added to the bill."
+        ],
+        [
+          "UC-026",
+          "Add Charge to Bill",
+          "Receptionist",
+          "Allows the receptionist to manually add a charge to a guest bill, such as minibar usage, damage fee, late check-out fee, or a special front-desk service."
+        ],
+        [
+          "UC-027",
+          "Generate Invoice",
+          "Receptionist",
+          "Allows the receptionist to generate the official final invoice, including room charges, service fees, minibar charges, damage fees, deposits, and final payable amount."
+        ],
+        [
+          "UC-028",
+          "Process Final Payment",
+          "Receptionist",
+          "Allows the receptionist to record final payment by cash, credit card, or bank transfer and update the invoice status to Paid."
+        ],
+        [
+          "UC-029",
+          "Manage Customer Profile",
+          "Receptionist",
+          "Allows the receptionist to manage guest profile records. This includes searching customer profiles, viewing customer profile details, creating or recording customer information during booking/check-in, and editing customer information when required. Historical customer records should not be hard-deleted by the receptionist."
+        ],
+        [
+          "UC-030",
+          "View Room Status Board",
+          "Receptionist",
+          "Allows the receptionist to view a real-time room status board for all hotel rooms, including Available, Occupied, Dirty, Cleaning, and Maintenance."
+        ],
+        [
+          "UC-031",
+          "Handle Customer Service Request",
+          "Receptionist",
+          "Allows the receptionist to receive, review, and handle customer service requests. This includes checking request details, assigning the request to suitable staff, tracking request status, and updating the request result when necessary."
+        ],
+        [
+          "UC-032",
+          "View Assigned Cleaning Tasks",
+          "Housekeeping Staff",
+          "Allows housekeeping staff to view assigned cleaning tasks for the current shift, including room number, task type, priority level, deadline, and task status."
+        ],
+        [
+          "UC-033",
+          "Update Cleaning Task Status",
+          "Housekeeping Staff",
+          "Allows housekeeping staff to update cleaning task status, such as Not Started, In Progress, and Completed. The room status may also be updated from Dirty to Cleaning and from Cleaning to Available after cleaning is completed."
+        ],
+        [
+          "UC-034",
+          "View Service Request List",
+          "Housekeeping Staff",
+          "Allows housekeeping staff to view the list of pending service requests assigned to them, including request type, room number, priority, and deadline."
+        ],
+        [
+          "UC-035",
+          "Process Service Request",
+          "Housekeeping Staff",
+          "Allows housekeeping staff to process additional service requests from guests, such as extra towels, pillows, room cleaning, or laundry support, and update the request status after completion."
+        ],
+        [
+          "UC-036",
+          "Inspect Room After Check-out",
+          "Housekeeping Staff",
+          "Allows housekeeping staff to inspect the room after guest check-out. This includes checking room condition, recording minibar or paid item consumption, recording lost or damaged items, reporting damage if found, and preparing the room for cleaning."
+        ],
+        [
+          "UC-037",
+          "Report Room Issue",
+          "Housekeeping Staff",
+          "Allows housekeeping staff to report issues or damage found in a room, such as broken equipment, missing amenities, or required repairs. The system may change the room status to Maintenance and notify technical staff or the manager."
+        ],
+        [
+          "UC-038",
+          "View Assigned Maintenance Task",
+          "Technical Staff",
+          "Allows technical staff to view assigned maintenance tasks, including room number, issue description, priority level, deadline, and task status."
+        ],
+        [
+          "UC-039",
+          "Update Maintenance Task Status",
+          "Technical Staff",
+          "Allows technical staff to update maintenance task status, such as Not Started, In Progress, Completed, or Cannot Resolve, after handling the assigned issue."
+        ],
+        [
+          "UC-040",
+          "Report Unresolved Maintenance Issue",
+          "Technical Staff",
+          "Allows technical staff to report an unresolved maintenance issue when the problem cannot be completed immediately, requires replacement parts, or needs manager approval."
+        ],
+        [
+          "UC-041",
+          "Manage Room",
+          "Manager",
+          "Allows the manager to manage hotel room records using CRUD-style operations. This includes adding new rooms, viewing room information, editing room details such as room number, floor, room type, capacity, amenities, images, and description, deactivating rooms that should not be reserved and deactivating rooms for maintenance during a defined period."
+        ],
+        [
+          "UC-042",
+          "Manage Room Type",
+          "Manager",
+          "Allows the manager to manage system-wide room type categories using CRUD operations. This includes creating new room types, viewing room type details, editing room type information such as name, capacity, bed type, base price, amenities, and description, and deleting or deactivating room types that are no longer used."
+        ],
+        [
+          "UC-043",
+          "Manage Staff Task",
+          "Manager",
+          "Allows the manager to manage staff tasks. This includes creating and assigning tasks to housekeeping or technical staff, viewing staff task overview, updating task information such as priority or deadline, reassigning tasks when needed, and canceling or closing tasks that are no longer required."
+        ],
+        [
+          "UC-044",
+          "Manage Minibar Item",
+          "Manager",
+          "Allows the manager to manage minibar items using CRUD operations. This includes adding new minibar items, viewing item details, editing item information such as name, category, price, stock status, and description, and deleting or deactivating items that are no longer available."
+        ],
+        [
+          "UC-045",
+          "View Reservation Overview",
+          "Manager",
+          "Allows the manager to view a reservation overview, including new bookings, current stays, upcoming arrivals, and upcoming check-outs by day or week."
+        ],
+        [
+          "UC-046",
+          "View Revenue Summary",
+          "Manager",
+          "Allows the manager to view operational revenue summaries by day, week, or month, including room revenue, service revenue, minibar revenue, and total revenue for business monitoring."
+        ],
+        [
+          "UC-047",
+          "Manage Customer Feedback",
+          "Manager",
+          "Allows the manager to manage customer feedback records. This includes viewing customer feedback, filtering feedback by rating or date, responding to customer feedback, updating response status, and archiving feedback that has already been handled. Feedback should usually be retained for historical service quality analysis instead of being permanently deleted."
+        ],
+        [
+          "UC-048",
+          "Manage Internal Account",
+          "Admin",
+          "Allows the admin to manage internal employee accounts using CRUD-style operations. This includes creating new internal accounts for staff, viewing account lists and account details, editing account information such as name, email, role, and active status, deactivating accounts that should no longer access the system."
+        ],
+        [
+          "UC-049",
+          "Manage Role",
+          "Admin",
+          "Allows the admin to manage user roles and permissions. This includes creating roles, viewing role details, editing role names or permission sets, assigning roles to internal accounts, and deleting or deactivating roles that are no longer used."
+        ],
+        [
+          "UC-050",
+          "Reset Staff Password",
+          "Admin",
+          "Allows the admin to reset passwords for internal staff accounts when employees forget their passwords or when account access must be restored securely."
+        ],
+        [
+          "UC-051",
+          "Reset Forgot Password",
+          "Customer",
+          "Allows the customer to reset forgot password in Login Page."
+        ]
+      ]
+    },
+    {
+      "index": 13,
+      "rows": [
+        [
+          "UC Code",
+          "UC-001",
+          "UC Name",
+          "Login"
+        ],
+        [
+          "Actor",
+          "Customer, Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff",
+          "Customer, Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff",
+          "Customer, Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff"
+        ],
+        [
+          "Description",
+          "User logs in with email and password to access the system.",
+          "User logs in with email and password to access the system.",
+          "User logs in with email and password to access the system."
+        ],
+        [
+          "Trigger Event",
+          "User submits login form with credentials",
+          "User submits login form with credentials",
+          "User submits login form with credentials"
+        ],
+        [
+          "Preconditions",
+          "User account exists in the system.\nThe user account was not locked by the admin.",
+          "User account exists in the system.\nThe user account was not locked by the admin.",
+          "User account exists in the system.\nThe user account was not locked by the admin."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Postconditions",
+          "User is authenticated and receives tokens, or receives an error message.",
+          "User is authenticated and receives tokens, or receives an error message.",
+          "User is authenticated and receives tokens, or receives an error message."
+        ]
+      ]
+    },
+    {
+      "index": 14,
+      "rows": [
+        [
+          "UC Code",
+          "UC-002",
+          "UC Name",
+          "Register"
+        ],
+        [
+          "Actor",
+          "User",
+          "User",
+          "User"
+        ],
+        [
+          "Description",
+          "User logs in with email and password to access the system.",
+          "User logs in with email and password to access the system.",
+          "User logs in with email and password to access the system."
+        ],
+        [
+          "Trigger Event",
+          "User submits login form with credentials",
+          "User submits login form with credentials",
+          "User submits login form with credentials"
+        ],
+        [
+          "Preconditions",
+          "User account exists in the system.\nUser has verified their email, unless the system allows login before verification.",
+          "User account exists in the system.\nUser has verified their email, unless the system allows login before verification.",
+          "User account exists in the system.\nUser has verified their email, unless the system allows login before verification."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Postconditions",
+          "User is authenticated and receives tokens, or receives an error message.",
+          "User is authenticated and receives tokens, or receives an error message.",
+          "User is authenticated and receives tokens, or receives an error message."
+        ]
+      ]
+    },
+    {
+      "index": 15,
+      "rows": [
+        [
+          "UC Code",
+          "UC-014",
+          "UC Name",
+          "View Booking List"
+        ],
+        [
+          "Actor",
+          "Receptionist",
+          "Receptionist",
+          "Receptionist"
+        ],
+        [
+          "Description",
+          "Allows the receptionist to view the daily booking list, including upcoming arrivals, current stays, and expected check-outs.",
+          "Allows the receptionist to view the daily booking list, including upcoming arrivals, current stays, and expected check-outs.",
+          "Allows the receptionist to view the daily booking list, including upcoming arrivals, current stays, and expected check-outs."
+        ],
+        [
+          "Trigger Event",
+          "The receptionist opens the booking list screen to review daily hotel operations.",
+          "The receptionist opens the booking list screen to review daily hotel operations.",
+          "The receptionist opens the booking list screen to review daily hotel operations."
+        ],
+        [
+          "Preconditions",
+          "The receptionist is authenticated and authorized.\nBooking data is available in the system.\nThe system date or selected operating date is available.",
+          "The receptionist is authenticated and authorized.\nBooking data is available in the system.\nThe system date or selected operating date is available.",
+          "The receptionist is authenticated and authorized.\nBooking data is available in the system.\nThe system date or selected operating date is available."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative\nFlow",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 16,
+      "rows": [
+        [
+          "UC Code",
+          "UC-015",
+          "UC Name",
+          "View Booking Detail"
+        ],
+        [
+          "Actor",
+          "Receptionist",
+          "Receptionist",
+          "Receptionist"
+        ],
+        [
+          "Description",
+          "Allows the receptionist to view full details of a selected booking, including guest information, reserved room type, stay dates, deposit status, payment status, special requests, and booking status.",
+          "Allows the receptionist to view full details of a selected booking, including guest information, reserved room type, stay dates, deposit status, payment status, special requests, and booking status.",
+          "Allows the receptionist to view full details of a selected booking, including guest information, reserved room type, stay dates, deposit status, payment status, special requests, and booking status."
+        ],
+        [
+          "Trigger Event",
+          "The receptionist selects a booking from a booking list or search result.",
+          "The receptionist selects a booking from a booking list or search result.",
+          "The receptionist selects a booking from a booking list or search result."
+        ],
+        [
+          "Preconditions",
+          "The receptionist is authenticated and authorized.\nThe selected booking exists in the system.\nThe receptionist has permission to view guest and payment information.",
+          "The receptionist is authenticated and authorized.\nThe selected booking exists in the system.\nThe receptionist has permission to view guest and payment information.",
+          "The receptionist is authenticated and authorized.\nThe selected booking exists in the system.\nThe receptionist has permission to view guest and payment information."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative\nFlow",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 17,
+      "rows": [
+        [
+          "UC Code",
+          "UC-017",
+          "UC Name",
+          "Create Walk-in Booking"
+        ],
+        [
+          "Actor",
+          "Receptionist",
+          "Receptionist",
+          "Receptionist"
+        ],
+        [
+          "Description",
+          "Allows the receptionist to create a reservation at the front desk for a walk-in guest. The system records guest information, stay dates, room type, and deposit status.",
+          "Allows the receptionist to create a reservation at the front desk for a walk-in guest. The system records guest information, stay dates, room type, and deposit status.",
+          "Allows the receptionist to create a reservation at the front desk for a walk-in guest. The system records guest information, stay dates, room type, and deposit status."
+        ],
+        [
+          "Trigger Event",
+          "A walk-in guest requests a room reservation at the front desk.",
+          "A walk-in guest requests a room reservation at the front desk.",
+          "A walk-in guest requests a room reservation at the front desk."
+        ],
+        [
+          "Preconditions",
+          "The receptionist is authenticated and authorized.\nThe guest provides required identity and contact information.\nRoom availability and pricing data are available for the requested stay dates.",
+          "The receptionist is authenticated and authorized.\nThe guest provides required identity and contact information.\nRoom availability and pricing data are available for the requested stay dates.",
+          "The receptionist is authenticated and authorized.\nThe guest provides required identity and contact information.\nRoom availability and pricing data are available for the requested stay dates."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative\nFlow",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 18,
+      "rows": [
+        [
+          "UC Code",
+          "UC-018",
+          "UC Name",
+          "Modify Booking"
+        ],
+        [
+          "Actor",
+          "Receptionist",
+          "Receptionist",
+          "Receptionist"
+        ],
+        [
+          "Description",
+          "Allows the receptionist to modify an existing reservation, such as changing stay dates, room type, special requests, or guest information if availability and hotel policy permit.",
+          "Allows the receptionist to modify an existing reservation, such as changing stay dates, room type, special requests, or guest information if availability and hotel policy permit.",
+          "Allows the receptionist to modify an existing reservation, such as changing stay dates, room type, special requests, or guest information if availability and hotel policy permit."
+        ],
+        [
+          "Trigger Event",
+          "A guest requests a booking change or the receptionist needs to correct booking information.",
+          "A guest requests a booking change or the receptionist needs to correct booking information.",
+          "A guest requests a booking change or the receptionist needs to correct booking information."
+        ],
+        [
+          "Preconditions",
+          "The receptionist is authenticated and authorized.\nThe booking exists and can be modified according to hotel policy.\nAvailability data is available if stay dates or room type are changed.",
+          "The receptionist is authenticated and authorized.\nThe booking exists and can be modified according to hotel policy.\nAvailability data is available if stay dates or room type are changed.",
+          "The receptionist is authenticated and authorized.\nThe booking exists and can be modified according to hotel policy.\nAvailability data is available if stay dates or room type are changed."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative\nFlow",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 19,
+      "rows": [
+        [
+          "UC Code",
+          "UC-019",
+          "UC Name",
+          "Cancel Booking"
+        ],
+        [
+          "Actor",
+          "Receptionist",
+          "Receptionist",
+          "Receptionist"
+        ],
+        [
+          "Description",
+          "Allows the receptionist to cancel a reservation based on the guest's request or hotel policy. The system updates the booking status and handles deposit or cancellation rules if applicable.",
+          "Allows the receptionist to cancel a reservation based on the guest's request or hotel policy. The system updates the booking status and handles deposit or cancellation rules if applicable.",
+          "Allows the receptionist to cancel a reservation based on the guest's request or hotel policy. The system updates the booking status and handles deposit or cancellation rules if applicable."
+        ],
+        [
+          "Trigger Event",
+          "A guest requests cancellation or the receptionist cancels a booking according to hotel policy.",
+          "A guest requests cancellation or the receptionist cancels a booking according to hotel policy.",
+          "A guest requests cancellation or the receptionist cancels a booking according to hotel policy."
+        ],
+        [
+          "Preconditions",
+          "The receptionist is authenticated and authorized.\nThe booking exists in the system.\nThe booking status allows cancellation according to hotel policy.\nDeposit and cancellation policy information is available.",
+          "The receptionist is authenticated and authorized.\nThe booking exists in the system.\nThe booking status allows cancellation according to hotel policy.\nDeposit and cancellation policy information is available.",
+          "The receptionist is authenticated and authorized.\nThe booking exists in the system.\nThe booking status allows cancellation according to hotel policy.\nDeposit and cancellation policy information is available."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative\nFlow",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 20,
+      "rows": [
+        [
+          "UC Code",
+          "UC-020",
+          "UC Name",
+          "Record Deposit Payment"
+        ],
+        [
+          "Actor",
+          "Receptionist",
+          "Receptionist",
+          "Receptionist"
+        ],
+        [
+          "Description",
+          "Allows the receptionist to record a reservation deposit payment for bookings made at the front desk or through offline payment channels.",
+          "Allows the receptionist to record a reservation deposit payment for bookings made at the front desk or through offline payment channels.",
+          "Allows the receptionist to record a reservation deposit payment for bookings made at the front desk or through offline payment channels."
+        ],
+        [
+          "Trigger Event",
+          "A guest pays a reservation deposit by cash, card, bank transfer, or another offline channel.",
+          "A guest pays a reservation deposit by cash, card, bank transfer, or another offline channel.",
+          "A guest pays a reservation deposit by cash, card, bank transfer, or another offline channel."
+        ],
+        [
+          "Preconditions",
+          "The receptionist is authenticated and authorized.\nThe booking exists and requires or accepts a deposit payment.\nThe payment amount and payment method are available.",
+          "The receptionist is authenticated and authorized.\nThe booking exists and requires or accepts a deposit payment.\nThe payment amount and payment method are available.",
+          "The receptionist is authenticated and authorized.\nThe booking exists and requires or accepts a deposit payment.\nThe payment amount and payment method are available."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative\nFlow",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 21,
+      "rows": [
+        [
+          "UC Code",
+          "UC-021",
+          "UC Name",
+          "Process Check-in"
+        ],
+        [
+          "Actor",
+          "Receptionist",
+          "Receptionist",
+          "Receptionist"
+        ],
+        [
+          "Description",
+          "Allows the receptionist to check in a guest by finding the booking, verifying guest information, confirming stay details, assigning a room, and changing the room status to Occupied.",
+          "Allows the receptionist to check in a guest by finding the booking, verifying guest information, confirming stay details, assigning a room, and changing the room status to Occupied.",
+          "Allows the receptionist to check in a guest by finding the booking, verifying guest information, confirming stay details, assigning a room, and changing the room status to Occupied."
+        ],
+        [
+          "Trigger Event",
+          "The guest arrives at the hotel and requests check-in for an existing booking.",
+          "The guest arrives at the hotel and requests check-in for an existing booking.",
+          "The guest arrives at the hotel and requests check-in for an existing booking."
+        ],
+        [
+          "Preconditions",
+          "The receptionist is authenticated and authorized.\nThe guest has a valid booking eligible for check-in.\nGuest identity information can be verified.\nAn available room can be assigned for the booking.",
+          "The receptionist is authenticated and authorized.\nThe guest has a valid booking eligible for check-in.\nGuest identity information can be verified.\nAn available room can be assigned for the booking.",
+          "The receptionist is authenticated and authorized.\nThe guest has a valid booking eligible for check-in.\nGuest identity information can be verified.\nAn available room can be assigned for the booking."
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative\nFlow",
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "index": 22,
+      "rows": [
+        [
+          "UC Code",
+          "UC-032",
+          "UC Name",
+          "View Assigned Cleaning Tasks"
+        ],
+        [
+          "Actor",
+          "Housekeeping Staff",
+          "Housekeeping Staff",
+          "Housekeeping Staff"
+        ],
+        [
+          "Description",
+          "Allows housekeeping staff to view assigned cleaning tasks for the current shift, including room number, task type, priority level, deadline, and task status.",
+          "Allows housekeeping staff to view assigned cleaning tasks for the current shift, including room number, task type, priority level, deadline, and task status.",
+          "Allows housekeeping staff to view assigned cleaning tasks for the current shift, including room number, task type, priority level, deadline, and task status."
+        ],
+        [
+          "Trigger Event",
+          "Housekeeping Staff clicks the Assigned Tasks menu from the dashboard .",
+          "Housekeeping Staff clicks the Assigned Tasks menu from the dashboard .",
+          "Housekeeping Staff clicks the Assigned Tasks menu from the dashboard ."
+        ],
+        [
+          "Preconditions",
+          "The user is authenticated as Housekeeping Staff.\nAt least one cleaning task is assigned to the user",
+          "The user is authenticated as Housekeeping Staff.\nAt least one cleaning task is assigned to the user",
+          "The user is authenticated as Housekeeping Staff.\nAt least one cleaning task is assigned to the user"
+        ],
+        [
+          "Main Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Alternative Flow",
+          "",
+          "",
+          ""
+        ],
+        [
+          "Postconditions",
+          "Assigned task list is displayed\nNo data is modified in the system.\nTask information becomes available for further processing",
+          "Assigned task list is displayed\nNo data is modified in the system.\nTask information becomes available for further processing",
+          "Assigned task list is displayed\nNo data is modified in the system.\nTask information becomes available for further processing"
+        ]
+      ]
+    }
+  ]
+}
