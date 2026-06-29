@@ -86,22 +86,41 @@ const ratingItems = [
   ['Location', 4.7],
 ];
 
-const ManagerDashboardPage = () => {
+const managerMenu = [
+  { icon: 'dashboard', label: 'Dashboard', active: true },
+  { icon: 'bed', label: 'Manage Room' },
+  { icon: 'bed', label: 'Manage Room Type' },
+  { icon: 'checkSquare', label: 'Staff Task' },
+  { icon: 'box', label: 'Minibar' },
+  { icon: 'calendar', label: 'Reservation Overview' },
+  { icon: 'wallet', label: 'Revenue Summary' },
+  { icon: 'file', label: 'Occupancy Report' },
+  { icon: 'star', label: 'Customer Feedback' },
+];
+
+const adminMenu = [
+  { icon: 'user', label: 'Manage Internal Account', active: true },
+  { icon: 'login', label: 'Reset Staff Password' },
+  { icon: 'sparkle', label: 'Manage Role' },
+  { icon: 'user', label: 'Profile' },
+];
+
+const ManagerDashboardPage = ({ role = 'MANAGER' }) => {
+  const currentMenu = role === 'ADMIN' ? adminMenu : managerMenu;
+
   return (
     <div className="manager-dashboard">
       <aside className="manager-sidebar">
         <div className="manager-brand"><span className="manager-brand-mark"><Icon name="dashboard" /></span><span>Hotelify</span></div>
         <nav className="manager-nav" aria-label="Manager navigation">
-          <SidebarItem icon="dashboard" label="Dashboard" active />
-          <SidebarItem icon="message" label="Inbox" />
-          <SidebarItem icon="calendar" label="Calendar" />
-          <SidebarItem icon="megaphone" label="Campaigns" hasSub />
-          <SidebarItem icon="bed" label="Rooms" hasSub />
-          <SidebarItem icon="sparkle" label="Housekeeping" />
-          <SidebarItem icon="box" label="Inventory" />
-          <SidebarItem icon="wallet" label="Finance" hasSub />
-          <SidebarItem icon="star" label="Reviews" badge="5" />
-          <SidebarItem icon="login" label="Register & Login" />
+          {currentMenu.map((item, index) => (
+            <SidebarItem 
+              key={index} 
+              icon={item.icon} 
+              label={item.label} 
+              active={item.active} 
+            />
+          ))}
         </nav>
         <div className="manager-promo">
           <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
@@ -113,20 +132,29 @@ const ManagerDashboardPage = () => {
 
       <section className="manager-workspace">
         <header className="manager-header">
-          <h1>Dashboard</h1>
+          <h1>{role === 'ADMIN' ? 'Manage Internal Account' : 'Dashboard'}</h1>
           <div className="manager-header-actions">
             <label className="manager-search"><Icon name="search" size={18} /><input placeholder="Search placeholder" type="search" /></label>
             <button className="manager-circle-button" type="button" aria-label="Open messages"><Icon name="chat" /></button>
             <button className="manager-circle-button" type="button" aria-label="Open notifications"><Icon name="bell" /></button>
             <div className="manager-profile">
               <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80" alt="Polina Streward" />
-              <span><strong>Polina Streward</strong><small>Admin</small></span>
+              <span><strong>Polina Streward</strong><small>{role === 'ADMIN' ? 'Admin' : 'Manager'}</small></span>
             </div>
           </div>
         </header>
 
         <main className="manager-content">
-          <div className="manager-main-column">
+          {role === 'ADMIN' ? (
+            <div className="manager-main-column" style={{ width: '100%' }}>
+              <section className="manager-card manager-booking-card">
+                <div className="manager-booking-heading"><h2>Internal Accounts</h2><div><label className="manager-table-search"><Icon name="search" size={16} /><input placeholder="Search account" type="search" /></label><button type="button" style={{ marginLeft: '8px' }}>Add Account</button></div></div>
+                <div className="manager-table-wrap"><table><thead><tr><th>Account ID & Name</th><th>Role</th><th>Email</th><th>Status</th></tr></thead><tbody><tr><td><strong>#ACC-001</strong><small>Polina Streward</small></td><td>Admin</td><td>polina@hotelify.com</td><td><span className="manager-status lime">Active</span></td></tr><tr><td><strong>#ACC-002</strong><small>John Manager</small></td><td>Manager</td><td>john@hotelify.com</td><td><span className="manager-status lime">Active</span></td></tr><tr><td><strong>#ACC-003</strong><small>Jane Receptionist</small></td><td>Receptionist</td><td>jane@hotelify.com</td><td><span className="manager-status gray">Inactive</span></td></tr></tbody></table></div>
+              </section>
+            </div>
+          ) : (
+            <>
+              <div className="manager-main-column">
             <section className="manager-grid manager-kpis">
               <article className="manager-card manager-greeting">
                 <div><h2>Hi, Polina</h2><p>Saturday, 25 November 2028</p></div>
@@ -198,6 +226,8 @@ const ManagerDashboardPage = () => {
             <article className="manager-card"><div className="manager-card-heading"><h2>Tasks</h2><button className="manager-add-button" type="button" aria-label="Add task"><Icon name="plus" size={16} /></button></div><div className="manager-task-list">{tasks.map(([title, date]) => <label key={title} className="manager-task"><input type="checkbox" /><span><strong>{title}</strong><small>{date}</small></span></label>)}</div></article>
             <article className="manager-card"><div className="manager-card-heading"><h2>Recent Activities</h2><button className="manager-icon-button" type="button" aria-label="Recent activity options"><Icon name="dots" /></button></div><div className="manager-timeline">{activities.map(([user, icon, text, time, tone]) => <div className="manager-activity" key={`${user}-${time}`}><span className={`manager-activity-icon ${tone}`}><Icon name={icon} size={14} /></span><strong>{user}</strong><p>{text}</p><small>{time}</small></div>)}</div></article>
           </aside>
+            </>
+          )}
         </main>
       </section>
     </div>

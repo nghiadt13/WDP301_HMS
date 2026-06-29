@@ -29,10 +29,11 @@ const App = () => {
         <Route path="rooms" element={<RoomListPage />} />
         <Route path="rooms/search" element={<RoomSearchResultsPage />} />
         <Route path="rooms/:roomId" element={<RoomDetailPage />} />
-        <Route path="manager" element={<ManagerDashboardPage />} />
-        <Route path="receptionist" element={<ReceptionistDashboardPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
+      <Route path="manager" element={<ManagerDashboardPage role="MANAGER" />} />
+      <Route path="admin" element={<ManagerDashboardPage role="ADMIN" />} />
+      <Route path="receptionist" element={<ReceptionistDashboardPage />} />
     </Routes>
   );
 };
