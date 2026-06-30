@@ -1,10 +1,25 @@
 const Room = require('../models/room.model');
+const fs = require('fs');
+const path = require('path');
 
 const POPULATE_OPTS = [
   { path: 'room_type_id', select: 'name description bed_type capacity base_price images' },
   { path: 'amenity_ids', select: 'name description' },
   { path: 'feature_ids', select: 'name description' },
 ];
+
+/** Delete image files from disk given an array of URLs */
+const deleteImageFiles = async (imageUrls) => {
+  if (!imageUrls || !Array.isArray(imageUrls)) return;
+  const uploadDir = path.join(__dirname, '../../uploads/rooms');
+  for (const url of imageUrls) {
+    const filename = url.split('/').pop();
+    const filePath = path.join(uploadDir, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+};
 
 const roomService = {
   // Get all rooms with filter, sort, pagination
@@ -65,11 +80,22 @@ const roomService = {
 
   // Update room
   async update(id, data) {
+    // Find existing room to detect removed images
+    const existingRoom = await Room.findById(id);
+    if (!existingRoom) throw { status: 404, message: 'Room not found' };
+
+    // Find images that were removed during edit
+    const existingImages = existingRoom.images || [];
+    const newImages = data.images || [];
+    const removedImages = existingImages.filter((img) => !newImages.includes(img));
+
+    // Delete removed image files from disk
+    await deleteImageFiles(removedImages);
+
     const room = await Room.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true,
     }).populate(POPULATE_OPTS);
-    if (!room) throw { status: 404, message: 'Room not found' };
     return room;
   },
 
@@ -82,6 +108,19 @@ const roomService = {
     );
     if (!room) throw { status: 404, message: 'Room not found' };
     return room;
+  },
+
+  // Hard delete room (permanently remove from DB and delete image files)
+  async hardDelete(id) {
+    const room = await Room.findById(id);
+    if (!room) throw { status: 404, message: 'Room not found' };
+
+    // Delete image files from disk
+    await deleteImageFiles(room.images);
+
+    // Remove from database
+    await Room.findByIdAndDelete(id);
+    return { message: 'Room permanently deleted' };
   },
 };
 

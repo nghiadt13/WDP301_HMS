@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X } from 'lucide-react';
-import { useCreateRoom, useRoomTypes, useAmenities, useFeatures } from '../hooks/use-rooms';
+import { useRoom, useUpdateRoom, useRoomTypes, useAmenities, useFeatures } from '../hooks/use-rooms';
 import { uploadApi } from '../services/room-api';
 import './add-room.css';
 
@@ -14,21 +14,11 @@ const toFullUrl = (url) => {
 
 const BED_TYPES = ['King Bed', 'Queen Bed', 'Twin Beds', 'Sofa Bed', 'Single Bed', 'Bunk Bed'];
 
-const defaultForm = {
-  roomName: '',
-  room_type_id: '',
-  description: '',
-  price: '',
-  bed_type: '',
-  isActive: true,
-  images: [],
-  amenity_ids: [],
-  feature_ids: [],
-};
-
-const AddRoomPage = () => {
+const EditRoomPage = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const createMutation = useCreateRoom();
+  const updateMutation = useUpdateRoom();
+  const { data: roomData, isLoading: roomLoading } = useRoom(id);
   const { data: rtData } = useRoomTypes();
   const { data: amData } = useAmenities();
   const { data: ftData } = useFeatures();
@@ -36,11 +26,39 @@ const AddRoomPage = () => {
   const amenities = amData?.data ?? [];
   const features = ftData?.data ?? [];
 
-  const [form, setForm] = useState(defaultForm);
+  const room = roomData?.data;
+
+  const [form, setForm] = useState({
+    roomName: '',
+    room_type_id: '',
+    description: '',
+    price: '',
+    bed_type: '',
+    isActive: true,
+    images: [],
+    amenity_ids: [],
+    feature_ids: [],
+  });
   const [errors, setErrors] = useState({});
   const [uploading, setUploading] = useState(false);
   const [coverIndex, setCoverIndex] = useState(0);
   const fileInputRef = useRef(null);
+
+  // ─── Pre-populate form from fetched room data ──────────────────
+  useEffect(() => {
+    if (!room) return;
+    setForm({
+      roomName: room.roomName || '',
+      room_type_id: typeof room.room_type_id === 'object' ? room.room_type_id?._id : room.room_type_id || '',
+      description: room.description || '',
+      price: room.price ?? '',
+      bed_type: room.bed_type || '',
+      isActive: room.isActive ?? true,
+      images: room.images || [],
+      amenity_ids: (room.amenity_ids || []).map((a) => (typeof a === 'object' ? a._id : a)),
+      feature_ids: (room.feature_ids || []).map((f) => (typeof f === 'object' ? f._id : f)),
+    });
+  }, [room]);
 
   // ─── Handlers ────────────────────────────────────────────────────
   const handleChange = (e) => {
@@ -98,10 +116,8 @@ const AddRoomPage = () => {
 
   const handleRemoveImage = async (index) => {
     const imageUrl = form.images[index];
-    // Extract filename from URL (e.g., "/uploads/rooms/room-123.jpg" → "room-123.jpg")
     const filename = imageUrl.split('/').pop();
 
-    // Remove from UI immediately for responsive feel
     setForm((prev) => {
       const newImages = prev.images.filter((_, i) => i !== index);
       if (index <= coverIndex) {
@@ -110,7 +126,6 @@ const AddRoomPage = () => {
       return { ...prev, images: newImages };
     });
 
-    // Delete file from server
     try {
       await uploadApi.deleteImage(filename);
     } catch (err) {
@@ -147,18 +162,35 @@ const AddRoomPage = () => {
       feature_ids: form.feature_ids,
     };
 
-    createMutation.mutate(payload, {
+    updateMutation.mutate({ id, data: payload }, {
       onSuccess: () => {
         navigate('/manager/rooms');
       },
       onError: (err) => {
-        const msg = err.response?.data?.message || 'Failed to create room. Please try again.';
+        const msg = err.response?.data?.message || 'Failed to update room. Please try again.';
         alert(msg);
       },
     });
   };
 
-  const isSubmitting = createMutation.isPending;
+  const isSubmitting = updateMutation.isPending;
+
+  // ─── Loading state ─────────────────────────────────────────────
+  if (roomLoading) {
+    return (
+      <div className="ar-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <p>Loading room data...</p>
+      </div>
+    );
+  }
+
+  if (!room) {
+    return (
+      <div className="ar-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <p>Room not found.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="ar-page">
@@ -167,7 +199,7 @@ const AddRoomPage = () => {
         <button type="button" className="ar-back-btn" onClick={() => navigate('/manager/rooms')}>
           <ArrowLeft size={16} /> Back to Rooms
         </button>
-        <h1>Add New Room</h1>
+        <h1>Edit Room</h1>
       </div>
 
       {/* Two-column grid */}
@@ -180,7 +212,7 @@ const AddRoomPage = () => {
               <span className="ar-card-title">Basic Information</span>
               <div className="ar-card-actions">
                 <button type="button" className="ar-btn-save" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Adding...' : 'Add Room'}
+                  {isSubmitting ? 'Updating...' : 'Update Room'}
                 </button>
                 <button type="button" className="ar-btn-cancel" onClick={() => navigate('/manager/rooms')} title="Cancel">
                   <X size={15} />
@@ -411,4 +443,4 @@ const AddRoomPage = () => {
   );
 };
 
-export default AddRoomPage;
+export default EditRoomPage;

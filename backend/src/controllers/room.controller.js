@@ -60,6 +60,18 @@ const roomController = {
       });
     }
   },
-};
 
+  async hardDelete(req, res) {
+    try {
+      await roomService.hardDelete(req.params.id);
+      res.status(200).json({ success: true, message: 'Room permanently deleted' });
+    } catch (err) {
+      res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal server error',
+      });
+    }
+  },
+};
+f
 module.exports = roomController;

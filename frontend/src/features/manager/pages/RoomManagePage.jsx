@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BedDouble, ChevronDown, Plus, SlidersHorizontal, Check, Maximize, Users, DollarSign, Trash2 } from 'lucide-react';
+import { BedDouble, ChevronDown, Plus, SlidersHorizontal, Check, Maximize, Users, DollarSign, Trash2, Pencil } from 'lucide-react';
 import { useRooms, useDeleteRoom } from '../hooks/use-rooms';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import './room-manage.css';
@@ -46,7 +46,7 @@ const fmtPrice = (v) => {
 };
 
 // ─── Room Card ─────────────────────────────────────────────────
-function RoomCard({ room, selected, onClick, onDelete }) {
+function RoomCard({ room, selected, onClick, onEdit, onDelete }) {
   const img = toFullUrl(room.images?.[0]) || fallbackImages[0];
   const isAvailable = room.status === 'Available';
 
@@ -75,6 +75,9 @@ function RoomCard({ room, selected, onClick, onDelete }) {
           </div>
           <div className="rm-room-card-actions">
             <div className="rm-room-card-btns">
+              <button type="button" className="rm-icon-btn rm-icon-edit" onClick={(e) => { e.stopPropagation(); onEdit(room); }} title="Edit">
+                <Pencil size={13} />
+              </button>
               <button type="button" className="rm-icon-btn rm-icon-delete" onClick={(e) => { e.stopPropagation(); onDelete(room); }} title="Delete">
                 <Trash2 size={13} />
               </button>
@@ -102,7 +105,7 @@ function Section({ title, items }) {
 }
 
 // ─── Room Detail ───────────────────────────────────────────────
-function RoomDetail({ room, onDelete }) {
+function RoomDetail({ room, onEdit, onDelete }) {
   const images = room.images?.length > 0 ? room.images.map(toFullUrl) : fallbackImages;
 
   const rt = room.room_type_id;
@@ -124,6 +127,9 @@ function RoomDetail({ room, onDelete }) {
       <div className="rm-detail-top">
         <h2>{room.roomName} <span className="rm-room-type-tag">{typeName}</span></h2>
         <div className="rm-detail-actions">
+          <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => onEdit(room)} title="Edit">
+            <Pencil size={13} />
+          </button>
           <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => onDelete(room)} title="Delete">
             <Trash2 size={13} />
           </button>
@@ -194,6 +200,10 @@ const RoomManagePage = () => {
     navigate('/manager/rooms/add');
   };
 
+  const handleEdit = (room) => {
+    navigate(`/manager/rooms/${room._id}/edit`);
+  };
+
   const handleDelete = (room) => {
     setDeleteTarget(room);
     setDeleteOpen(true);
@@ -249,6 +259,7 @@ const RoomManagePage = () => {
                 room={r}
                 selected={selected?._id === r._id}
                 onClick={() => setSelectedId(r._id)}
+                onEdit={handleEdit}
                 onDelete={handleDelete}
               />
             ))}
@@ -257,7 +268,7 @@ const RoomManagePage = () => {
         {/* Right: Detail */}
         <div className="rm-detail-panel">
           {selected ? (
-            <RoomDetail room={selected} onDelete={handleDelete} />
+            <RoomDetail room={selected} onEdit={handleEdit} onDelete={handleDelete} />
           ) : (
             <div className="rm-detail-empty">Select a room to view details</div>
           )}

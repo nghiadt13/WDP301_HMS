@@ -6,6 +6,7 @@ export const roomApi = {
   create: (data) => axiosClient.post('/rooms', data).then((res) => res.data),
   update: (id, data) => axiosClient.put(`/rooms/${id}`, data).then((res) => res.data),
   remove: (id) => axiosClient.delete(`/rooms/${id}`).then((res) => res.data),
+  hardDelete: (id) => axiosClient.delete(`/rooms/${id}/permanent`).then((res) => res.data),
 };
 
 export const roomTypeApi = {
@@ -27,5 +28,9 @@ export const uploadApi = {
     return axiosClient.post('/upload/rooms', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then((res) => res.data);
+  },
+
+  deleteImage: (filename) => {
+    return axiosClient.delete(`/upload/rooms/${filename}`).then((res) => res.data);
   },
 };

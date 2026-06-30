@@ -14,5 +14,6 @@ router.get('/:id', roomController.getById);
 router.post('/', auth, authorize('manager'), validateRoom, roomController.create);
 router.put('/:id', auth, authorize('manager'), roomController.update);
 router.delete('/:id', auth, authorize('manager'), roomController.remove);
+router.delete('/:id/permanent', auth, authorize('manager'), roomController.hardDelete);
 
 module.exports = router;

@@ -111,11 +111,22 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
     }
   };
 
-  const handleRemoveImage = (index) => {
+  const handleRemoveImage = async (index) => {
+    const imageUrl = form.images[index];
+    const filename = imageUrl.split('/').pop();
+
+    // Remove from UI immediately
     setForm((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
     }));
+
+    // Delete file from server
+    try {
+      await uploadApi.deleteImage(filename);
+    } catch (err) {
+      console.error('Failed to delete image file:', err);
+    }
   };
 
   const validate = () => {

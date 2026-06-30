@@ -72,4 +72,23 @@ router.post('/rooms/multiple', upload.array('images', 10), handleMulterError, (r
   res.status(200).json({ success: true, data: { urls } });
 });
 
+// DELETE /api/upload/rooms/:filename — delete a single uploaded file
+router.delete('/rooms/:filename', (req, res) => {
+  const { filename } = req.params;
+  // Sanitize filename to prevent path traversal
+  const safeName = path.basename(filename);
+  const filePath = path.join(uploadDir, safeName);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ success: false, message: 'File not found' });
+  }
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Failed to delete file' });
+    }
+    res.status(200).json({ success: true, message: 'File deleted successfully' });
+  });
+});
+
 module.exports = router;

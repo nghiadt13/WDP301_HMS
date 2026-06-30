@@ -24,16 +24,17 @@
   gap: 6px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  border: none;
+  background: #a3e635;
   font-size: 13px;
-  color: #374151;
+  font-weight: 600;
+  color: #1a1a1a;
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .ar-back-btn:hover {
-  background: #f9fafb;
+  background: #bef264;
 }
 
 /* ─── Grid Layout ─────────────────────────────────────────────────────── */
@@ -41,7 +42,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  max-width: 1200px;
 }
 
 .ar-col {
@@ -223,6 +223,24 @@
 .ar-btn-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.ar-btn-cancel {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 5px 9px;
+  cursor: pointer;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.ar-btn-cancel:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
 }
 
 .ar-icon-btn {
