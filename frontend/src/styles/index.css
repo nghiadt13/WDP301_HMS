@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "./global.css";
 
 @theme {
   --color-brand-bg: #F9FAFB;
