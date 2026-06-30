@@ -4,6 +4,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const connectDB = require('./src/config/db');
+const errorHandler = require('./src/middlewares/errorHandler');
 const apiRoutes = require('./src/routes');
 
 const app = express();
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', apiRoutes);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 9999;
 

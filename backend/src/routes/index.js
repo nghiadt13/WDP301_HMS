@@ -1,5 +1,7 @@
 const express = require('express');
 
+const managerRoutes = require('./manager.route');
+
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -8,5 +10,7 @@ router.get('/health', (req, res) => {
     service: 'wdp101-api'
   });
 });
+
+router.use('/manager', managerRoutes);
 
 module.exports = router;
