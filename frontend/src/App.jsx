@@ -4,6 +4,7 @@ import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
+import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import MyProfilePage from './pages/MyProfilePage.jsx';
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="profile" element={<MyProfilePage />} />
+        <Route path="change-password" element={<ChangePasswordPage />} />
         <Route path="booking" element={<BookingPage />} />
         <Route path="payment/:reservationId" element={<PaymentPage />} />
         <Route path="listRoom" element={<RoomListPage />} />

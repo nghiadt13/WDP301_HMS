@@ -1,8 +1,8 @@
 const express = require('express');
 
-const { createRoomBooking } = require('../controllers/reservationController');
-const { getRoomCalendar, getRoomDetail, listRooms, searchRooms, submitRoomReview } = require('../controllers/roomController');
-const authMiddleware = require('../middleware/authMiddleware');
+const { createRoomBooking } = require('../controllers/reservation.controller');
+const { getRoomCalendar, getRoomDetail, listRooms, searchRooms, submitRoomReview } = require('../controllers/room.controller');
+const authMiddleware = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 

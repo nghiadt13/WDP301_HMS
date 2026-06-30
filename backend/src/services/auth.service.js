@@ -1,8 +1,9 @@
 const bcrypt = require('bcryptjs');
 
-const Role = require('../models/Role');
-const User = require('../models/User');
-const asyncHandler = require('../utils/asyncHandler');
+const Role = require('../models/role.model');
+const User = require('../models/user.model');
+const asyncHandler = require('../utils/async-handler');
+const { verifyGoogleIdToken } = require('../utils/google-auth');
 const { signAuthToken } = require('../utils/token');
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
@@ -57,6 +58,24 @@ const getCustomerRole = async () => {
   }
 
   return role;
+};
+
+const buildUniqueGoogleLoginAccount = async (email) => {
+  const baseAccount =
+    email
+      .split('@')[0]
+      .replace(/[^a-z0-9._-]/gi, '')
+      .toLowerCase()
+      .slice(0, 24) || 'google-user';
+  let loginAccount = baseAccount;
+  let suffix = 1;
+
+  while (await User.exists({ login_account: loginAccount })) {
+    loginAccount = `${baseAccount}${suffix}`.slice(0, 30);
+    suffix += 1;
+  }
+
+  return loginAccount;
 };
 
 const register = asyncHandler(async (req, res) => {
@@ -164,6 +183,98 @@ const login = asyncHandler(async (req, res) => {
   sendAuthResponse(res, 200, user, role, 'Login successfully');
 });
 
+const googleLogin = asyncHandler(async (req, res) => {
+  const payload = await verifyGoogleIdToken(req.body.credential || req.body.idToken);
+  const email = normalizeEmail(payload.email);
+  const fullName = normalizeText(payload.name || [payload.given_name, payload.family_name].filter(Boolean).join(' '));
+
+  if (!email || !payload.email_verified) {
+    return res.status(401).send({ message: 'Google account email is not verified' });
+  }
+
+  const customerRole = await getCustomerRole();
+  let user = await User.findOne({
+    $or: [{ email }, { google_id: payload.sub }]
+  }).populate('role_id');
+
+  if (user) {
+    if (user.status !== 'active') {
+      return res.status(403).send({ message: 'This account is not active' });
+    }
+
+    user.google_id = user.google_id || payload.sub;
+    user.auth_provider = user.auth_provider === 'local' ? 'local' : 'google';
+    user.email_verified = true;
+    user.avatar = user.avatar || payload.picture || '';
+    await user.save();
+  } else {
+    const loginAccount = await buildUniqueGoogleLoginAccount(email);
+
+    user = await User.create({
+      role_id: customerRole._id,
+      email,
+      login_account: loginAccount,
+      password_hash: `google:${payload.sub}`,
+      full_name: fullName || email,
+      avatar: payload.picture || '',
+      status: 'active',
+      auth_provider: 'google',
+      google_id: payload.sub,
+      email_verified: true,
+      accepted_terms_at: new Date()
+    });
+    user.role_id = customerRole;
+  }
+
+  const role = user.role_id?._id ? user.role_id : customerRole;
+  if (!role || role.is_active === false) {
+    return res.status(403).send({ message: 'This account role is not active' });
+  }
+
+  sendAuthResponse(res, 200, user, role, 'Login with Google successfully');
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+  const currentPassword = req.body.current_password || req.body.currentPassword;
+  const newPassword = req.body.new_password || req.body.newPassword;
+  const confirmPassword = req.body.confirm_password || req.body.confirmPassword;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).send({ message: 'Current password, new password, and confirmation are required' });
+  }
+
+  if (!isStrongEnoughPassword(newPassword)) {
+    return res.status(400).send({ message: 'New password must be at least 8 characters long' });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).send({ message: 'New password confirmation does not match' });
+  }
+
+  if (currentPassword === newPassword) {
+    return res.status(400).send({ message: 'New password must be different from current password' });
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return res.status(404).send({ message: 'Account not found' });
+  }
+
+  if (user.auth_provider === 'google' || String(user.password_hash || '').startsWith('google:')) {
+    return res.status(400).send({ message: 'This account uses Google sign-in and does not have a local password' });
+  }
+
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!isCurrentPasswordValid) {
+    return res.status(401).send({ message: 'Current password is incorrect' });
+  }
+
+  user.password_hash = await bcrypt.hash(newPassword, 10);
+  await user.save();
+
+  res.send({ message: 'Password changed successfully' });
+});
+
 const me = asyncHandler(async (req, res) => {
   res.send({
     user: req.user.toSafeObject(req.role)
@@ -171,6 +282,8 @@ const me = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  changePassword,
+  googleLogin,
   login,
   me,
   register

@@ -4,7 +4,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const connectDB = require('./src/config/db');
-const errorHandler = require('./src/middleware/errorHandler');
+const errorHandler = require('./src/middlewares/error.handler');
 const apiRoutes = require('./src/routes');
 
 const app = express();

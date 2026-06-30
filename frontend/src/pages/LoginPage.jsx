@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import axiosClient from '../api/axiosClient';
@@ -6,6 +6,7 @@ import hotelLoginImage from '../assets/hotel-login.png';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const [formData, setFormData] = useState({
     identifier: '',
     password: '',
@@ -13,6 +14,99 @@ const LoginPage = () => {
   });
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  const handleAuthSuccess = useCallback(
+    (data) => {
+      localStorage.setItem('hotelify_token', data.token);
+      localStorage.setItem('hotelify_user', JSON.stringify(data.user));
+      window.dispatchEvent(new Event('hotelify-auth-change'));
+      navigate('/home');
+    },
+    [navigate]
+  );
+
+  const handleGoogleCredential = useCallback(
+    async (googleResponse) => {
+      setErrorMessage('');
+      setIsGoogleSubmitting(true);
+
+      try {
+        const response = await axiosClient.post('/auth/google', {
+          credential: googleResponse.credential
+        });
+        handleAuthSuccess(response.data);
+      } catch (error) {
+        setErrorMessage(
+          error.response?.data?.message ||
+            'Cannot sign in with Google right now. Please try again.'
+        );
+      } finally {
+        setIsGoogleSubmitting(false);
+      }
+    },
+    [handleAuthSuccess]
+  );
+
+  useEffect(() => {
+    if (!googleClientId) {
+      return undefined;
+    }
+
+    let isCancelled = false;
+
+    const renderGoogleButton = () => {
+      if (isCancelled || !window.google?.accounts?.id) {
+        return;
+      }
+
+      const buttonTarget = document.getElementById('google-login-button');
+      if (!buttonTarget) {
+        return;
+      }
+
+      buttonTarget.innerHTML = '';
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredential
+      });
+      window.google.accounts.id.renderButton(buttonTarget, {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        width: Math.min(buttonTarget.offsetWidth || 420, 420)
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      renderGoogleButton();
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    const script = existingScript || document.createElement('script');
+
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = renderGoogleButton;
+    script.onerror = () => {
+      if (!isCancelled) {
+        setErrorMessage('Cannot load Google sign-in. Please check your network.');
+      }
+    };
+
+    if (!existingScript) {
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [googleClientId, handleGoogleCredential]);
 
   const handleChange = (event) => {
     const { checked, name, type, value } = event.target;
@@ -34,10 +128,7 @@ const LoginPage = () => {
         password: formData.password
       });
 
-      localStorage.setItem('hotelify_token', response.data.token);
-      localStorage.setItem('hotelify_user', JSON.stringify(response.data.user));
-      window.dispatchEvent(new Event('hotelify-auth-change'));
-      navigate('/home');
+      handleAuthSuccess(response.data);
     } catch (error) {
       setErrorMessage(
         error.response?.data?.message ||
@@ -103,6 +194,23 @@ const LoginPage = () => {
             />
             <span>Remember Me</span>
           </label>
+
+          <div className="login-divider">
+            <span>or</span>
+          </div>
+
+          <div className="google-login-area">
+            {googleClientId ? (
+              <>
+                <div id="google-login-button" />
+                {isGoogleSubmitting ? <span>Signing in with Google...</span> : null}
+              </>
+            ) : (
+              <button type="button" disabled>
+                Google login is not configured
+              </button>
+            )}
+          </div>
 
           {errorMessage ? <p className="login-error">{errorMessage}</p> : null}
 

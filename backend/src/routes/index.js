@@ -1,10 +1,10 @@
 const express = require('express');
 
-const authRoutes = require('./authRoutes');
-const homeRoutes = require('./homeRoutes');
-const profileRoutes = require('./profileRoutes');
-const reservationRoutes = require('./reservationRoutes');
-const roomRoutes = require('./roomRoutes');
+const authRoutes = require('./auth.route');
+const homeRoutes = require('./home.route');
+const profileRoutes = require('./profile.route');
+const reservationRoutes = require('./reservation.route');
+const roomRoutes = require('./room.route');
 
 const router = express.Router();
 

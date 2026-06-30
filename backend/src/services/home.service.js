@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const asyncHandler = require('../utils/asyncHandler');
+const asyncHandler = require('../utils/async-handler');
 
 const bannerItems = Array.from({ length: 9 }, (_, index) => {
   const number = String(index + 1).padStart(2, '0');

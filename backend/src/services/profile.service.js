@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const asyncHandler = require('../utils/asyncHandler');
+const asyncHandler = require('../utils/async-handler');
 
 const toDate = (value) => (value ? new Date(value) : null);
 

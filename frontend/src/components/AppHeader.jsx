@@ -149,6 +149,14 @@ const AppHeader = () => {
                 >
                   My Profile
                 </Link>
+                <Link
+                  className="header-profile-menu-item"
+                  to="/change-password"
+                  role="menuitem"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                >
+                  Change Password
+                </Link>
                 <button
                   className="header-profile-menu-item"
                   type="button"
