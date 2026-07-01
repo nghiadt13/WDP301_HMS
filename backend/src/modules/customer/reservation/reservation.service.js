@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
-
-const asyncHandler = require('../utils/async-handler');
+const asyncHandler = require('../../../utils/async-handler');
+const { createHttpError } = require('../../../utils/error.utils');
+const { parseDateOnly, parsePositiveInteger } = require('../../../utils/date.utils');
 
 const { ObjectId } = mongoose.Types;
 
@@ -9,35 +10,12 @@ const CHILDREN_PER_ROOM = 1;
 const CANCELED_STATUS = 'Canceled';
 const CANCELABLE_STATUS_PATTERN = /pending|confirmed/i;
 
-const createHttpError = (message, statusCode = 400) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
-
-const parsePositiveInteger = (value, fallback = 0) => {
-  const parsedValue = Number.parseInt(value, 10);
-  return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : fallback;
-};
-
-const parseDateOnly = (value) => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null;
-  }
-
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
 const differenceInNights = (start, end) => {
   const checkIn = new Date(start);
   const checkOut = new Date(end);
   const dayMs = 24 * 60 * 60 * 1000;
   return Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / dayMs));
 };
-
-const getRoomQuantity = (reservation) =>
-  Math.max(1, Number(reservation.room_quantity || reservation.room_count || reservation.rooms_count || 1));
 
 const getBookedRooms = async (db, roomId, checkInDate, checkOutDate) => {
   const reservations = await db
@@ -51,7 +29,7 @@ const getBookedRooms = async (db, roomId, checkInDate, checkOutDate) => {
     .project({ room_quantity: 1, room_count: 1, rooms_count: 1 })
     .toArray();
 
-  return reservations.reduce((total, reservation) => total + getRoomQuantity(reservation), 0);
+  return reservations.reduce((total, reservation) => total + Math.max(1, Number(reservation.room_quantity || reservation.room_count || reservation.rooms_count || 1)), 0);
 };
 
 const buildOccupancy = (payload) => {
@@ -121,7 +99,7 @@ const mapReservation = (reservation, room = null) => ({
   guestCount: reservation.guest_count || 0,
   adultCount: reservation.adult_count || 0,
   childCount: reservation.child_count || 0,
-  roomQuantity: getRoomQuantity(reservation),
+  roomQuantity: Math.max(1, Number(reservation.room_quantity || reservation.room_count || reservation.rooms_count || 1)),
   specialRequest: reservation.special_request || '',
   totalAmount: reservation.total_amount || 0,
   depositAmount: reservation.deposit_amount || 0,
@@ -131,9 +109,7 @@ const mapReservation = (reservation, room = null) => ({
 });
 
 const mapRoomSummary = (room = null) => {
-  if (!room) {
-    return null;
-  }
+  if (!room) return null;
 
   const features = Array.isArray(room.features) ? room.features : [];
   const images = Array.isArray(room.images) ? room.images : room.image_url ? [room.image_url] : [];

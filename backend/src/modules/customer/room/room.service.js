@@ -1,18 +1,12 @@
-const Room = require('../models/room.model');
 const mongoose = require('mongoose');
-const fs = require('fs');
-const path = require('path');
-const asyncHandler = require('../utils/async-handler');
+const asyncHandler = require('../../../utils/async-handler');
+const { createHttpError } = require('../../../utils/error.utils');
+const { parseDateOnly, parsePositiveInteger, addDays, getMonthStart, addMonths, toDateKey } = require('../../../utils/date.utils');
+const { normalizeRoomName, getRoomOrder, getRoomQuantity } = require('../../../utils/room.utils');
 
 const { ObjectId } = mongoose.Types;
 
 // ========== Constants ==========
-const POPULATE_OPTS = [
-  { path: 'room_type_id', select: 'name description bed_type capacity base_price images' },
-  { path: 'amenity_ids', select: 'name description' },
-  { path: 'feature_ids', select: 'name description' },
-];
-
 const ADULTS_PER_ROOM = 2;
 const CHILDREN_PER_ROOM = 1;
 const ACTIVE_ROOM_QUERY = {
@@ -20,160 +14,8 @@ const ACTIVE_ROOM_QUERY = {
   isActive: { $ne: false }
 };
 const REVIEWABLE_STATUS_PATTERN = /checkedin|checkedout|completed/i;
-const ROOM_DISPLAY_ORDER = [
-  'PHONG DELUXE',
-  'PHONG PREMIUM',
-  'PHONG CLUB DELUXE TWIN',
-  'PHONG CLUB PADDINGTON DELUXE',
-  'PHONG GRAND SUITE',
-  'PHONG PRESIDENT SUITE'
-];
 
-// ========== Utility Functions ==========
-const createHttpError = (message, statusCode = 400) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
-
-const parsePositiveInteger = (value, fallback = 0) => {
-  const parsedValue = Number.parseInt(value, 10);
-  return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : fallback;
-};
-
-const parseDateOnly = (value) => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null;
-  }
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const toDateKey = (date) => date.toISOString().slice(0, 10);
-
-const addDays = (date, days) => {
-  const nextDate = new Date(date);
-  nextDate.setUTCDate(nextDate.getUTCDate() + days);
-  return nextDate;
-};
-
-const getMonthStart = (date) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-
-const addMonths = (date, months) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
-
-const normalizeRoomName = (roomName = '') => roomName.replace(/^PHONG\b/i, 'PHÒNG');
-
-const getRoomOrder = (roomName) => {
-  const index = ROOM_DISPLAY_ORDER.indexOf(roomName);
-  return index === -1 ? ROOM_DISPLAY_ORDER.length : index;
-};
-
-const getRoomQuantity = (reservation) =>
-  Math.max(1, Number(reservation.room_quantity || reservation.room_count || reservation.rooms_count || 1));
-
-const deleteImageFiles = async (imageUrls) => {
-  if (!imageUrls || !Array.isArray(imageUrls)) return;
-  const uploadDir = path.join(__dirname, '../../uploads/rooms');
-  for (const url of imageUrls) {
-    const filename = url.split('/').pop();
-    const filePath = path.join(uploadDir, filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-  }
-};
-
-// ========== Manager CRUD Operations ==========
-const managerService = {
-  async getAll(query) {
-    const {
-      roomTypeId,
-      status,
-      isActive,
-      page = 1,
-      limit = 10,
-      sort = '-createdAt',
-    } = query;
-
-    const filter = {};
-    filter.isActive = isActive !== undefined ? isActive === 'true' : true;
-
-    if (roomTypeId) filter.room_type_id = roomTypeId;
-    if (status) filter.status = status;
-
-    const skip = (Number(page) - 1) * Number(limit);
-
-    const [rooms, total] = await Promise.all([
-      Room.find(filter)
-        .populate(POPULATE_OPTS)
-        .sort(sort)
-        .skip(skip)
-        .limit(Number(limit)),
-      Room.countDocuments(filter),
-    ]);
-
-    return {
-      data: rooms,
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        totalPages: Math.ceil(total / Number(limit)),
-      },
-    };
-  },
-
-  async getById(id) {
-    const room = await Room.findById(id).populate(POPULATE_OPTS);
-    if (!room) throw { status: 404, message: 'Room not found' };
-    return room;
-  },
-
-  async create(data) {
-    const existing = await Room.findOne({ roomName: data.roomName });
-    if (existing) throw { status: 409, message: 'Room name already exists' };
-    const room = await Room.create(data);
-    return await room.populate(POPULATE_OPTS);
-  },
-
-  async update(id, data) {
-    const existingRoom = await Room.findById(id);
-    if (!existingRoom) throw { status: 404, message: 'Room not found' };
-
-    const existingImages = existingRoom.images || [];
-    const newImages = data.images || [];
-    const removedImages = existingImages.filter((img) => !newImages.includes(img));
-
-    await deleteImageFiles(removedImages);
-
-    const room = await Room.findByIdAndUpdate(id, data, {
-      new: true,
-      runValidators: true,
-    }).populate(POPULATE_OPTS);
-    return room;
-  },
-
-  async remove(id) {
-    const room = await Room.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    );
-    if (!room) throw { status: 404, message: 'Room not found' };
-    return room;
-  },
-
-  async hardDelete(id) {
-    const room = await Room.findById(id);
-    if (!room) throw { status: 404, message: 'Room not found' };
-
-    await deleteImageFiles(room.images);
-    await Room.findByIdAndDelete(id);
-    return { message: 'Room permanently deleted' };
-  },
-};
-
-// ========== Customer-facing Operations ==========
+// ========== Helper Functions ==========
 const getBookedRooms = async (db, roomId, checkInDate, checkOutDate) => {
   const reservations = await db
     .collection('reservations')
@@ -226,6 +68,21 @@ const buildOccupancy = (query) => {
     message: isAssignable
       ? `Cần ${requiredRooms} phòng cho ${adults} người lớn và ${children} trẻ em.`
       : 'Trẻ em không thể tự đứng phòng. Vui lòng tăng số người lớn hoặc giảm số trẻ em.'
+  };
+};
+
+const buildOccupancyCounts = (query) => {
+  const adults = parsePositiveInteger(query.adults, 1);
+  const children = parsePositiveInteger(query.children, 0);
+  const adultRoomCount = Math.ceil(Math.max(adults, 1) / ADULTS_PER_ROOM);
+  const childRoomCount = children > 0 ? Math.ceil(children / CHILDREN_PER_ROOM) : 0;
+  const requiredRooms = Math.max(adultRoomCount, childRoomCount, 1);
+
+  return {
+    adults,
+    children,
+    requiredRooms,
+    isAssignable: requiredRooms <= Math.max(adults, 1)
   };
 };
 
@@ -327,21 +184,6 @@ const getRoomsWithAvailability = async (db, occupancy) => {
   );
 };
 
-const buildOccupancyCounts = (query) => {
-  const adults = parsePositiveInteger(query.adults, 1);
-  const children = parsePositiveInteger(query.children, 0);
-  const adultRoomCount = Math.ceil(Math.max(adults, 1) / ADULTS_PER_ROOM);
-  const childRoomCount = children > 0 ? Math.ceil(children / CHILDREN_PER_ROOM) : 0;
-  const requiredRooms = Math.max(adultRoomCount, childRoomCount, 1);
-
-  return {
-    adults,
-    children,
-    requiredRooms,
-    isAssignable: requiredRooms <= Math.max(adults, 1)
-  };
-};
-
 const findReviewableReservation = async (db, customerId, roomId) =>
   db.collection('reservations').findOne(
     {
@@ -358,6 +200,7 @@ const findReviewableReservation = async (db, customerId, roomId) =>
     }
   );
 
+// ========== Public Room Operations ==========
 const searchRooms = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
   const occupancy = buildOccupancy(req.query);
@@ -602,11 +445,26 @@ const submitRoomReview = asyncHandler(async (req, res) => {
   });
 });
 
+// For getById used by public routes — uses Mongoose model
+const Room = require('../../../models/room.model');
+
+const POPULATE_OPTS = [
+  { path: 'room_type_id', select: 'name description bed_type capacity base_price images' },
+  { path: 'amenity_ids', select: 'name description' },
+  { path: 'feature_ids', select: 'name description' },
+];
+
+const getById = async (id) => {
+  const room = await Room.findById(id).populate(POPULATE_OPTS);
+  if (!room) throw { status: 404, message: 'Room not found' };
+  return room;
+};
+
 module.exports = {
-  ...managerService,
-  getRoomCalendar,
-  getRoomDetail,
   listRooms,
   searchRooms,
-  submitRoomReview
+  getRoomDetail,
+  getRoomCalendar,
+  submitRoomReview,
+  getById,
 };
