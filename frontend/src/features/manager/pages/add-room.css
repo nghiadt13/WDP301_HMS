@@ -1,0 +1,466 @@
+/* ─── Add Room Page ─────────────────────────────────────────────────────── */
+.ar-page {
+  padding: 20px 24px;
+  min-height: 100%;
+}
+
+.ar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ar-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ar-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #a3e635;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ar-back-btn:hover {
+  background: #bef264;
+}
+
+/* ─── Grid Layout ─────────────────────────────────────────────────────── */
+.ar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.ar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── Card ────────────────────────────────────────────────────────────── */
+.ar-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #f3f4f6;
+}
+
+.ar-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.ar-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.ar-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Form Fields ─────────────────────────────────────────────────────── */
+.ar-field {
+  margin-bottom: 16px;
+}
+
+.ar-field:last-child {
+  margin-bottom: 0;
+}
+
+.ar-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.ar-input,
+.ar-select,
+.ar-textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  background: #fff;
+}
+
+.ar-input:focus,
+.ar-select:focus,
+.ar-textarea:focus {
+  border-color: #a3e635;
+}
+
+.ar-textarea {
+  resize: none;
+}
+
+.ar-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+.ar-error {
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+/* ─── Radio Group ─────────────────────────────────────────────────────── */
+.ar-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 4px;
+}
+
+.ar-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+}
+
+.ar-radio {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ar-radio:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+}
+
+.ar-radio.unchecked {
+  border-color: #d1d5db;
+}
+
+/* ─── Price Input Row ─────────────────────────────────────────────────── */
+.ar-price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ar-price-row .ar-input {
+  flex: 1;
+}
+
+.ar-price-badge {
+  color: #6b7280;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  white-space: nowrap;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────────── */
+.ar-btn-save {
+  background: #a3e635;
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ar-btn-save:hover {
+  background: #bef264;
+}
+
+.ar-btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ar-btn-cancel {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 5px 9px;
+  cursor: pointer;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.ar-btn-cancel:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.ar-icon-btn {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 5px 9px;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.ar-icon-btn:hover {
+  background: #f9fafb;
+}
+
+/* ─── Drop Zone ───────────────────────────────────────────────────────── */
+.ar-drop-zone {
+  border: 1.5px dashed #d1d5db;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.ar-drop-zone:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.ar-drop-zone-icon {
+  color: #9ca3af;
+}
+
+.ar-drop-zone p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.ar-drop-zone .ar-drop-hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.ar-drop-zone .ar-drop-upload-btn {
+  background: #3b82f6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ar-drop-zone .ar-drop-upload-btn:hover {
+  background: #2563eb;
+}
+
+.ar-drop-zone .ar-drop-note {
+  font-size: 11px;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ─── Thumbnails ──────────────────────────────────────────────────────── */
+.ar-thumbs-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.ar-thumbs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ar-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.ar-thumb:hover {
+  border-color: #d1d5db;
+}
+
+.ar-thumb.is-cover {
+  border-color: #a3e635;
+}
+
+.ar-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ar-thumb-cover {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.4);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  padding: 2px 0;
+}
+
+.ar-thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.ar-thumb:hover .ar-thumb-remove {
+  opacity: 1;
+}
+
+.ar-thumb-remove:hover {
+  background: rgba(220, 38, 38, 0.8);
+}
+
+/* ─── Checkbox Grid ──────────────────────────────────────────────────── */
+.ar-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.ar-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ar-checkbox-label:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.ar-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ar-checkbox:checked {
+  background: #a3e635;
+  border-color: #a3e635;
+}
+
+.ar-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ar-empty-text {
+  font-size: 12px;
+  color: #9ca3af;
+  grid-column: 1 / -1;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .ar-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -11,12 +11,12 @@ function Kill-PortProcess {
     $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
     if ($connections) {
         $pids = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-        foreach ($pid in $pids) {
-            if ($pid -ne 0) {
-                $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+        foreach ($procId in $pids) {
+            if ($procId -ne 0) {
+                $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
                 if ($proc) {
-                    Write-Host "[KILL] Port $Port -> PID $pid ($($proc.ProcessName))" -ForegroundColor Yellow
-                    Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+                    Write-Host "[KILL] Port $Port -> PID $procId ($($proc.ProcessName))" -ForegroundColor Yellow
+                    Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
                 }
             }
         }
@@ -38,22 +38,28 @@ Kill-PortProcess -Port $FrontendPort
 
 Start-Sleep -Seconds 1
 
-# Step 2: Verify ports are free
+# Step 2: Verify ports are free, retry kill if still busy
 Write-Host ""
 Write-Host "[2/3] Verifying ports are free..." -ForegroundColor Cyan
-$backendBusy = Get-NetTCPConnection -LocalPort $BackendPort -ErrorAction SilentlyContinue
-$frontendBusy = Get-NetTCPConnection -LocalPort $FrontendPort -ErrorAction SilentlyContinue
+$maxRetries = 3
 
-if ($backendBusy) {
-    Write-Host "[ERROR] Port $BackendPort is still in use!" -ForegroundColor Red
-    exit 1
+foreach ($port in @($BackendPort, $FrontendPort)) {
+    for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+        $busy = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+        if (-not $busy) {
+            Write-Host "[OK]   Port $port is free" -ForegroundColor Green
+            break
+        }
+        if ($attempt -lt $maxRetries) {
+            Write-Host "[WARN] Port $port still in use (attempt $attempt/$maxRetries), retrying kill..." -ForegroundColor Yellow
+            Kill-PortProcess -Port $port
+            Start-Sleep -Seconds 2
+        } else {
+            Write-Host "[ERROR] Port $port is still in use after $maxRetries attempts!" -ForegroundColor Red
+            exit 1
+        }
+    }
 }
-if ($frontendBusy) {
-    Write-Host "[ERROR] Port $FrontendPort is still in use!" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "[OK]   All ports are free" -ForegroundColor Green
 
 # Step 3: Start both services using concurrently
 Write-Host ""
