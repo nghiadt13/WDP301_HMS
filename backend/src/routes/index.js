@@ -10,6 +10,7 @@ const roomTypeRoutes = require('./room-type.route');
 const amenityRoutes = require('./amenity.route');
 const featureRoutes = require('./feature.route');
 const uploadRoutes = require('./upload.route');
+const managerRoutes = require('./manager.route');
 
 const router = express.Router();
 
@@ -30,5 +31,6 @@ router.use('/room-types', roomTypeRoutes);
 router.use('/amenities', amenityRoutes);
 router.use('/features', featureRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/manager', managerRoutes);
 
 module.exports = router;
