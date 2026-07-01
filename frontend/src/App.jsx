@@ -5,6 +5,9 @@ import ReceptionistDashboardPage from './features/receptionist/pages/Receptionis
 import RoomManagePage from './features/manager/pages/RoomManagePage.jsx';
 import AddRoomPage from './features/manager/pages/AddRoomPage.jsx';
 import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
+import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPage.jsx';
+import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
+import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
 import ManagerLayout from './features/manager/layouts/ManagerLayout.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
@@ -40,6 +43,9 @@ const App = () => {
           <Route path="rooms" element={<RoomManagePage />} />
           <Route path="rooms/add" element={<AddRoomPage />} />
           <Route path="rooms/:id/edit" element={<EditRoomPage />} />
+          <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
+          <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
+          <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
         </Route>
 
         {/* Receptionist routes */}
@@ -52,3 +58,4 @@ const App = () => {
 };
 
 export default App;
+

@@ -8,10 +8,10 @@ const sidebarItems = [
   { icon: Calendar, label: 'Calendar' },
   { icon: Megaphone, label: 'Campaigns', hasSub: true },
   { icon: BedDouble, label: 'Rooms', hasSub: true, matchPath: '/manager/rooms' },
-  { icon: Sparkles, label: 'Housekeeping' },
-  { icon: Package, label: 'Inventory' },
+  { icon: Sparkles, label: 'Staff Tasks', to: '/manager/staff-tasks' },
+  { icon: Package, label: 'Minibar Items', to: '/manager/minibar-items' },
   { icon: Wallet, label: 'Finance', hasSub: true },
-  { icon: Star, label: 'Reviews', badge: 5 },
+  { icon: Star, label: 'Customer Feedback', to: '/manager/feedback', badge: 5 },
   { icon: LogIn, label: 'Register & Login' },
 ];
 
