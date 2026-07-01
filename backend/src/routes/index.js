@@ -1,4 +1,10 @@
 const express = require('express');
+
+const authRoutes = require('./auth.route');
+const homeRoutes = require('./home.route');
+const paymentRoutes = require('./payment.route');
+const profileRoutes = require('./profile.route');
+const reservationRoutes = require('./reservation.route');
 const roomRoutes = require('./room.route');
 const roomTypeRoutes = require('./room-type.route');
 const amenityRoutes = require('./amenity.route');
@@ -14,6 +20,11 @@ router.get('/health', (req, res) => {
   });
 });
 
+router.use('/auth', authRoutes);
+router.use('/home', homeRoutes);
+router.use('/payments', paymentRoutes);
+router.use('/profile', profileRoutes);
+router.use('/reservations', reservationRoutes);
 router.use('/rooms', roomRoutes);
 router.use('/room-types', roomTypeRoutes);
 router.use('/amenities', amenityRoutes);
