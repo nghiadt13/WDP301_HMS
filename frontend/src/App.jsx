@@ -13,6 +13,11 @@ import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import MyProfilePage from './pages/MyProfilePage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import PaymentPage from './pages/PaymentPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
+import RoomDetailPage from './pages/RoomDetailPage.jsx';
+import RoomListPage from './pages/RoomListPage.jsx';
+import RoomSearchResultsPage from './pages/RoomSearchResultsPage.jsx';
 
 const App = () => {
   return (
