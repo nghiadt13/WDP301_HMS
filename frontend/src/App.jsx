@@ -1,5 +1,8 @@
 import { Route, Routes } from 'react-router-dom';
 
+import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
+import CustomerServiceRequestsPage from './features/customer/pages/CustomerServiceRequestsPage.jsx';
+import CustomerServicesPage from './features/customer/pages/CustomerServicesPage.jsx';
 import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.jsx';
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
@@ -31,6 +34,9 @@ const App = () => {
         <Route path="rooms" element={<RoomListPage />} />
         <Route path="rooms/search" element={<RoomSearchResultsPage />} />
         <Route path="rooms/:roomId" element={<RoomDetailPage />} />
+        <Route path="customer/services" element={<CustomerServicesPage />} />
+        <Route path="customer/service-requests" element={<CustomerServiceRequestsPage />} />
+        <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
         <Route path="manager" element={<ManagerDashboardPage />} />
         <Route path="receptionist" element={<ReceptionistDashboardPage />} />
         <Route path="*" element={<NotFoundPage />} />
