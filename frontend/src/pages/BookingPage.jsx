@@ -111,7 +111,7 @@ const BookingPage = () => {
           });
           setResult(response.data);
         } else {
-          const response = await axiosClient.get('/rooms');
+          const response = await axiosClient.get('/rooms/list');
           setResult({
             search: null,
             rooms: response.data.rooms || []
