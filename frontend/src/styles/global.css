@@ -3717,6 +3717,10 @@ button:disabled {
 .payment-summary-card button {
   min-width: 86px;
   min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   border: 0;
   border-radius: 4px;
   background: #087aa9;
@@ -3726,8 +3730,10 @@ button:disabled {
 }
 
 .booking-rate-price button:disabled,
-.booking-summary-card button:disabled {
+.booking-summary-card button:disabled,
+.payment-summary-card button:disabled {
   background: #9bb7c4;
+  cursor: not-allowed;
 }
 
 .booking-soldout {
@@ -3976,6 +3982,119 @@ button:disabled {
 .payment-method-card small {
   color: #687589;
   line-height: 1.45;
+}
+
+.vietqr-payment-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #d9e5ee;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.vietqr-payment-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vietqr-payment-heading span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #087aa9;
+  font-weight: 900;
+}
+
+.vietqr-payment-heading strong {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #edf7cc;
+  color: #806a16;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.vietqr-payment-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.vietqr-payment-layout > img {
+  width: 260px;
+  max-width: 100%;
+  border: 1px solid #dde7ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.vietqr-payment-info {
+  display: grid;
+  gap: 10px;
+}
+
+.vietqr-payment-info > span {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #e2ebf2;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.vietqr-payment-info small {
+  grid-column: 1 / -1;
+  color: #718094;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.vietqr-payment-info strong {
+  min-width: 0;
+  color: #27313e;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.vietqr-payment-info button {
+  min-width: 76px;
+  height: 34px;
+  border: 0;
+  border-radius: 5px;
+  background: #ecf5fa;
+  color: #087aa9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.vietqr-payment-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff1f2;
+  color: #be123c;
+  font-weight: 800;
+}
+
+.vietqr-paid-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 8px;
+  background: #ecfdf3;
+  color: #166534;
 }
 
 .payment-summary-card {
@@ -4402,7 +4521,8 @@ button:disabled {
 
   .booking-search-panel,
   .booking-content,
-  .payment-layout {
+  .payment-layout,
+  .vietqr-payment-layout {
     grid-template-columns: 1fr;
   }
 
@@ -4422,6 +4542,10 @@ button:disabled {
 
   .payment-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vietqr-payment-layout > img {
+    justify-self: center;
   }
 }
 
@@ -4461,6 +4585,14 @@ button:disabled {
   .payment-room-preview img {
     width: 100%;
     height: 190px;
+  }
+
+  .vietqr-payment-info > span {
+    grid-template-columns: 1fr;
+  }
+
+  .vietqr-payment-info button {
+    width: 100%;
   }
 }
 
