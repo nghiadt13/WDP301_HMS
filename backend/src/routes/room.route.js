@@ -8,7 +8,8 @@ const { createRoomBooking } = require('../controllers/reservation.controller');
 const router = express.Router();
 
 // Public routes
-router.get('/', roomController.listRooms || roomController.getAll);
+router.get('/', roomController.getAll);
+router.get('/list', roomController.listRooms);
 router.get('/search', roomController.searchRooms);
 router.get('/:id', roomController.getRoomDetail || roomController.getById);
 router.get('/:id/calendar', roomController.getRoomCalendar);

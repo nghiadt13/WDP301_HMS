@@ -15,7 +15,7 @@ const RoomListPage = () => {
   useEffect(() => {
     const loadRooms = async () => {
       try {
-        const response = await axiosClient.get('/rooms');
+        const response = await axiosClient.get('/rooms/list');
         setPageData({
           hero: response.data.hero || null,
           rooms: response.data.rooms || []
