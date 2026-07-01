@@ -454,11 +454,20 @@ const POPULATE_OPTS = [
   { path: 'feature_ids', select: 'name description' },
 ];
 
-const getById = async (id) => {
+const getById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    throw createHttpError('Invalid room ID.', 400);
+  }
+
   const room = await Room.findById(id).populate(POPULATE_OPTS);
-  if (!room) throw { status: 404, message: 'Room not found' };
-  return room;
-};
+  if (!room) {
+    throw createHttpError('Room not found.', 404);
+  }
+
+  res.send({ room: mapRoom(room) });
+});
 
 module.exports = {
   listRooms,
