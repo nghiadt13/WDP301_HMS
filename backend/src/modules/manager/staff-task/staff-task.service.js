@@ -1,7 +1,5 @@
-const CustomerFeedback = require('../models/customerFeedback.model');
-const MinibarItem = require('../models/minibarItem.model');
-const StaffTask = require('../models/staffTask.model');
-const User = require('../models/user.model');
+const StaffTask = require('../../../models/staffTask.model');
+const User = require('../../../models/user.model');
 
 const mockStaffMembers = [
   { _id: 'mock-housekeeping-1', full_name: 'Nguyen Thi Hoa', role: 'housekeeping' },
@@ -9,8 +7,6 @@ const mockStaffMembers = [
   { _id: 'mock-technical-1', full_name: 'Tran Quoc Bao', role: 'technical' },
   { _id: 'mock-technical-2', full_name: 'Pham Duc Anh', role: 'technical' },
 ];
-
-const normalizeStatus = (status = '') => String(status).toLowerCase();
 
 const createHttpError = (message, status = 400) => {
   const error = new Error(message);
@@ -71,32 +67,7 @@ const buildStaffTaskPayload = (data) => {
   };
 };
 
-const buildMinibarPayload = (data) => {
-  const price = Number(data.price);
-
-  if (!String(data.name || '').trim()) {
-    throw createHttpError('Vui long nhap ten mon minibar.');
-  }
-
-  if (!String(data.category || '').trim()) {
-    throw createHttpError('Vui long chon danh muc.');
-  }
-
-  if (!Number.isFinite(price) || price < 0) {
-    throw createHttpError('Gia khong duoc nho hon 0.');
-  }
-
-  return {
-    name: String(data.name).trim(),
-    category: String(data.category).trim(),
-    price,
-    stock_status: data.stock_status || 'in_stock',
-    image_url: String(data.image_url || '').trim(),
-    description: String(data.description || '').trim(),
-  };
-};
-
-const managerService = {
+const staffTaskService = {
   async getStaffMembers() {
     const users = await User.find({ status: 'active' }).populate('role_id').select('full_name role_id');
     const staffMembers = users
@@ -141,79 +112,6 @@ const managerService = {
     if (!task) throw createHttpError('Khong tim thay nhiem vu.', 404);
     return task;
   },
-
-  async getMinibarItems(query = {}) {
-    const filter = {};
-    if (query.stock_status) filter.stock_status = query.stock_status;
-    if (query.is_active !== undefined) filter.is_active = query.is_active === 'true';
-    return MinibarItem.find(filter).sort({ createdAt: -1 });
-  },
-
-  async createMinibarItem(data) {
-    return MinibarItem.create(buildMinibarPayload(data));
-  },
-
-  async updateMinibarItem(id, data) {
-    const item = await MinibarItem.findByIdAndUpdate(id, buildMinibarPayload(data), { new: true, runValidators: true });
-    if (!item) throw createHttpError('Khong tim thay mon minibar.', 404);
-    return item;
-  },
-
-  async deactivateMinibarItem(id) {
-    const item = await MinibarItem.findByIdAndUpdate(id, { is_active: false }, { new: true, runValidators: true });
-    if (!item) throw createHttpError('Khong tim thay mon minibar.', 404);
-    return item;
-  },
-
-  async activateMinibarItem(id) {
-    const item = await MinibarItem.findByIdAndUpdate(id, { is_active: true }, { new: true, runValidators: true });
-    if (!item) throw createHttpError('Khong tim thay mon minibar.', 404);
-    return item;
-  },
-
-  async getCustomerFeedbacks(query = {}) {
-    const filter = {};
-    if (query.rating) filter.rating = Number(query.rating);
-    if (query.status) filter.status = query.status;
-    return CustomerFeedback.find(filter).sort({ submitted_at: -1, createdAt: -1 });
-  },
-
-  async respondCustomerFeedback(id, responseText, user) {
-    const cleanResponse = String(responseText || '').trim();
-    if (cleanResponse.length < 2) {
-      throw createHttpError('Vui long nhap noi dung phan hoi.');
-    }
-
-    const response = {
-      responseText: cleanResponse,
-      responderId: user?._id || null,
-      responderName: user?.full_name || 'Manager',
-      respondedAt: new Date(),
-    };
-
-    const feedback = await CustomerFeedback.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          response_text: cleanResponse,
-          status: 'responded',
-          responded_at: response.respondedAt,
-        },
-        $push: { manager_responses: response },
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!feedback) throw createHttpError('Khong tim thay gop y.', 404);
-    return feedback;
-  },
-
-  async archiveCustomerFeedback(id) {
-    const feedback = await CustomerFeedback.findByIdAndUpdate(id, { status: 'archived' }, { new: true, runValidators: true });
-    if (!feedback) throw createHttpError('Khong tim thay gop y.', 404);
-    return feedback;
-  },
 };
 
-module.exports = managerService;
-
+module.exports = staffTaskService;
