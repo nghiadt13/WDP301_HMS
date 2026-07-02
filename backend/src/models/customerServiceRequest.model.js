@@ -12,6 +12,11 @@ const customerServiceRequestSchema = new mongoose.Schema(
       ref: 'HotelService',
       default: null,
     },
+    reservation_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Reservation',
+      default: null,
+    },
     service_code: {
       type: String,
       trim: true,

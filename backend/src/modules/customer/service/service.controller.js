@@ -28,6 +28,15 @@ const customerServiceController = {
     }
   },
 
+  async listCustomerServiceRooms(req, res, next) {
+    try {
+      const rooms = await customerService.listCustomerServiceRooms(req.user);
+      res.status(200).send({ rooms });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async requestHotelService(req, res, next) {
     try {
       const request = await customerService.requestHotelService(req.params.serviceId, req.body, req.user);
