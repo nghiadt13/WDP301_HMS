@@ -1,9 +1,9 @@
-const roomService = require('../services/room.service');
+const managerRoomService = require('./room.service');
 
-const roomController = {
+const managerRoomController = {
   async getAll(req, res) {
     try {
-      const result = await roomService.getAll(req.query);
+      const result = await managerRoomService.getAll(req.query);
       res.status(200).json({ success: true, ...result });
     } catch (err) {
       res.status(err.status || 500).json({
@@ -15,7 +15,7 @@ const roomController = {
 
   async getById(req, res) {
     try {
-      const room = await roomService.getById(req.params.id);
+      const room = await managerRoomService.getById(req.params.id);
       res.status(200).json({ success: true, data: room });
     } catch (err) {
       res.status(err.status || 500).json({
@@ -27,7 +27,7 @@ const roomController = {
 
   async create(req, res) {
     try {
-      const room = await roomService.create(req.body);
+      const room = await managerRoomService.create(req.body);
       res.status(201).json({ success: true, data: room });
     } catch (err) {
       res.status(err.status || 500).json({
@@ -39,7 +39,7 @@ const roomController = {
 
   async update(req, res) {
     try {
-      const room = await roomService.update(req.params.id, req.body);
+      const room = await managerRoomService.update(req.params.id, req.body);
       res.status(200).json({ success: true, data: room });
     } catch (err) {
       res.status(err.status || 500).json({
@@ -51,7 +51,7 @@ const roomController = {
 
   async remove(req, res) {
     try {
-      await roomService.remove(req.params.id);
+      await managerRoomService.remove(req.params.id);
       res.status(200).json({ success: true, message: 'Room deleted successfully' });
     } catch (err) {
       res.status(err.status || 500).json({
@@ -63,7 +63,7 @@ const roomController = {
 
   async hardDelete(req, res) {
     try {
-      await roomService.hardDelete(req.params.id);
+      await managerRoomService.hardDelete(req.params.id);
       res.status(200).json({ success: true, message: 'Room permanently deleted' });
     } catch (err) {
       res.status(err.status || 500).json({
@@ -72,26 +72,6 @@ const roomController = {
       });
     }
   },
-
-  getRoomCalendar(req, res, next) {
-    return roomService.getRoomCalendar(req, res, next);
-  },
-
-  getRoomDetail(req, res, next) {
-    return roomService.getRoomDetail(req, res, next);
-  },
-
-  listRooms(req, res, next) {
-    return roomService.listRooms(req, res, next);
-  },
-
-  searchRooms(req, res, next) {
-    return roomService.searchRooms(req, res, next);
-  },
-
-  submitRoomReview(req, res, next) {
-    return roomService.submitRoomReview(req, res, next);
-  },
 };
 
-module.exports = roomController;
+module.exports = managerRoomController;

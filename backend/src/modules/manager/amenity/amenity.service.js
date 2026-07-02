@@ -1,4 +1,4 @@
-const Amenity = require('../models/amenity.model');
+const Amenity = require('../../../models/amenity.model');
 
 const amenityService = {
   async getAll() {

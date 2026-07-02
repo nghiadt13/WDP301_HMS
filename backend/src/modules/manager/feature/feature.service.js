@@ -1,4 +1,4 @@
-const Feature = require('../models/feature.model');
+const Feature = require('../../../models/feature.model');
 
 const featureService = {
   async getAll() {

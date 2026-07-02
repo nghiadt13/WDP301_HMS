@@ -1,4 +1,4 @@
-const amenityService = require('../services/amenity.service');
+const amenityService = require('./amenity.service');
 
 const amenityController = {
   async getAll(req, res) {

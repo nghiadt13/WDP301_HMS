@@ -1,6 +1,6 @@
-const reservationService = require('../services/reservation.service');
+const reservationService = require('./reservation.service');
 
-const reservationController = {
+const customerReservationController = {
   cancelCustomerReservation(req, res, next) {
     return reservationService.cancelCustomerReservation(req, res, next);
   },
@@ -14,4 +14,4 @@ const reservationController = {
   }
 };
 
-module.exports = reservationController;
+module.exports = customerReservationController;

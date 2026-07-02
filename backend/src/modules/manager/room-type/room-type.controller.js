@@ -1,9 +1,9 @@
-const featureService = require('../services/feature.service');
+const roomTypeService = require('./room-type.service');
 
-const featureController = {
+const roomTypeController = {
   async getAll(req, res) {
     try {
-      const data = await featureService.getAll();
+      const data = await roomTypeService.getAll();
       res.status(200).json({ success: true, data });
     } catch (err) {
       res.status(err.status || 500).json({ success: false, message: err.message || 'Internal server error' });
@@ -12,7 +12,7 @@ const featureController = {
 
   async getById(req, res) {
     try {
-      const data = await featureService.getById(req.params.id);
+      const data = await roomTypeService.getById(req.params.id);
       res.status(200).json({ success: true, data });
     } catch (err) {
       res.status(err.status || 500).json({ success: false, message: err.message || 'Internal server error' });
@@ -20,4 +20,4 @@ const featureController = {
   },
 };
 
-module.exports = featureController;
+module.exports = roomTypeController;
