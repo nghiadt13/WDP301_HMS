@@ -1,15 +1,20 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getCustomerFeedbacks, sendCustomerFeedback, updateCustomerFeedback } from '../api/customerApi';
+import {
+  getCustomerFeedbackRooms,
+  getCustomerFeedbacks,
+  sendCustomerFeedback,
+  updateCustomerFeedback
+} from '../api/customerApi';
 import './CustomerPages.css';
 
 const ratingOptions = [
-  { value: '5', label: 'Rất hài lòng' },
-  { value: '4', label: 'Hài lòng' },
-  { value: '3', label: 'Bình thường' },
-  { value: '2', label: 'Chưa hài lòng' },
-  { value: '1', label: 'Rất không hài lòng' }
+  { value: '5', label: 'Xuất sắc', note: 'Trải nghiệm vượt mong đợi' },
+  { value: '4', label: 'Tốt', note: 'Hài lòng với dịch vụ' },
+  { value: '3', label: 'Ổn', note: 'Có thể cải thiện thêm' },
+  { value: '2', label: 'Chưa tốt', note: 'Cần được hỗ trợ' },
+  { value: '1', label: 'Rất tệ', note: 'Trải nghiệm không hài lòng' }
 ];
 
 const statusLabels = {
@@ -19,7 +24,7 @@ const statusLabels = {
 };
 
 const initialForm = {
-  roomNumber: '',
+  reservationId: '',
   rating: '5',
   feedbackText: ''
 };
@@ -29,13 +34,11 @@ const getRatingLabel = (rating) =>
 
 const renderStars = (rating) => {
   const value = Math.max(0, Math.min(5, Number(rating || 0)));
-  return `${'\u2605'.repeat(value)}${'\u2606'.repeat(5 - value)}`;
+  return `${'★'.repeat(value)}${'☆'.repeat(5 - value)}`;
 };
 
 const formatDateTime = (value) => {
-  if (!value) {
-    return 'Không có dữ liệu';
-  }
+  if (!value) return 'Không có dữ liệu';
 
   return new Intl.DateTimeFormat('vi-VN', {
     dateStyle: 'medium',
@@ -43,10 +46,16 @@ const formatDateTime = (value) => {
   }).format(new Date(value));
 };
 
+const formatDate = (value) => {
+  if (!value) return 'Chưa có ngày';
+  return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium' }).format(new Date(value));
+};
+
 const CustomerFeedbackPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialForm);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbackRooms, setFeedbackRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -55,6 +64,12 @@ const CustomerFeedbackPage = () => {
 
   const existingFeedback = feedbacks[0];
   const isFeedbackLocked = Boolean(existingFeedback) && !editingFeedbackId;
+  const selectedRoom = feedbackRooms.find((room) => room.reservationId === formData.reservationId);
+  const averageRating = feedbacks.length
+    ? (feedbacks.reduce((total, feedback) => total + Number(feedback.rating || 0), 0) / feedbacks.length).toFixed(1)
+    : '0.0';
+  const hasManagerResponse = feedbacks.some((feedback) => feedback.responseText);
+  const canSubmitFeedback = feedbackRooms.length > 0;
 
   const handleAuthError = (error) => {
     if (error.response?.status === 401) {
@@ -67,13 +82,21 @@ const CustomerFeedbackPage = () => {
     return false;
   };
 
-  const loadFeedbacks = async () => {
+  const loadFeedbackData = async () => {
     try {
-      const data = await getCustomerFeedbacks();
-      setFeedbacks(data);
+      const [feedbackData, roomData] = await Promise.all([
+        getCustomerFeedbacks(),
+        getCustomerFeedbackRooms()
+      ]);
+      setFeedbacks(feedbackData);
+      setFeedbackRooms(roomData);
+      setFormData((currentData) => ({
+        ...currentData,
+        reservationId: currentData.reservationId || roomData[0]?.reservationId || ''
+      }));
     } catch (error) {
       if (!handleAuthError(error)) {
-        setErrorMessage('Không thể tải lịch sử góp ý. Vui lòng kiểm tra backend đã chạy chưa.');
+        setErrorMessage('Không thể tải dữ liệu góp ý. Vui lòng kiểm tra backend đã chạy chưa.');
       }
     } finally {
       setIsLoading(false);
@@ -86,7 +109,7 @@ const CustomerFeedbackPage = () => {
       return;
     }
 
-    loadFeedbacks();
+    loadFeedbackData();
   }, [navigate]);
 
   const handleChange = (event) => {
@@ -98,8 +121,8 @@ const CustomerFeedbackPage = () => {
   };
 
   const validateForm = () => {
-    if (formData.roomNumber && !/^[A-Za-z0-9-]{1,12}$/.test(formData.roomNumber)) {
-      return 'Số phòng không hợp lệ.';
+    if (!formData.reservationId) {
+      return 'Vui lòng chọn phòng/booking muốn đánh giá.';
     }
 
     if (!Number.isFinite(Number(formData.rating)) || Number(formData.rating) < 1 || Number(formData.rating) > 5) {
@@ -124,7 +147,6 @@ const CustomerFeedbackPage = () => {
     }
 
     const validationMessage = validateForm();
-
     if (validationMessage) {
       setErrorMessage(validationMessage);
       return;
@@ -132,9 +154,14 @@ const CustomerFeedbackPage = () => {
 
     try {
       setIsSubmitting(true);
+      const payload = {
+        reservationId: formData.reservationId,
+        rating: formData.rating,
+        feedbackText: formData.feedbackText
+      };
       const response = editingFeedbackId
-        ? await updateCustomerFeedback(editingFeedbackId, formData)
-        : await sendCustomerFeedback(formData);
+        ? await updateCustomerFeedback(editingFeedbackId, payload)
+        : await sendCustomerFeedback(payload);
 
       setFeedbacks((currentFeedbacks) => {
         if (editingFeedbackId) {
@@ -146,7 +173,7 @@ const CustomerFeedbackPage = () => {
         return [response.feedback, ...currentFeedbacks];
       });
       setSuccessMessage(editingFeedbackId ? 'Cập nhật góp ý thành công.' : 'Gửi góp ý thành công.');
-      setFormData(initialForm);
+      setFormData({ ...initialForm, reservationId: feedbackRooms[0]?.reservationId || '' });
       setEditingFeedbackId('');
     } catch (error) {
       if (!handleAuthError(error)) {
@@ -162,7 +189,7 @@ const CustomerFeedbackPage = () => {
     setSuccessMessage('');
     setEditingFeedbackId(feedback.id);
     setFormData({
-      roomNumber: feedback.roomNumber || '',
+      reservationId: feedback.reservationId || feedbackRooms[0]?.reservationId || '',
       rating: String(feedback.rating || '5'),
       feedbackText: feedback.feedbackText || ''
     });
@@ -170,59 +197,110 @@ const CustomerFeedbackPage = () => {
 
   const handleCancelEdit = () => {
     setEditingFeedbackId('');
-    setFormData(initialForm);
+    setFormData({ ...initialForm, reservationId: feedbackRooms[0]?.reservationId || '' });
   };
 
   return (
-    <section className="customer-page">
-      <div className="customer-hero">
+    <section className="customer-page customer-feedback-page">
+      <div className="customer-hero customer-feedback-hero">
         <div>
           <span className="customer-chip">Góp ý khách hàng</span>
-          <h1>Gửi góp ý</h1>
-          <p>Đánh giá trải nghiệm khách sạn và theo dõi phản hồi của quản lý tại một nơi.</p>
+          <h1>Đánh giá kỳ lưu trú</h1>
+          <p>Chọn booking đã hoàn tất/check-out, gửi đánh giá và theo dõi phản hồi chính thức từ quản lý khách sạn.</p>
+        </div>
+        <div className="customer-feedback-hero-score">
+          <span>{renderStars(existingFeedback?.rating || 0)}</span>
+          <strong>{existingFeedback ? `${existingFeedback.rating}/5` : 'Chưa đánh giá'}</strong>
+          <small>{existingFeedback ? getRatingLabel(existingFeedback.rating) : 'Hãy gửi góp ý đầu tiên của bạn'}</small>
         </div>
       </div>
 
       {errorMessage ? <div className="customer-alert error">{errorMessage}</div> : null}
       {successMessage ? <div className="customer-alert success">{successMessage}</div> : null}
 
-      <div className="customer-feedback-board">
-        <div className="customer-form-card">
-          <h2>{editingFeedbackId ? 'Cập nhật góp ý' : 'Thông tin góp ý'}</h2>
-          <p>
-            {isFeedbackLocked
-              ? 'Bạn đã gửi góp ý rồi. Hãy dùng nút Cập nhật góp ý trong phần Góp ý của tôi nếu muốn bổ sung thông tin.'
-              : 'Vui lòng mô tả trải nghiệm rõ ràng để quản lý khách sạn có thể theo dõi và xử lý phù hợp.'}
-          </p>
+      <div className="customer-feedback-stats">
+        <div className="feedback-stat-card rating">
+          <span>Điểm đánh giá của tôi</span>
+          <strong>{averageRating}</strong>
+          <small>{existingFeedback ? getRatingLabel(existingFeedback.rating) : 'Chưa có điểm'}</small>
+        </div>
+        <div className="feedback-stat-card response">
+          <span>Phản hồi quản lý</span>
+          <strong>{hasManagerResponse ? 'Có' : 'Chưa'}</strong>
+          <small>Theo dõi câu trả lời sau khi gửi góp ý</small>
+        </div>
+      </div>
 
-          <form className="customer-form" onSubmit={handleSubmit}>
-            <label>
-              Số phòng
-              <input
-                disabled={isFeedbackLocked}
-                name="roomNumber"
+      <div className="customer-feedback-board enhanced">
+        <div className="customer-form-card feedback-compose-card">
+          <div className="feedback-card-heading">
+            <div>
+              <span className="customer-chip">{editingFeedbackId ? 'Bổ sung góp ý' : 'Góp ý mới'}</span>
+              <h2>{editingFeedbackId ? 'Cập nhật góp ý của bạn' : 'Bạn muốn đánh giá phòng nào?'}</h2>
+              <p>
+                {isFeedbackLocked
+                  ? 'Bạn đã gửi góp ý rồi. Hãy dùng nút Cập nhật góp ý trong phần lịch sử nếu muốn bổ sung.'
+                  : 'Chọn đúng booking đã hoàn tất để quản lý khách sạn xử lý góp ý chính xác hơn.'}
+              </p>
+            </div>
+          </div>
+
+          {!canSubmitFeedback ? (
+            <div className="customer-empty-state">
+              Tài khoản của bạn chưa có booking đã hoàn tất/check-out để gửi góp ý.
+            </div>
+          ) : null}
+
+          <form className="customer-form feedback-form" onSubmit={handleSubmit}>
+            <label className="full">
+              Phòng / booking đã đặt
+              <select
+                disabled={isFeedbackLocked || !canSubmitFeedback}
+                name="reservationId"
                 onChange={handleChange}
-                placeholder="305"
-                type="text"
-                value={formData.roomNumber}
-              />
+                value={formData.reservationId}
+              >
+                <option value="">Chọn phòng/booking</option>
+                {feedbackRooms.map((room) => (
+                  <option key={room.reservationId} value={room.reservationId}>
+                    {room.roomName} {room.bookingCode ? `- ${room.bookingCode}` : ''}
+                  </option>
+                ))}
+              </select>
             </label>
 
+            {selectedRoom ? (
+              <div className="feedback-selected-room full">
+                <div>
+                  <strong>{selectedRoom.roomName}</strong>
+                  <span>{selectedRoom.bookingCode || 'Booking của bạn'}</span>
+                </div>
+                <div>
+                  <small>Nhận phòng</small>
+                  <strong>{formatDate(selectedRoom.checkInDate)}</strong>
+                </div>
+                <div>
+                  <small>Trả phòng</small>
+                  <strong>{formatDate(selectedRoom.checkOutDate)}</strong>
+                </div>
+                <span className="customer-status submitted">{selectedRoom.bookingStatus || 'Booking'}</span>
+              </div>
+            ) : null}
+
             <div className="customer-rating-field">
-              <span>Đánh giá</span>
-              <div className="customer-rating-options">
+              <span>Đánh giá trải nghiệm</span>
+              <div className="customer-rating-options premium">
                 {ratingOptions.map((option) => (
                   <button
                     className={`customer-rating-choice ${formData.rating === option.value ? 'is-selected' : ''}`}
-                    disabled={isFeedbackLocked}
+                    disabled={isFeedbackLocked || !canSubmitFeedback}
                     key={option.value}
                     type="button"
                     onClick={() => setFormData((currentData) => ({ ...currentData, rating: option.value }))}
                   >
                     <span className="customer-stars">{renderStars(option.value)}</span>
-                    <strong>
-                      {option.value} - {option.label}
-                    </strong>
+                    <strong>{option.value} - {option.label}</strong>
+                    <small>{option.note}</small>
                   </button>
                 ))}
               </div>
@@ -231,17 +309,17 @@ const CustomerFeedbackPage = () => {
             <label className="full">
               Nội dung góp ý
               <textarea
-                disabled={isFeedbackLocked}
+                disabled={isFeedbackLocked || !canSubmitFeedback}
                 name="feedbackText"
                 onChange={handleChange}
-                placeholder="Hãy cho chúng tôi biết điều gì đã xảy ra, bạn đã dùng dịch vụ nào hoặc khách sạn cần cải thiện gì."
-                rows="8"
+                placeholder="Ví dụ: Phòng sạch, nhân viên hỗ trợ nhanh. Tôi muốn khách sạn cải thiện thêm tốc độ phục vụ bữa sáng."
+                rows="7"
                 value={formData.feedbackText}
               />
             </label>
 
             <div className="customer-actions full">
-              <button className="customer-button" disabled={isSubmitting || isFeedbackLocked} type="submit">
+              <button className="customer-button" disabled={isSubmitting || isFeedbackLocked || !canSubmitFeedback} type="submit">
                 {isSubmitting ? 'Đang gửi...' : editingFeedbackId ? 'Lưu cập nhật góp ý' : 'Gửi góp ý'}
               </button>
               {editingFeedbackId ? (
@@ -249,7 +327,7 @@ const CustomerFeedbackPage = () => {
                   Hủy cập nhật
                 </button>
               ) : (
-                <button className="customer-button secondary" disabled={isFeedbackLocked} type="button" onClick={() => setFormData(initialForm)}>
+                <button className="customer-button secondary" disabled={isFeedbackLocked || !canSubmitFeedback} type="button" onClick={() => setFormData({ ...initialForm, reservationId: feedbackRooms[0]?.reservationId || '' })}>
                   Xóa nội dung
                 </button>
               )}
@@ -257,11 +335,11 @@ const CustomerFeedbackPage = () => {
           </form>
         </div>
 
-        <aside className="customer-history-card">
+        <aside className="customer-history-card feedback-timeline-card">
           <div className="customer-section-heading">
             <div>
               <h2>Góp ý của tôi</h2>
-              <p>Xem góp ý đã gửi, các phiên bản trước và phản hồi của quản lý.</p>
+              <p>Lịch sử góp ý, phiên bản cũ và phản hồi từ quản lý.</p>
             </div>
           </div>
 
@@ -270,58 +348,50 @@ const CustomerFeedbackPage = () => {
           ) : feedbacks.length === 0 ? (
             <div className="customer-empty-state">Bạn chưa gửi góp ý nào.</div>
           ) : (
-            <div className="customer-feedback-list">
+            <div className="customer-feedback-list professional">
               {feedbacks.map((feedback) => (
-                <article className="customer-feedback-item" key={feedback.id}>
+                <article className="customer-feedback-item professional" key={feedback.id}>
+                  <div className="customer-feedback-head">
+                    <div>
+                      <span className="customer-stars large">{renderStars(feedback.rating)}</span>
+                      <strong>{feedback.rating} - {getRatingLabel(feedback.rating)}</strong>
+                      <small>{feedback.roomNumber ? `Phòng ${feedback.roomNumber}` : 'Booking của bạn'} - {formatDateTime(feedback.submittedAt)}</small>
+                    </div>
+                    <span className={`customer-status ${feedback.status}`}>{statusLabels[feedback.status] || feedback.status}</span>
+                  </div>
+
+                  <p>{feedback.feedbackText}</p>
+
+                  <div className="customer-manager-response highlighted">
+                    <strong>Phản hồi của quản lý</strong>
+                    <p>{feedback.responseText || 'Quản lý chưa phản hồi góp ý này.'}</p>
+                  </div>
+
                   {feedback.history?.length > 0 ? (
-                    <div className="customer-feedback-version-list">
-                      <strong>Góp ý trước đó</strong>
+                    <details className="customer-feedback-version-list compact">
+                      <summary> Xem {feedback.history.length} phiên bản góp ý trước</summary>
                       {feedback.history.map((historyItem, index) => (
                         <div className="customer-feedback-version" key={`${historyItem.savedAt || historyItem.submittedAt}-${index}`}>
                           <div className="customer-feedback-head">
                             <div>
                               <span className="customer-stars">{renderStars(historyItem.rating)}</span>
-                              <strong>
-                                {historyItem.rating} - {getRatingLabel(historyItem.rating)}
-                              </strong>
+                              <strong>{historyItem.rating} - {getRatingLabel(historyItem.rating)}</strong>
                             </div>
                             <span className={`customer-status ${historyItem.status}`}>{statusLabels[historyItem.status] || historyItem.status}</span>
                           </div>
                           <p>{historyItem.feedbackText}</p>
-                          <small>
-                            {historyItem.roomNumber ? `Phòng ${historyItem.roomNumber} - ` : ''}
-                            {formatDateTime(historyItem.submittedAt)}
-                          </small>
+                          <small>{historyItem.roomNumber ? `Phòng ${historyItem.roomNumber} - ` : ''}{formatDateTime(historyItem.submittedAt)}</small>
                           {historyItem.responseText ? (
                             <div className="customer-manager-response">
-                              <strong>Phản hồi của quản lý cho góp ý này</strong>
+                              <strong>Phản hồi cho phiên bản này</strong>
                               <p>{historyItem.responseText}</p>
                             </div>
                           ) : null}
                         </div>
                       ))}
-                    </div>
+                    </details>
                   ) : null}
 
-                  <strong className="customer-current-label">Góp ý hiện tại</strong>
-                  <div className="customer-feedback-head">
-                    <div>
-                      <span className="customer-stars">{renderStars(feedback.rating)}</span>
-                      <strong>
-                        {feedback.rating} - {getRatingLabel(feedback.rating)}
-                      </strong>
-                    </div>
-                    <span className={`customer-status ${feedback.status}`}>{statusLabels[feedback.status] || feedback.status}</span>
-                  </div>
-                  <p>{feedback.feedbackText}</p>
-                  <small>
-                    {feedback.roomNumber ? `Phòng ${feedback.roomNumber} - ` : ''}
-                    {formatDateTime(feedback.submittedAt)}
-                  </small>
-                  <div className="customer-manager-response">
-                    <strong>Phản hồi của quản lý</strong>
-                    <p>{feedback.responseText || 'Chưa có phản hồi từ quản lý.'}</p>
-                  </div>
                   <button className="customer-button small" type="button" onClick={() => handleEditFeedback(feedback)}>
                     Cập nhật góp ý
                   </button>
@@ -336,6 +406,3 @@ const CustomerFeedbackPage = () => {
 };
 
 export default CustomerFeedbackPage;
-
-
-

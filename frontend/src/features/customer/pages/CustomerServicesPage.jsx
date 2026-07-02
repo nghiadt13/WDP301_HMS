@@ -1,7 +1,8 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
+  getCustomerRooms,
   getCustomerServiceRequests,
   getHotelServices,
   requestHotelService
@@ -17,7 +18,7 @@ const formatCurrency = (value) =>
 
 
 const initialRequestForm = {
-  roomNumber: '',
+  reservationId: '',
   note: ''
 };
 
@@ -77,6 +78,7 @@ const CustomerServicesPage = () => {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [serviceRequests, setServiceRequests] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [selectedServiceId, setSelectedServiceId] = useState('');
   const [requestForm, setRequestForm] = useState(initialRequestForm);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,12 +99,14 @@ const CustomerServicesPage = () => {
 
   const loadCustomerServices = async () => {
     try {
-      const [serviceData, requestData] = await Promise.all([
+      const [serviceData, requestData, roomData] = await Promise.all([
         getHotelServices(),
-        getCustomerServiceRequests()
+        getCustomerServiceRequests(),
+        getCustomerRooms()
       ]);
       setServices(serviceData);
       setServiceRequests(requestData);
+      setRooms(roomData);
     } catch (error) {
       if (!handleAuthError(error)) {
         setErrorMessage('Không thể tải danh sách dịch vụ. Vui lòng kiểm tra backend đã chạy chưa.');
@@ -151,8 +155,8 @@ const CustomerServicesPage = () => {
       return;
     }
 
-    if (!/^[A-Za-z0-9-]{1,12}$/.test(requestForm.roomNumber.trim())) {
-      setErrorMessage('Vui lòng nhập số phòng hợp lệ.');
+    if (!requestForm.reservationId) {
+      setErrorMessage('Vui lòng chọn phòng từ booking đã thanh toán trước khi gửi yêu cầu dịch vụ.');
       return;
     }
 
@@ -177,7 +181,7 @@ const CustomerServicesPage = () => {
         <div>
           <span className="customer-chip">Dịch vụ khách hàng</span>
           <h1>Xem dịch vụ khách sạn</h1>
-          <p>Xem các dịch vụ khách sạn, gửi yêu cầu trong thời gian lưu trú và hủy các yêu cầu đang chờ xử lý.</p>
+          <p>Xem các dịch vụ khách sạn, gửi yêu cầu cho phòng đã thanh toán và hủy các yêu cầu đang chờ xử lý.</p>
         </div>
       </div>
 
@@ -191,11 +195,11 @@ const CustomerServicesPage = () => {
       ) : (
         <>
           <div className="customer-service-summary">
-            <div>
+            <div className="customer-summary-card services">
               <strong>{services.length}</strong>
               <span>Dịch vụ hiện có</span>
             </div>
-            <div>
+            <div className="customer-summary-card pending">
               <strong>{pendingRequestCount}</strong>
               <span>Yêu cầu đang chờ</span>
             </div>
@@ -270,13 +274,17 @@ const CustomerServicesPage = () => {
                     <form className="customer-request-form" id="customer-service-request-form" onSubmit={handleRequestSubmit}>
                       <label>
                         Số phòng
-                        <input
-                          name="roomNumber"
-                          onChange={handleRequestChange}
-                          placeholder="305"
-                          type="text"
-                          value={requestForm.roomNumber}
-                        />
+                        <select name="reservationId" onChange={handleRequestChange} value={requestForm.reservationId}>
+                          <option value="">Chọn phòng</option>
+                          {rooms.map((room) => (
+                            <option key={room.reservationId || room.id} value={room.reservationId || room.id}>
+                              {room.name || room.rawName} {room.bookingCode ? `- ${room.bookingCode}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        {rooms.length === 0 ? (
+                          <small className="customer-field-hint">Bạn cần có booking đã thanh toán trước khi gửi yêu cầu dịch vụ.</small>
+                        ) : null}
                       </label>
                       <label>
                         Ghi chú yêu cầu
@@ -292,7 +300,7 @@ const CustomerServicesPage = () => {
                   </div>
 
                   <div className="customer-modal-actions">
-                    <button className="customer-button" disabled={isSubmitting} form="customer-service-request-form" type="submit">
+                    <button className="customer-button" disabled={isSubmitting || rooms.length === 0} form="customer-service-request-form" type="submit">
                       {isSubmitting ? 'Đang gửi...' : 'Gửi yêu cầu'}
                     </button>
                     <button className="customer-button secondary" type="button" onClick={closeServiceModal}>

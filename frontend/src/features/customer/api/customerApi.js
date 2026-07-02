@@ -1,5 +1,9 @@
-﻿import axiosClient from '../../../api/axiosClient';
+import axiosClient from '../../../api/axiosClient';
 
+export const getCustomerRooms = async () => {
+  const response = await axiosClient.get('/customer/service-rooms');
+  return response.data.rooms || [];
+};
 export const getHotelServices = async () => {
   const response = await axiosClient.get('/customer/services');
   return response.data.services || [];
@@ -23,6 +27,11 @@ export const requestHotelService = async (serviceId, payload) => {
 export const cancelCustomerServiceRequest = async (requestId) => {
   const response = await axiosClient.patch(`/customer/service-requests/${requestId}/cancel`);
   return response.data;
+};
+
+export const getCustomerFeedbackRooms = async () => {
+  const response = await axiosClient.get('/customer/feedback-rooms');
+  return response.data.rooms || [];
 };
 
 export const getCustomerFeedbacks = async () => {

@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Building2, CalendarDays, Search } from 'lucide-react';
 
@@ -67,6 +67,9 @@ const AppHeader = () => {
         .toUpperCase()
     : 'GU';
 
+  const roleName = String(user?.role?.name || user?.role_name || user?.role || '').toLowerCase();
+  const isCustomer = roleName.includes('customer') || roleName.includes('khách');
+
   const handleLogout = () => {
     localStorage.removeItem('hotelify_token');
     localStorage.removeItem('hotelify_user');
@@ -86,7 +89,7 @@ const AppHeader = () => {
         <Link to="/">Trang chủ</Link>
         <Link to="/listRoom">Danh sách phòng</Link>
         <Link to="/booking">Đặt phòng</Link>
-        {user ? (
+        {isCustomer ? (
           <>
             <Link to="/customer/services">Dịch vụ</Link>
             <Link to="/customer/feedback">Góp ý</Link>
