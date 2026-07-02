@@ -1,6 +1,15 @@
-﻿const customerFeedbackService = require('./feedback.service');
+const customerFeedbackService = require('./feedback.service');
 
 const customerFeedbackController = {
+  async listFeedbackRooms(req, res, next) {
+    try {
+      const rooms = await customerFeedbackService.listFeedbackRooms(req.user);
+      res.status(200).send({ rooms });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async listCustomerFeedbacks(req, res, next) {
     try {
       const feedbacks = await customerFeedbackService.listCustomerFeedbacks(req.user);
