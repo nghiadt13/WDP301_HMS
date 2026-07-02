@@ -1,12 +1,23 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { Search, Star, MessageSquare, Archive } from 'lucide-react';
 import { managerApi } from '../services/manager-api.js';
 import './manager-operations.css';
 
-const statusLabels = { submitted: 'Đã gửi', Submitted: 'Đã gửi', responded: 'Đã phản hồi', Responded: 'Đã phản hồi', archived: 'Đã lưu trữ', Archived: 'Đã lưu trữ' };
+const statusLabels = { submitted: 'Chưa phản hồi', Submitted: 'Chưa phản hồi', responded: 'Đã phản hồi', Responded: 'Đã phản hồi', archived: 'Đã lưu trữ', Archived: 'Đã lưu trữ' };
+const statusTone = (status) => {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'responded') return 'is-good';
+  if (normalized === 'archived') return 'is-muted';
+  return 'is-info';
+};
 const getErrorMessage = (error) => error?.response?.data?.message || error.message || 'Đã có lỗi xảy ra';
 const formatDate = (value) => (value ? new Intl.DateTimeFormat('vi-VN').format(new Date(value)) : '-');
-const renderStars = (rating) => `${'★'.repeat(Number(rating || 0))}${'☆'.repeat(5 - Number(rating || 0))}`;
-const statusTone = (status) => String(status).toLowerCase() === 'responded' ? 'is-good' : String(status).toLowerCase() === 'archived' ? 'is-muted' : 'is-info';
+const normalizeStatus = (status) => String(status || '').toLowerCase();
+const getCustomerKey = (feedback) => feedback.customer_email || feedback.customer_id || feedback.customer_name || feedback._id;
+const renderStars = (rating) => {
+  const value = Math.max(0, Math.min(5, Number(rating || 0)));
+  return `${'★'.repeat(value)}${'☆'.repeat(5 - value)}`;
+};
 
 const getResponses = (feedback) => {
   if (feedback?.manager_responses?.length) return feedback.manager_responses;
@@ -20,16 +31,15 @@ const ManagerCustomerFeedbackPage = () => {
   const [selectedId, setSelectedId] = useState('');
   const [ratingFilter, setRatingFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [responseText, setResponseText] = useState('');
   const [message, setMessage] = useState('');
+
   const selectedFeedback = feedbacks.find((feedback) => feedback._id === selectedId);
   const responses = getResponses(selectedFeedback);
 
   const loadFeedbacks = async (nextId = selectedId) => {
-    const params = {};
-    if (ratingFilter) params.rating = ratingFilter;
-    if (statusFilter) params.status = statusFilter;
-    const data = await managerApi.getCustomerFeedbacks(params);
+    const data = await managerApi.getCustomerFeedbacks();
     setFeedbacks(data);
     if (nextId) {
       const nextFeedback = data.find((feedback) => feedback._id === nextId);
@@ -37,36 +47,157 @@ const ManagerCustomerFeedbackPage = () => {
     }
   };
 
-  useEffect(() => { loadFeedbacks('').catch((error) => setMessage(getErrorMessage(error))); }, [ratingFilter, statusFilter]);
-  const handleSelect = (feedback) => { setSelectedId(feedback._id); setResponseText(''); setMessage(''); };
+  useEffect(() => {
+    loadFeedbacks('').catch((error) => setMessage(getErrorMessage(error)));
+  }, []);
+
+  const filteredFeedbacks = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+    return feedbacks.filter((feedback) => {
+      const matchesKeyword = !keyword || [feedback.customer_name, feedback.customer_email, feedback.feedback_text, feedback.room_number]
+        .some((value) => String(value || '').toLowerCase().includes(keyword));
+      const matchesRating = !ratingFilter || Number(feedback.rating) === Number(ratingFilter);
+      const matchesStatus = !statusFilter || normalizeStatus(feedback.status) === statusFilter;
+      return matchesKeyword && matchesRating && matchesStatus;
+    });
+  }, [feedbacks, ratingFilter, statusFilter, searchTerm]);
+
+  const stats = useMemo(() => {
+    const totalReviews = feedbacks.length;
+    const totalGuests = new Set(feedbacks.map(getCustomerKey).filter(Boolean)).size;
+    const averageRating = totalReviews ? feedbacks.reduce((sum, feedback) => sum + Number(feedback.rating || 0), 0) / totalReviews : 0;
+    return { totalReviews, totalGuests, averageRating };
+  }, [feedbacks]);
+
+  const ratingRows = useMemo(() => [5, 4, 3, 2, 1].map((rating) => {
+    const count = feedbacks.filter((feedback) => Number(feedback.rating) === rating).length;
+    const percent = stats.totalReviews ? Math.round((count / stats.totalReviews) * 100) : 0;
+    return { rating, count, percent };
+  }), [feedbacks, stats.totalReviews]);
+
+  const handleSelect = (feedback) => {
+    setSelectedId(feedback._id);
+    setResponseText('');
+    setMessage('');
+  };
+
   const handleRespond = async (event) => {
     event.preventDefault();
-    if (!selectedFeedback) { setMessage('Vui lòng chọn một góp ý trước khi phản hồi.'); return; }
+    if (!selectedFeedback) {
+      setMessage('Vui lòng chọn một góp ý trước khi phản hồi.');
+      return;
+    }
     try {
       const feedback = await managerApi.respondCustomerFeedback(selectedFeedback._id, responseText);
       setMessage('Gửi phản hồi cho khách hàng thành công.');
       setResponseText('');
       await loadFeedbacks(feedback._id);
-    } catch (error) { setMessage(getErrorMessage(error)); }
+    } catch (error) {
+      setMessage(getErrorMessage(error));
+    }
   };
+
   const handleArchive = async () => {
     if (!selectedFeedback) return;
-    try { const feedback = await managerApi.archiveCustomerFeedback(selectedFeedback._id); setMessage('Lưu trữ góp ý thành công.'); await loadFeedbacks(feedback._id); } catch (error) { setMessage(getErrorMessage(error)); }
+    try {
+      const feedback = await managerApi.archiveCustomerFeedback(selectedFeedback._id);
+      setMessage('Lưu trữ góp ý thành công.');
+      await loadFeedbacks(feedback._id);
+    } catch (error) {
+      setMessage(getErrorMessage(error));
+    }
   };
 
   return (
-    <div className="manager-ops-page">
+    <div className="manager-ops-page manager-figma-page reviews-page">
       {message && <div className="manager-ops-message">{message}</div>}
-      <section className="manager-ops-grid">
-        <article className="manager-ops-card">
-          <div className="manager-ops-heading"><div><h2>Danh sách góp ý</h2><p>Lọc theo số sao, xem nội dung và phản hồi khách hàng.</p></div><span className="manager-ops-muted">{feedbacks.length} bản ghi</span></div>
-          <div className="manager-ops-filter-row"><select value={ratingFilter} onChange={(event) => setRatingFilter(event.target.value)}><option value="">Tất cả đánh giá</option><option value="5">5 sao</option><option value="4">4 sao</option><option value="3">3 sao</option><option value="2">2 sao</option><option value="1">1 sao</option></select><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">Tất cả trạng thái</option><option value="submitted">Đã gửi</option><option value="responded">Đã phản hồi</option><option value="archived">Đã lưu trữ</option></select></div>
-          <div className="manager-ops-table-wrap"><table className="manager-ops-table"><thead><tr><th>Khách hàng</th><th>Đánh giá</th><th>Góp ý</th><th>Trạng thái</th></tr></thead><tbody>{feedbacks.length ? feedbacks.map((feedback) => <tr className={`manager-ops-row ${selectedId === feedback._id ? 'is-selected' : ''}`} key={feedback._id} onClick={() => handleSelect(feedback)}><td><strong>{feedback.customer_name || 'Khách hàng'}</strong><small>{feedback.customer_email || `Phòng ${feedback.room_number || '-'}`}</small></td><td><span className="manager-ops-stars">{renderStars(feedback.rating)}</span><small>{feedback.rating}/5</small></td><td><strong>{feedback.feedback_text}</strong><small>{formatDate(feedback.submitted_at || feedback.createdAt)}</small></td><td><span className={`manager-ops-status ${statusTone(feedback.status)}`}>{statusLabels[feedback.status] || feedback.status}</span></td></tr>) : <tr><td className="manager-ops-empty" colSpan="4">Chưa có góp ý nào.</td></tr>}</tbody></table></div>
+
+      <section className="reviews-dashboard-grid">
+        <article className="figma-card review-stat-card">
+          <div className="figma-card-heading"><h2>Thống kê đánh giá</h2><span>...</span></div>
+          <div className="review-stat-row"><span>Tổng khách góp ý</span><strong>{stats.totalGuests}</strong></div>
+          <div className="review-stat-row"><span>Tổng đánh giá</span><strong>{stats.totalReviews}</strong></div>
         </article>
-        <article className="manager-ops-card">
-          <div className="manager-ops-heading"><div><h2>Phản hồi của quản lý</h2><p>Phản hồi đã gửi sẽ được giữ lại; nếu cần thì thêm phản hồi bổ sung.</p></div></div>
-          {selectedFeedback ? <form className="manager-ops-form" onSubmit={handleRespond}><div className="manager-ops-summary manager-ops-wide"><strong>{selectedFeedback.customer_name || 'Khách hàng'} - Phòng {selectedFeedback.room_number || '-'}</strong><p><span className="manager-ops-stars">{renderStars(selectedFeedback.rating)}</span> {selectedFeedback.rating}/5</p><p>{selectedFeedback.feedback_text}</p><small>Ngày gửi: {formatDate(selectedFeedback.submitted_at || selectedFeedback.createdAt)}</small></div><div className="manager-ops-summary manager-ops-wide"><strong>Các phản hồi đã gửi</strong>{responses.length ? responses.map((response, index) => <p key={`${response.respondedAt || index}-${index}`}>{response.responseText}<small> - {response.responderName || 'Quản lý'} {response.respondedAt ? `(${formatDate(response.respondedAt)})` : ''}</small></p>) : <p>Chưa có phản hồi nào.</p>}</div><label className="manager-ops-wide">Thêm phản hồi mới<textarea onChange={(event) => setResponseText(event.target.value)} placeholder="Nhập phản hồi cho khách hàng..." required rows="7" value={responseText} /></label><div className="manager-ops-actions"><button className="manager-ops-button" type="submit">{responses.length ? 'Thêm phản hồi' : 'Gửi phản hồi'}</button><button className="manager-ops-danger" onClick={handleArchive} type="button">Lưu trữ</button></div></form> : <div className="manager-ops-detail-empty">Chọn một góp ý để xem chi tiết.</div>}
+
+        <article className="figma-card rating-card">
+          <div className="figma-card-heading"><h2>Điểm đánh giá</h2><span>...</span></div>
+          <div className="rating-ring" style={{ '--score': `${Math.min((stats.averageRating / 5) * 100, 100)}%` }}>
+            <div><span>Điểm trung bình</span><strong>{stats.averageRating.toFixed(1)}</strong><small>/5.0</small></div>
+          </div>
+          <div className="rating-breakdown">
+            {ratingRows.map((row) => (
+              <div key={row.rating}><span>{row.rating} sao</span><strong>{renderStars(row.rating)}</strong><small>{row.count} lượt</small></div>
+            ))}
+          </div>
         </article>
+      </section>
+
+      <section className="figma-card feedback-workspace">
+        <div className="inventory-toolbar feedback-toolbar">
+          <label className="figma-search-box">
+            <Search size={17} />
+            <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Tìm khách hàng, phòng, nội dung góp ý..." />
+          </label>
+          <select value={ratingFilter} onChange={(event) => setRatingFilter(event.target.value)}>
+            <option value="">Tất cả sao</option>
+            <option value="5">5 sao</option>
+            <option value="4">4 sao</option>
+            <option value="3">3 sao</option>
+            <option value="2">2 sao</option>
+            <option value="1">1 sao</option>
+          </select>
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+            <option value="">Tất cả trạng thái</option>
+            <option value="submitted">Chưa phản hồi</option>
+            <option value="responded">Đã phản hồi</option>
+            <option value="archived">Đã lưu trữ</option>
+          </select>
+        </div>
+
+        <div className="feedback-split-grid">
+          <article className="feedback-list-panel">
+            <div className="figma-card-heading"><h2>Danh sách góp ý</h2><span>{filteredFeedbacks.length} bản ghi</span></div>
+            <div className="feedback-card-list">
+              {filteredFeedbacks.length ? filteredFeedbacks.map((feedback) => (
+                <button className={`feedback-review-card ${selectedId === feedback._id ? 'is-selected' : ''}`} key={feedback._id} type="button" onClick={() => handleSelect(feedback)}>
+                  <span className="feedback-avatar">{String(feedback.customer_name || 'K').charAt(0).toUpperCase()}</span>
+                  <span className="feedback-review-content">
+                    <strong>{feedback.customer_name || 'Khách hàng'}</strong>
+                    <small>Phòng {feedback.room_number || '-'} · {formatDate(feedback.submitted_at || feedback.createdAt)}</small>
+                    <span className="manager-ops-stars">{renderStars(feedback.rating)} <b>{feedback.rating}/5</b></span>
+                    <em>{feedback.feedback_text}</em>
+                  </span>
+                  <span className={`manager-ops-status ${statusTone(feedback.status)}`}>{statusLabels[feedback.status] || feedback.status}</span>
+                </button>
+              )) : <div className="manager-ops-empty">Không tìm thấy góp ý phù hợp.</div>}
+            </div>
+          </article>
+
+          <article className="feedback-response-panel">
+            <div className="figma-card-heading"><h2>Phản hồi quản lý</h2><MessageSquare size={18} /></div>
+            {selectedFeedback ? (
+              <form className="manager-ops-form feedback-response-form" onSubmit={handleRespond}>
+                <div className="manager-ops-summary manager-ops-wide">
+                  <strong>{selectedFeedback.customer_name || 'Khách hàng'} - Phòng {selectedFeedback.room_number || '-'}</strong>
+                  <p><span className="manager-ops-stars">{renderStars(selectedFeedback.rating)}</span> {selectedFeedback.rating}/5</p>
+                  <p>{selectedFeedback.feedback_text}</p>
+                  <small>Ngày gửi: {formatDate(selectedFeedback.submitted_at || selectedFeedback.createdAt)}</small>
+                </div>
+                <div className="manager-ops-summary manager-ops-wide">
+                  <strong>Các phản hồi đã gửi</strong>
+                  {responses.length ? responses.map((response, index) => (
+                    <p key={`${response.respondedAt || index}-${index}`}>{response.responseText}<small> - {response.responderName || 'Quản lý'} {response.respondedAt ? `(${formatDate(response.respondedAt)})` : ''}</small></p>
+                  )) : <p>Chưa có phản hồi nào.</p>}
+                </div>
+                <label className="manager-ops-wide">Thêm phản hồi mới<textarea onChange={(event) => setResponseText(event.target.value)} placeholder="Nhập phản hồi cho khách hàng..." required rows="6" value={responseText} /></label>
+                <div className="manager-ops-actions">
+                  <button className="manager-ops-button" type="submit"><Star size={15} /> {responses.length ? 'Thêm phản hồi' : 'Gửi phản hồi'}</button>
+                  <button className="manager-ops-danger" onClick={handleArchive} type="button"><Archive size={15} /> Lưu trữ</button>
+                </div>
+              </form>
+            ) : <div className="manager-ops-detail-empty">Chọn một góp ý để xem chi tiết và phản hồi.</div>}
+          </article>
+        </div>
       </section>
     </div>
   );

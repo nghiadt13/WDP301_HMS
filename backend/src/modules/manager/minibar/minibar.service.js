@@ -1,4 +1,4 @@
-const MinibarItem = require('../../../models/minibarItem.model');
+﻿const MinibarItem = require('../../../models/minibarItem.model');
 
 const createHttpError = (message, status = 400) => {
   const error = new Error(message);
@@ -8,6 +8,7 @@ const createHttpError = (message, status = 400) => {
 
 const buildMinibarPayload = (data) => {
   const price = Number(data.price);
+  const quantity = Number(data.quantity ?? 0);
 
   if (!String(data.name || '').trim()) {
     throw createHttpError('Vui long nhap ten mon minibar.');
@@ -21,10 +22,15 @@ const buildMinibarPayload = (data) => {
     throw createHttpError('Gia khong duoc nho hon 0.');
   }
 
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    throw createHttpError('So luong phai la so nguyen khong am.');
+  }
+
   return {
     name: String(data.name).trim(),
     category: String(data.category).trim(),
     price,
+    quantity,
     stock_status: data.stock_status || 'in_stock',
     image_url: String(data.image_url || '').trim(),
     description: String(data.description || '').trim(),
@@ -63,3 +69,4 @@ const minibarService = {
 };
 
 module.exports = minibarService;
+
