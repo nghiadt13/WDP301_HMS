@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const managerResponseSchema = new mongoose.Schema(
   {
@@ -24,6 +24,48 @@ const managerResponseSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const feedbackHistorySchema = new mongoose.Schema(
+  {
+    room_number: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+    },
+    feedback_text: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    response_text: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    status: {
+      type: String,
+      default: 'submitted',
+    },
+    submitted_at: {
+      type: Date,
+      default: null,
+    },
+    responded_at: {
+      type: Date,
+      default: null,
+    },
+    saved_at: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
 const customerFeedbackSchema = new mongoose.Schema(
   {
     customer_id: {
@@ -37,7 +79,7 @@ const customerFeedbackSchema = new mongoose.Schema(
     customer_name: {
       type: String,
       trim: true,
-      default: 'Khach hang',
+      default: 'Khách hàng',
     },
     customer_email: {
       type: String,
@@ -65,6 +107,10 @@ const customerFeedbackSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    feedback_history: {
+      type: [feedbackHistorySchema],
+      default: [],
+    },
     manager_responses: {
       type: [managerResponseSchema],
       default: [],
@@ -82,6 +128,10 @@ const customerFeedbackSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    archived_at: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -91,5 +141,6 @@ const customerFeedbackSchema = new mongoose.Schema(
 
 customerFeedbackSchema.index({ rating: 1, status: 1 });
 customerFeedbackSchema.index({ submitted_at: -1 });
+customerFeedbackSchema.index({ customer_id: 1 });
 
 module.exports = mongoose.model('CustomerFeedback', customerFeedbackSchema);

@@ -1,5 +1,9 @@
 ﻿import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 
+import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
+import CustomerServiceRequestsPage from './features/customer/pages/CustomerServiceRequestsPage.jsx';
+import CustomerServicesPage from './features/customer/pages/CustomerServicesPage.jsx';
+
 import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.jsx';
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
 import RoomManagePage from './features/manager/pages/RoomManagePage.jsx';
@@ -62,6 +66,9 @@ const App = () => {
         <Route path="profile" element={<MyProfilePage />} />
         <Route path="change-password" element={<ChangePasswordPage />} />
         <Route path="payment/:reservationId" element={<PaymentPage />} />
+        <Route path="customer/services" element={<CustomerServicesPage />} />
+        <Route path="customer/service-requests" element={<CustomerServiceRequestsPage />} />
+        <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
 
         {/* Manager routes */}
         <Route element={<ManagerProtectedRoute />}>
@@ -86,3 +93,4 @@ const App = () => {
 };
 
 export default App;
+
