@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BedDouble, ChevronDown, Plus, SlidersHorizontal, Check, Maximize, Users, DollarSign, Trash2, Pencil } from 'lucide-react';
+import { BedDouble, Plus, SlidersHorizontal, Check, Users, DollarSign, Trash2, Pencil } from 'lucide-react';
 import { useRooms, useDeleteRoom } from '../hooks/use-rooms';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import './room-manage.css';
@@ -43,6 +43,39 @@ const toFullUrl = (url) => {
 const fmtPrice = (v) => {
   if (!v && v !== 0) return '-';
   return v.toLocaleString('vi-VN');
+};
+
+const getRoomType = (room) => (typeof room.room_type_id === 'object' ? room.room_type_id : null);
+const getRoomTypeKey = (room) => getRoomType(room)?._id || room.room_type_id || 'unknown';
+const getRoomTypeName = (room) => getRoomType(room)?.name || 'Unknown room type';
+
+const groupRoomsByType = (rooms) => {
+  const map = new Map();
+
+  rooms.forEach((room) => {
+    const key = getRoomTypeKey(room);
+    const type = getRoomType(room);
+
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        type,
+        rooms: [],
+      });
+    }
+
+    map.get(key).rooms.push(room);
+  });
+
+  return Array.from(map.values()).map((group) => ({
+    ...group,
+    rooms: [...group.rooms].sort((first, second) =>
+      String(first.roomName || '').localeCompare(String(second.roomName || ''), 'en', {
+        numeric: true,
+        sensitivity: 'base',
+      })
+    ),
+  }));
 };
 
 // ─── Room Card ─────────────────────────────────────────────────
@@ -158,6 +191,91 @@ function RoomDetail({ room, onEdit, onDelete }) {
   );
 }
 
+function RoomTypeCard({ group, selected, onClick }) {
+  const sampleRoom = group.rooms[0] || {};
+  const type = group.type || {};
+  const img = toFullUrl(type.images?.[0] || sampleRoom.images?.[0]) || fallbackImages[0];
+  const availableCount = group.rooms.filter((room) => room.status === 'Available').length;
+
+  return (
+    <button type="button" onClick={onClick} className={`rm-room-card rm-type-card${selected ? ' is-selected' : ''}`}>
+      <img src={img} alt={type.name || 'Room type'} className="rm-room-card-img" />
+      <div className="rm-room-card-body">
+        <div className="rm-room-card-top">
+          <h3>{type.name || getRoomTypeName(sampleRoom)}</h3>
+          <span className="rm-status-badge is-available">{availableCount}/{group.rooms.length} rooms</span>
+        </div>
+        <p className="rm-room-card-desc">{type.description || sampleRoom.description}</p>
+        <div className="rm-room-card-bottom">
+          <div className="rm-room-card-meta">
+            {(type.bed_type || sampleRoom.bed_type) && <span><BedDouble size={12} />{type.bed_type || sampleRoom.bed_type}</span>}
+            {type.capacity && <span><Users size={12} />{type.capacity} guests</span>}
+            <span><DollarSign size={12} />{fmtPrice(type.base_price || sampleRoom.price)}đ</span>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function RoomTypeDetail({ group, onEdit, onDelete }) {
+  if (!group) {
+    return <div className="rm-detail-empty">Select a room type to view details</div>;
+  }
+
+  const type = group.type || {};
+  const sampleRoom = group.rooms[0] || {};
+  const images = type.images?.length > 0 ? type.images.map(toFullUrl) : (sampleRoom.images || []).map(toFullUrl);
+  const availableCount = group.rooms.filter((room) => room.status === 'Available').length;
+  const occupiedCount = group.rooms.filter((room) => room.status === 'Occupied').length;
+  const maintenanceCount = group.rooms.filter((room) => room.status === 'Maintenance').length;
+
+  return (
+    <div className="rm-detail">
+      <div className="rm-detail-top">
+        <h2>{type.name || getRoomTypeName(sampleRoom)}</h2>
+        <span className="rm-room-type-tag">{group.rooms.length} physical rooms</span>
+      </div>
+      <div className="rm-detail-status-row">
+        <span className="rm-status-badge is-available">{availableCount} Available</span>
+        {occupiedCount > 0 ? <span className="rm-status-badge is-booked">{occupiedCount} Occupied</span> : null}
+        {maintenanceCount > 0 ? <span className="rm-status-badge is-booked">{maintenanceCount} Maintenance</span> : null}
+      </div>
+      <div className="rm-detail-main-img">
+        <img src={images[0] || fallbackImages[0]} alt={type.name || 'Room type'} />
+      </div>
+      <div className="rm-detail-stats">
+        {(type.bed_type || sampleRoom.bed_type) && <span><BedDouble size={12} />{type.bed_type || sampleRoom.bed_type}</span>}
+        {type.capacity && <span><Users size={12} />{type.capacity} guests</span>}
+        <span><DollarSign size={12} />{fmtPrice(type.base_price || sampleRoom.price)}đ /đêm</span>
+      </div>
+      <p className="rm-detail-desc">{type.description || sampleRoom.description}</p>
+      <Section title="Features" items={type.features || []} />
+      <Section title="Facilities" items={type.facilities || []} />
+
+      <div className="rm-physical-room-list">
+        <h4>Room numbers</h4>
+        {group.rooms.map((room) => (
+          <div className="rm-physical-room-row" key={room._id}>
+            <div>
+              <strong>{room.roomName}</strong>
+              <span>{room.status}</span>
+            </div>
+            <div className="rm-room-card-btns">
+              <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => onEdit(room)} title="Edit">
+                <Pencil size={13} />
+              </button>
+              <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => onDelete(room)} title="Delete">
+                <Trash2 size={13} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Footer ────────────────────────────────────────────────────
 function Footer() {
   return (
@@ -182,9 +300,10 @@ function Footer() {
 // ─── Page ──────────────────────────────────────────────────────
 const RoomManagePage = () => {
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useRooms();
+  const { data, isLoading, isError } = useRooms({ limit: 500 });
   const rooms = data?.data ?? [];
   const [selectedId, setSelectedId] = useState(null);
+  const roomGroups = useMemo(() => groupRoomsByType(rooms), [rooms]);
 
   // Delete modal states
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -193,7 +312,7 @@ const RoomManagePage = () => {
   // Mutations
   const deleteMutation = useDeleteRoom();
 
-  const selected = rooms.find((r) => r._id === selectedId) ?? rooms[0];
+  const selected = roomGroups.find((group) => group.key === selectedId) ?? roomGroups[0];
 
   // ─── Handlers ──────────────────────────────────────────────
   const handleAdd = () => {
@@ -215,7 +334,7 @@ const RoomManagePage = () => {
       onSuccess: () => {
         setDeleteOpen(false);
         setDeleteTarget(null);
-        if (selectedId === deleteTarget._id) setSelectedId(null);
+        if (selected?.rooms?.some((room) => room._id === deleteTarget._id)) setSelectedId(null);
       },
     });
   };
@@ -243,24 +362,20 @@ const RoomManagePage = () => {
         {/* Left: Room list */}
         <div className="rm-list-panel">
           <div className="rm-list-toolbar">
-            <h2>Room Category</h2>
+            <h2>Room Categories</h2>
             <div className="rm-list-toolbar-actions">
-              <span>Sort by:</span>
-              <button type="button" className="rm-filter-btn">Popular <ChevronDown size={12} /></button>
-              <button type="button" className="rm-filter-btn">All Type <ChevronDown size={12} /></button>
+              <span>{roomGroups.length} types / {rooms.length} rooms</span>
               <button type="button" className="rm-add-btn" onClick={handleAdd}><Plus size={14} />Add Room</button>
               <button type="button" className="rm-sort-btn"><SlidersHorizontal size={14} /></button>
             </div>
           </div>
           <div className="rm-list-cards">
-            {rooms.map((r) => (
-              <RoomCard
-                key={r._id}
-                room={r}
-                selected={selected?._id === r._id}
-                onClick={() => setSelectedId(r._id)}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
+            {roomGroups.map((group) => (
+              <RoomTypeCard
+                key={group.key}
+                group={group}
+                selected={selected?.key === group.key}
+                onClick={() => setSelectedId(group.key)}
               />
             ))}
           </div>
@@ -268,9 +383,9 @@ const RoomManagePage = () => {
         {/* Right: Detail */}
         <div className="rm-detail-panel">
           {selected ? (
-            <RoomDetail room={selected} onEdit={handleEdit} onDelete={handleDelete} />
+            <RoomTypeDetail group={selected} onEdit={handleEdit} onDelete={handleDelete} />
           ) : (
-            <div className="rm-detail-empty">Select a room to view details</div>
+            <div className="rm-detail-empty">Select a room type to view details</div>
           )}
         </div>
       </div>

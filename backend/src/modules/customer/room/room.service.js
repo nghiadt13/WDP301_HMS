@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const asyncHandler = require('../../../utils/async-handler');
 const { createHttpError } = require('../../../utils/error.utils');
 const { parseDateOnly, parsePositiveInteger, addDays, getMonthStart, addMonths, toDateKey } = require('../../../utils/date.utils');
@@ -6,21 +7,24 @@ const { normalizeRoomName, getRoomOrder, getRoomQuantity } = require('../../../u
 
 const { ObjectId } = mongoose.Types;
 
-// ========== Constants ==========
 const ADULTS_PER_ROOM = 2;
 const CHILDREN_PER_ROOM = 1;
-const ACTIVE_ROOM_QUERY = {
-  roomName: /^PHONG /,
-  isActive: { $ne: false }
+const ACTIVE_ROOM_TYPE_QUERY = {
+  is_active: { $ne: false }
+};
+const ACTIVE_PHYSICAL_ROOM_QUERY = {
+  isActive: { $ne: false },
+  status: { $nin: ['Maintenance', 'OutOfService'] }
 };
 const REVIEWABLE_STATUS_PATTERN = /checkedin|checkedout|completed/i;
 
-// ========== Helper Functions ==========
-const getBookedRooms = async (db, roomId, checkInDate, checkOutDate) => {
+const toObjectId = (value) => (ObjectId.isValid(value) ? new ObjectId(value) : null);
+
+const getBookedRooms = async (db, roomTypeId, checkInDate, checkOutDate) => {
   const reservations = await db
     .collection('reservations')
     .find({
-      room_id: roomId,
+      room_type_id: roomTypeId,
       booking_status: { $not: /cancel/i },
       check_in_date: { $lt: checkOutDate },
       check_out_date: { $gt: checkInDate }
@@ -31,6 +35,12 @@ const getBookedRooms = async (db, roomId, checkInDate, checkOutDate) => {
   return reservations.reduce((total, reservation) => total + getRoomQuantity(reservation), 0);
 };
 
+const getTotalRoomsByType = (db, roomTypeId) =>
+  db.collection('rooms').countDocuments({
+    room_type_id: roomTypeId,
+    ...ACTIVE_PHYSICAL_ROOM_QUERY
+  });
+
 const buildOccupancy = (query) => {
   const checkIn = parseDateOnly(query.checkIn);
   const checkOut = parseDateOnly(query.checkOut);
@@ -38,15 +48,15 @@ const buildOccupancy = (query) => {
   const children = parsePositiveInteger(query.children, 0);
 
   if (!checkIn || !checkOut) {
-    throw createHttpError('Vui lòng chọn ngày đến và ngày đi hợp lệ.');
+    throw createHttpError('Please choose valid check-in and check-out dates.');
   }
 
   if (checkOut <= checkIn) {
-    throw createHttpError('Ngày đi phải sau ngày đến.');
+    throw createHttpError('Check-out date must be after check-in date.');
   }
 
   if (adults < 1) {
-    throw createHttpError('Cần ít nhất 1 người lớn để đặt phòng.');
+    throw createHttpError('At least 1 adult is required to book a room.');
   }
 
   const adultRoomCount = Math.ceil(adults / ADULTS_PER_ROOM);
@@ -66,8 +76,8 @@ const buildOccupancy = (query) => {
     childrenPerRoom: CHILDREN_PER_ROOM,
     isAssignable,
     message: isAssignable
-      ? `Cần ${requiredRooms} phòng cho ${adults} người lớn và ${children} trẻ em.`
-      : 'Trẻ em không thể tự đứng phòng. Vui lòng tăng số người lớn hoặc giảm số trẻ em.'
+      ? `Can fit ${adults} adult(s) and ${children} child(ren) in ${requiredRooms} room(s).`
+      : 'Children cannot occupy a room without an adult. Please increase adults or reduce children.'
   };
 };
 
@@ -86,25 +96,42 @@ const buildOccupancyCounts = (query) => {
   };
 };
 
-const mapRoom = (room, availability = null) => {
-  const features = Array.isArray(room.features) ? room.features : [];
-  const images = Array.isArray(room.images) ? room.images : [];
+const mapRoomType = (roomType, availability = null) => {
+  const features = Array.isArray(roomType.features) ? roomType.features : [];
+  const images = Array.isArray(roomType.images) ? roomType.images : roomType.image_url ? [roomType.image_url] : [];
+  const name = roomType.name || roomType.roomName || 'Room Type';
 
   return {
-    id: String(room._id),
-    name: normalizeRoomName(room.roomName),
-    rawName: room.roomName,
-    description: room.description || '',
+    id: String(roomType._id),
+    name: normalizeRoomName(name),
+    rawName: name,
+    description: roomType.description || '',
     image: images[0] || '',
     images,
-    area: features[0] || '',
-    guests: features[1] || '',
-    beds: features[2] || '',
-    facilities: Array.isArray(room.facilities) ? room.facilities : [],
-    price: Number(room.price || room.base_price || 0),
-    totalRooms: Number(room.totalRooms || 0),
+    area: roomType.area || features[0] || '',
+    guests: roomType.guests || features[1] || (roomType.capacity ? `${roomType.capacity} Guests` : ''),
+    beds: roomType.beds || features[2] || roomType.bed_type || '',
+    facilities: Array.isArray(roomType.facilities) ? roomType.facilities : [],
+    price: Number(roomType.base_price || roomType.price || 0),
+    totalRooms: Number(roomType.totalRooms || 0),
     availability
   };
+};
+
+const sortRoomTypes = (roomTypes) => {
+  return roomTypes.sort((firstRoomType, secondRoomType) => {
+    const firstOrder = Number.isFinite(firstRoomType.display_order) ? firstRoomType.display_order : getRoomOrder(firstRoomType.name);
+    const secondOrder = Number.isFinite(secondRoomType.display_order) ? secondRoomType.display_order : getRoomOrder(secondRoomType.name);
+
+    if (firstOrder !== secondOrder) {
+      return firstOrder - secondOrder;
+    }
+
+    return String(firstRoomType.name || '').localeCompare(String(secondRoomType.name || ''), 'en', {
+      numeric: true,
+      sensitivity: 'base'
+    });
+  });
 };
 
 const mapReview = async (db, feedback, roomName = 'Hotelify Room') => {
@@ -126,10 +153,10 @@ const mapReview = async (db, feedback, roomName = 'Hotelify Room') => {
   };
 };
 
-const getRoomReviews = async (db, room) => {
+const getRoomReviews = async (db, roomType) => {
   const reservations = await db
     .collection('reservations')
-    .find({ room_id: room._id })
+    .find({ room_type_id: roomType._id })
     .project({ _id: 1 })
     .toArray();
   const reservationIds = reservations.map((reservation) => reservation._id);
@@ -144,51 +171,56 @@ const getRoomReviews = async (db, room) => {
     .sort({ submitted_at: -1 })
     .toArray();
 
-  return Promise.all(feedbacks.map((feedback) => mapReview(db, feedback, normalizeRoomName(room.roomName))));
+  return Promise.all(feedbacks.map((feedback) => mapReview(db, feedback, normalizeRoomName(roomType.name))));
 };
 
-const getOtherRooms = async (db, roomId) => {
-  const rooms = await db
-    .collection('rooms')
+const getOtherRooms = async (db, roomTypeId) => {
+  const roomTypes = await db
+    .collection('room_types')
     .find({
-      ...ACTIVE_ROOM_QUERY,
-      _id: { $ne: roomId }
+      ...ACTIVE_ROOM_TYPE_QUERY,
+      _id: { $ne: roomTypeId }
     })
     .toArray();
 
-  rooms.sort((firstRoom, secondRoom) => getRoomOrder(firstRoom.roomName) - getRoomOrder(secondRoom.roomName));
-
-  return rooms.slice(0, 5).map((room) => mapRoom(room));
+  return sortRoomTypes(roomTypes).slice(0, 5).map((roomType) => mapRoomType(roomType));
 };
 
-const getRoomsWithAvailability = async (db, occupancy) => {
-  const rooms = await db.collection('rooms').find(ACTIVE_ROOM_QUERY).toArray();
+const withAvailability = async (db, roomType, occupancy) => {
+  const [totalRooms, bookedRooms] = await Promise.all([
+    getTotalRoomsByType(db, roomType._id),
+    getBookedRooms(db, roomType._id, occupancy.checkIn, occupancy.checkOut)
+  ]);
+  const availableRooms = Math.max(0, totalRooms - bookedRooms);
+  const canBook = occupancy.isAssignable && availableRooms >= occupancy.requiredRooms;
 
-  rooms.sort((firstRoom, secondRoom) => getRoomOrder(firstRoom.roomName) - getRoomOrder(secondRoom.roomName));
-
-  return Promise.all(
-    rooms.map(async (room) => {
-      const bookedRooms = await getBookedRooms(db, room._id, occupancy.checkIn, occupancy.checkOut);
-      const totalRooms = Number(room.totalRooms || 0);
-      const availableRooms = Math.max(0, totalRooms - bookedRooms);
-      const canBook = occupancy.isAssignable && availableRooms >= occupancy.requiredRooms;
-
-      return mapRoom(room, {
-        totalRooms,
-        bookedRooms,
-        availableRooms,
-        requiredRooms: occupancy.requiredRooms,
-        canBook
-      });
-    })
+  return mapRoomType(
+    {
+      ...roomType,
+      totalRooms
+    },
+    {
+      totalRooms,
+      bookedRooms,
+      availableRooms,
+      requiredRooms: occupancy.requiredRooms,
+      canBook
+    }
   );
 };
 
-const findReviewableReservation = async (db, customerId, roomId) =>
+const getRoomsWithAvailability = async (db, occupancy) => {
+  const roomTypes = await db.collection('room_types').find(ACTIVE_ROOM_TYPE_QUERY).toArray();
+  const sortedRoomTypes = sortRoomTypes(roomTypes);
+
+  return Promise.all(sortedRoomTypes.map((roomType) => withAvailability(db, roomType, occupancy)));
+};
+
+const findReviewableReservation = async (db, customerId, roomTypeId) =>
   db.collection('reservations').findOne(
     {
       customer_id: customerId,
-      room_id: roomId,
+      room_type_id: roomTypeId,
       booking_status: REVIEWABLE_STATUS_PATTERN
     },
     {
@@ -200,7 +232,6 @@ const findReviewableReservation = async (db, customerId, roomId) =>
     }
   );
 
-// ========== Public Room Operations ==========
 const searchRooms = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
   const occupancy = buildOccupancy(req.query);
@@ -224,54 +255,54 @@ const searchRooms = asyncHandler(async (req, res) => {
 
 const listRooms = asyncHandler(async (_req, res) => {
   const db = mongoose.connection.db;
-  const rooms = await db.collection('rooms').find(ACTIVE_ROOM_QUERY).toArray();
+  const roomTypes = await db.collection('room_types').find(ACTIVE_ROOM_TYPE_QUERY).toArray();
+  const sortedRoomTypes = sortRoomTypes(roomTypes);
 
-  rooms.sort((firstRoom, secondRoom) => getRoomOrder(firstRoom.roomName) - getRoomOrder(secondRoom.roomName));
+  const rooms = await Promise.all(
+    sortedRoomTypes.map(async (roomType) =>
+      mapRoomType({
+        ...roomType,
+        totalRooms: await getTotalRoomsByType(db, roomType._id)
+      })
+    )
+  );
 
   res.send({
     hero: {
       image: 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/slide_1.jpg',
-      title: 'PHÒNG NGHỈ',
+      title: 'PHONG NGHI',
       description:
-        'Với vị trí đắc địa bên bờ Vịnh Hạ Long, Hotelify mang đến các hạng phòng nghỉ sang trọng, tiện nghi và phù hợp với nhiều nhu cầu lưu trú.'
+        'Hotelify offers elegant room types with real room inventory for every stay need.'
     },
-    rooms: rooms.map((room) => mapRoom(room))
+    rooms
   });
 });
 
 const getRoomDetail = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
+  const roomTypeId = toObjectId(req.params.roomId || req.params.id);
 
-  if (!ObjectId.isValid(req.params.roomId || req.params.id)) {
-    throw createHttpError('Không tìm thấy phòng.', 404);
+  if (!roomTypeId) {
+    throw createHttpError('Room type not found.', 404);
   }
 
-  const roomId = req.params.roomId || req.params.id;
-  const room = await db.collection('rooms').findOne({
-    _id: new ObjectId(roomId),
-    isActive: { $ne: false }
+  const roomType = await db.collection('room_types').findOne({
+    _id: roomTypeId,
+    is_active: { $ne: false }
   });
 
-  if (!room) {
-    throw createHttpError('Không tìm thấy phòng.', 404);
+  if (!roomType) {
+    throw createHttpError('Room type not found.', 404);
   }
 
   let availability = null;
   let search = null;
+  let mappedRoom = mapRoomType(roomType);
 
   if (req.query.checkIn || req.query.checkOut) {
     const occupancy = buildOccupancy(req.query);
-    const bookedRooms = await getBookedRooms(db, room._id, occupancy.checkIn, occupancy.checkOut);
-    const totalRooms = Number(room.totalRooms || 0);
-    const availableRooms = Math.max(0, totalRooms - bookedRooms);
-
-    availability = {
-      totalRooms,
-      bookedRooms,
-      availableRooms,
-      requiredRooms: occupancy.requiredRooms,
-      canBook: occupancy.isAssignable && availableRooms >= occupancy.requiredRooms
-    };
+    mappedRoom = await withAvailability(db, roomType, occupancy);
+    availability = mappedRoom.availability;
 
     search = {
       checkIn: occupancy.checkInDate,
@@ -284,15 +315,17 @@ const getRoomDetail = asyncHandler(async (req, res) => {
       isAssignable: occupancy.isAssignable,
       message: occupancy.message
     };
+  } else {
+    mappedRoom.totalRooms = await getTotalRoomsByType(db, roomType._id);
   }
 
   const [reviews, otherRooms] = await Promise.all([
-    getRoomReviews(db, room),
-    getOtherRooms(db, room._id)
+    getRoomReviews(db, roomType),
+    getOtherRooms(db, roomType._id)
   ]);
 
   res.send({
-    room: mapRoom(room, availability),
+    room: mappedRoom,
     search,
     otherRooms,
     reviews
@@ -301,19 +334,19 @@ const getRoomDetail = asyncHandler(async (req, res) => {
 
 const getRoomCalendar = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
+  const roomTypeId = toObjectId(req.params.roomId || req.params.id);
 
-  if (!ObjectId.isValid(req.params.roomId || req.params.id)) {
-    throw createHttpError('Không tìm thấy phòng.', 404);
+  if (!roomTypeId) {
+    throw createHttpError('Room type not found.', 404);
   }
 
-  const roomId = req.params.roomId || req.params.id;
-  const room = await db.collection('rooms').findOne({
-    _id: new ObjectId(roomId),
-    isActive: { $ne: false }
+  const roomType = await db.collection('room_types').findOne({
+    _id: roomTypeId,
+    is_active: { $ne: false }
   });
 
-  if (!room) {
-    throw createHttpError('Không tìm thấy phòng.', 404);
+  if (!roomType) {
+    throw createHttpError('Room type not found.', 404);
   }
 
   const today = new Date();
@@ -323,13 +356,13 @@ const getRoomCalendar = asyncHandler(async (req, res) => {
   const monthStart = getMonthStart(fromDate);
   const months = Math.min(6, Math.max(1, parsePositiveInteger(req.query.months, 2)));
   const rangeEnd = addMonths(monthStart, months);
-  const totalRooms = Number(room.totalRooms || 0);
+  const totalRooms = await getTotalRoomsByType(db, roomType._id);
   const occupancy = buildOccupancyCounts(req.query);
 
   const reservations = await db
     .collection('reservations')
     .find({
-      room_id: room._id,
+      room_type_id: roomType._id,
       booking_status: { $not: /cancel/i },
       check_in_date: { $lt: rangeEnd },
       check_out_date: { $gt: monthStart }
@@ -358,7 +391,7 @@ const getRoomCalendar = asyncHandler(async (req, res) => {
   }
 
   res.send({
-    roomId: String(room._id),
+    roomId: String(roomType._id),
     totalRooms,
     requiredRooms: occupancy.requiredRooms,
     months,
@@ -370,40 +403,40 @@ const getRoomCalendar = asyncHandler(async (req, res) => {
 
 const submitRoomReview = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
+  const roomTypeId = toObjectId(req.params.roomId || req.params.id);
 
-  if (!ObjectId.isValid(req.params.roomId || req.params.id)) {
-    throw createHttpError('Không tìm thấy phòng.', 404);
+  if (!roomTypeId) {
+    throw createHttpError('Room type not found.', 404);
   }
 
-  const roomId = req.params.roomId || req.params.id;
-  const room = await db.collection('rooms').findOne({
-    _id: new ObjectId(roomId),
-    isActive: { $ne: false }
+  const roomType = await db.collection('room_types').findOne({
+    _id: roomTypeId,
+    is_active: { $ne: false }
   });
 
-  if (!room) {
-    throw createHttpError('Không tìm thấy phòng.', 404);
+  if (!roomType) {
+    throw createHttpError('Room type not found.', 404);
   }
 
   const rating = Number.parseInt(req.body.rating, 10);
   const feedbackText = String(req.body.feedbackText || '').trim();
 
   if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-    throw createHttpError('Vui lòng chọn đánh giá từ 1 đến 5 sao.');
+    throw createHttpError('Please choose a rating from 1 to 5 stars.');
   }
 
   if (feedbackText.length < 5) {
-    throw createHttpError('Bình luận cần tối thiểu 5 ký tự.');
+    throw createHttpError('Review must be at least 5 characters.');
   }
 
   if (feedbackText.length > 1000) {
-    throw createHttpError('Bình luận không được vượt quá 1000 ký tự.');
+    throw createHttpError('Review cannot exceed 1000 characters.');
   }
 
-  const reservation = await findReviewableReservation(db, req.user._id, room._id);
+  const reservation = await findReviewableReservation(db, req.user._id, roomType._id);
 
   if (!reservation) {
-    throw createHttpError('Bạn chỉ có thể bình luận sau khi đã từng đặt và check-in hoặc hoàn thành phòng này.', 403);
+    throw createHttpError('You can only review this room type after a checked-in or completed booking.', 403);
   }
 
   const now = new Date();
@@ -440,33 +473,29 @@ const submitRoomReview = asyncHandler(async (req, res) => {
     }));
 
   res.status(201).send({
-    message: 'Cảm ơn bạn đã gửi đánh giá.',
-    review: await mapReview(db, feedback, normalizeRoomName(room.roomName))
+    message: 'Thank you for your review.',
+    review: await mapReview(db, feedback, normalizeRoomName(roomType.name))
   });
 });
 
-// For getById used by public routes — uses Mongoose model
-const Room = require('../../../models/room.model');
-
-const POPULATE_OPTS = [
-  { path: 'room_type_id', select: 'name description bed_type capacity base_price images' },
-  { path: 'amenity_ids', select: 'name description' },
-  { path: 'feature_ids', select: 'name description' },
-];
-
 const getById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const roomTypeId = toObjectId(req.params.id);
 
-  if (!ObjectId.isValid(id)) {
-    throw createHttpError('Invalid room ID.', 400);
+  if (!roomTypeId) {
+    throw createHttpError('Invalid room type ID.', 400);
   }
 
-  const room = await Room.findById(id).populate(POPULATE_OPTS);
-  if (!room) {
-    throw createHttpError('Room not found.', 404);
+  const db = mongoose.connection.db;
+  const roomType = await db.collection('room_types').findOne({
+    _id: roomTypeId,
+    is_active: { $ne: false }
+  });
+
+  if (!roomType) {
+    throw createHttpError('Room type not found.', 404);
   }
 
-  res.send({ room: mapRoom(room) });
+  res.send({ room: mapRoomType(roomType) });
 });
 
 module.exports = {

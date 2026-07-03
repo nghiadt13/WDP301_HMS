@@ -88,6 +88,28 @@ const getCompletedPayments = async (db, reservationId) =>
 
 const getPaidAmount = (payments) => payments.reduce((total, payment) => total + Number(payment.amount || 0), 0);
 
+const updateReservationAfterPayment = async (db, reservation, paidAmount, now) => {
+  const totalAmount = Number(reservation.total_amount || 0);
+  const isFullyPaid = paidAmount >= totalAmount;
+
+  const update = {
+    deposit_amount: paidAmount,
+    payment_status: isFullyPaid ? 'Paid' : 'DepositPaid',
+    updated_at: now
+  };
+
+  if (/pending/i.test(String(reservation.booking_status || ''))) {
+    update.booking_status = 'Confirmed';
+  }
+
+  await db.collection('reservations').updateOne(
+    { _id: reservation._id },
+    { $set: update }
+  );
+
+  return update;
+};
+
 const createVietQrPayment = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
   const reservation = await getReservationForCustomer(db, req.params.reservationId, req.user._id);
@@ -101,7 +123,7 @@ const createVietQrPayment = asyncHandler(async (req, res) => {
   const paidAmount = getPaidAmount(completedPayments);
   const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
-  if (remainingAmount <= 0 || /paid/i.test(String(reservation.payment_status || ''))) {
+  if (remainingAmount <= 0 || /^paid$/i.test(String(reservation.payment_status || ''))) {
     return res.send({
       message: 'Reservation is already paid.',
       paidAmount,
@@ -169,6 +191,63 @@ const createVietQrPayment = asyncHandler(async (req, res) => {
   });
 });
 
+const createMockPayment = asyncHandler(async (req, res) => {
+  const db = mongoose.connection.db;
+  const reservation = await getReservationForCustomer(db, req.params.reservationId, req.user._id);
+  const totalAmount = Number(reservation.total_amount || 0);
+
+  if (totalAmount <= 0) {
+    throw createHttpError('Reservation amount is invalid.', 400);
+  }
+
+  const completedPayments = await getCompletedPayments(db, reservation._id);
+  const paidAmount = getPaidAmount(completedPayments);
+  const remainingAmount = Math.max(0, totalAmount - paidAmount);
+
+  if (remainingAmount <= 0 || /^paid$/i.test(String(reservation.payment_status || ''))) {
+    return res.send({
+      message: 'Reservation is already paid.',
+      paidAmount,
+      remainingAmount: 0,
+      paymentStatus: 'Paid'
+    });
+  }
+
+  const now = new Date();
+  const transactionId = `MOCK-${normalizeForMatching(reservation.booking_code).slice(0, 24)}-${Date.now().toString(36).toUpperCase()}`;
+  const payment = {
+    _id: new ObjectId(),
+    reservation_id: reservation._id,
+    invoice_id: reservation.invoice_id || null,
+    payment_method: 'MockAPI',
+    amount: remainingAmount,
+    transaction_id: transactionId,
+    status: 'Completed',
+    paid_at: now,
+    created_at: now,
+    updated_at: now,
+    mock_payload: {
+      provider: 'Hotelify MockAPI',
+      cardLast4: String(req.body.cardLast4 || '4242').slice(-4),
+      approved: true
+    }
+  };
+
+  await db.collection('payments').insertOne(payment);
+
+  const newPaidAmount = paidAmount + remainingAmount;
+  const reservationUpdate = await updateReservationAfterPayment(db, reservation, newPaidAmount, now);
+
+  res.status(201).send({
+    message: 'MockAPI payment completed successfully.',
+    paidAmount: newPaidAmount,
+    payment: mapPayment(payment),
+    paymentStatus: reservationUpdate.payment_status,
+    remainingAmount: Math.max(0, totalAmount - newPaidAmount),
+    totalAmount
+  });
+});
+
 const getReservationPaymentStatus = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
   const reservation = await getReservationForCustomer(db, req.params.reservationId, req.user._id);
@@ -185,6 +264,7 @@ const getReservationPaymentStatus = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  createMockPayment,
   createVietQrPayment,
   getReservationPaymentStatus
 };

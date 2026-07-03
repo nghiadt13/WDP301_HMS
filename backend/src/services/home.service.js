@@ -16,9 +16,9 @@ const bannerItems = Array.from({ length: 9 }, (_, index) => {
 
 const lobbyContent = {
   eyebrow: 'Paddington Bayview Ha Long',
-  title: 'Không gian sảnh khách sạn',
+  title: 'Khong gian sanh khach san',
   description:
-    'Trải nghiệm khu sảnh rộng, sáng và sang trọng với các góc tiếp khách được thiết kế cho cả nghỉ dưỡng lẫn công tác.',
+    'Trai nghiem khu sanh rong, sang va sang trong voi cac goc tiep khach duoc thiet ke cho ca nghi duong lan cong tac.',
   images: [
     ['lobby-1', 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/sanh_khach_san_1.jpg'],
     ['lobby-5', 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/sanh_khach_san_5.jpg'],
@@ -32,9 +32,9 @@ const lobbyContent = {
 };
 
 const roomIntro = {
-  title: 'LOẠI PHÒNG',
+  title: 'LOAI PHONG',
   description:
-    'Với vị trí đắc địa bên bờ Vịnh Hạ Long, khách sạn Paddington Halong Bayview sở hữu không gian lý tưởng cùng các phòng nghỉ sang trọng, tiện nghi và phù hợp với nhiều nhu cầu lưu trú.',
+    'Voi vi tri dac dia ben bo Vinh Ha Long, Hotelify so huu cac hang phong nghi sang trong, tien nghi va phu hop voi nhieu nhu cau luu tru.',
   image: 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_03.jpg',
   alt: 'Paddington Bayview Ha Long room view'
 };
@@ -48,7 +48,7 @@ const mapHomeContentItem = (item) => ({
   description: item.description || ''
 });
 
-const displayRoomName = (roomName = '') => roomName.replace(/^PHONG\b/i, 'PHÒNG');
+const displayRoomName = (roomName = '') => roomName.replace(/^PHONG\b/i, 'PHONG');
 
 const roomDisplayOrder = [
   'PHONG DELUXE',
@@ -59,45 +59,60 @@ const roomDisplayOrder = [
   'PHONG PRESIDENT SUITE'
 ];
 
-const getRoomDisplayOrder = (roomName) => {
-  const index = roomDisplayOrder.indexOf(roomName);
+const getRoomDisplayOrder = (roomName = '') => {
+  const index = roomDisplayOrder.indexOf(String(roomName).toUpperCase());
   return index === -1 ? roomDisplayOrder.length : index;
 };
 
-const mapHomeRoom = (room) => {
-  const features = Array.isArray(room.features) ? room.features : [];
+const mapHomeRoom = (roomType) => {
+  const features = Array.isArray(roomType.features) ? roomType.features : [];
 
   return {
-    id: String(room._id),
-    src: room.images?.[0] || '',
-    alt: displayRoomName(room.roomName),
-    name: displayRoomName(room.roomName),
-    area: features[0] || '',
-    guests: features[1] || '',
-    beds: features[2] || '',
-    description: room.description || ''
+    id: String(roomType._id),
+    src: roomType.images?.[0] || roomType.image_url || '',
+    alt: displayRoomName(roomType.name),
+    name: displayRoomName(roomType.name),
+    area: roomType.area || features[0] || '',
+    guests: roomType.guests || features[1] || (roomType.capacity ? `${roomType.capacity} Guests` : ''),
+    beds: roomType.beds || features[2] || roomType.bed_type || '',
+    description: roomType.description || ''
   };
 };
 
 const getHomePage = asyncHandler(async (_req, res) => {
   const db = mongoose.connection.db;
-  const roomsCollection = db.collection('rooms');
 
-  const rooms = await roomsCollection
+  const roomTypes = await db
+    .collection('room_types')
     .find({
-      roomName: /^PHONG /,
-      isActive: { $ne: false }
+      is_active: { $ne: false }
     })
-    .sort({ createdAt: 1, roomName: 1 })
+    .sort({ display_order: 1, createdAt: 1, name: 1 })
     .toArray();
 
-  rooms.sort((firstRoom, secondRoom) => getRoomDisplayOrder(firstRoom.roomName) - getRoomDisplayOrder(secondRoom.roomName));
+  roomTypes.sort((firstRoomType, secondRoomType) => {
+    const firstOrder = Number.isFinite(firstRoomType.display_order)
+      ? firstRoomType.display_order
+      : getRoomDisplayOrder(firstRoomType.name);
+    const secondOrder = Number.isFinite(secondRoomType.display_order)
+      ? secondRoomType.display_order
+      : getRoomDisplayOrder(secondRoomType.name);
+
+    if (firstOrder !== secondOrder) {
+      return firstOrder - secondOrder;
+    }
+
+    return String(firstRoomType.name || '').localeCompare(String(secondRoomType.name || ''), 'en', {
+      numeric: true,
+      sensitivity: 'base'
+    });
+  });
 
   res.send({
     banners: bannerItems.map(mapHomeContentItem),
     lobby: lobbyContent,
     roomIntro,
-    rooms: rooms.map(mapHomeRoom)
+    rooms: roomTypes.map(mapHomeRoom)
   });
 });
 

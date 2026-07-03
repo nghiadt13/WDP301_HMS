@@ -5,8 +5,7 @@ import {
   BedDouble,
   CalendarDays,
   CheckCircle2,
-  Copy,
-  QrCode,
+  CreditCard,
   RefreshCw,
   ShieldCheck,
   Users
@@ -53,11 +52,10 @@ const PaymentPage = () => {
     room: null
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [isMockPaying, setIsMockPaying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [paymentError, setPaymentError] = useState('');
-  const [paymentInfo, setPaymentInfo] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
 
   useEffect(() => {
@@ -93,7 +91,26 @@ const PaymentPage = () => {
     [reservation?.checkInDate, reservation?.checkOutDate]
   );
   const currentPaymentStatus = paymentStatus?.paymentStatus || reservation?.paymentStatus || 'Unpaid';
-  const remainingAmount = paymentStatus?.remainingAmount ?? paymentInfo?.remainingAmount ?? reservation?.totalAmount;
+  const paidAmount = paymentStatus?.paidAmount ?? reservation?.depositAmount ?? 0;
+  const remainingAmount = paymentStatus?.remainingAmount ?? Math.max(Number(reservation?.totalAmount || 0) - Number(paidAmount || 0), 0);
+  const isPaid = Number(remainingAmount || 0) <= 0 || /^paid$/i.test(String(currentPaymentStatus));
+
+  const applyPaymentStatus = (statusPayload) => {
+    setPaymentStatus(statusPayload);
+
+    setPageData((currentData) => ({
+      ...currentData,
+      reservation: {
+        ...currentData.reservation,
+        bookingStatus:
+          currentData.reservation?.bookingStatus === 'Pending'
+            ? 'Confirmed'
+            : currentData.reservation?.bookingStatus,
+        depositAmount: statusPayload.paidAmount,
+        paymentStatus: statusPayload.paymentStatus
+      }
+    }));
+  };
 
   const checkPaymentStatus = async ({ silent = false } = {}) => {
     if (!reservation?.id) {
@@ -107,17 +124,11 @@ const PaymentPage = () => {
 
     try {
       const response = await axiosClient.get(`/payments/reservations/${reservation.id}/status`);
-      setPaymentStatus(response.data);
 
       if (/paid/i.test(String(response.data.paymentStatus || ''))) {
-        setPageData((currentData) => ({
-          ...currentData,
-          reservation: {
-            ...currentData.reservation,
-            depositAmount: response.data.paidAmount,
-            paymentStatus: response.data.paymentStatus
-          }
-        }));
+        applyPaymentStatus(response.data);
+      } else {
+        setPaymentStatus(response.data);
       }
     } catch (error) {
       if (!silent) {
@@ -131,29 +142,7 @@ const PaymentPage = () => {
   };
 
   useEffect(() => {
-    const createVietQrPayment = async () => {
-      if (!reservation?.id || /paid/i.test(String(reservation.paymentStatus || ''))) {
-        return;
-      }
-
-      setIsCreatingPayment(true);
-      setPaymentError('');
-
-      try {
-        const response = await axiosClient.post(`/payments/reservations/${reservation.id}/vietqr`);
-        setPaymentInfo(response.data);
-      } catch (error) {
-        setPaymentError(error.response?.data?.message || 'Không thể tạo mã VietQR.');
-      } finally {
-        setIsCreatingPayment(false);
-      }
-    };
-
-    createVietQrPayment();
-  }, [reservation?.id, reservation?.paymentStatus]);
-
-  useEffect(() => {
-    if (!reservation?.id || /paid/i.test(String(currentPaymentStatus))) {
+    if (!reservation?.id || isPaid) {
       return undefined;
     }
 
@@ -162,14 +151,27 @@ const PaymentPage = () => {
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, [reservation?.id, currentPaymentStatus]);
+  }, [reservation?.id, isPaid]);
 
-  const handleCopy = async (value) => {
+  const handleMockPayment = async () => {
+    if (!reservation?.id || isPaid) {
+      return;
+    }
+
+    setIsMockPaying(true);
+    setPaymentError('');
+
     try {
-      await navigator.clipboard.writeText(String(value || ''));
-      setPaymentError('');
-    } catch {
-      setPaymentError('Không thể copy nội dung. Vui lòng copy thủ công.');
+      const response = await axiosClient.post(`/payments/reservations/${reservation.id}/mock`, {
+        provider: 'MockAPI',
+        cardLast4: '4242'
+      });
+
+      applyPaymentStatus(response.data);
+    } catch (error) {
+      setPaymentError(error.response?.data?.message || 'Không thể thanh toán bằng MockAPI.');
+    } finally {
+      setIsMockPaying(false);
     }
   };
 
@@ -198,7 +200,7 @@ const PaymentPage = () => {
           <header>
             <span>Hotelify payment</span>
             <h1>Thanh toán đặt phòng</h1>
-            <p>Booking của bạn đã được tạo. Quét VietQR hoặc chuyển khoản đúng nội dung để Casso tự động xác nhận.</p>
+            <p>Booking của bạn đã được tạo. Dùng MockAPI để giả lập thanh toán thành công và cập nhật trạng thái đặt phòng.</p>
           </header>
 
           <div className="payment-room-preview">
@@ -238,64 +240,33 @@ const PaymentPage = () => {
           <section className="payment-method-card">
             <h2>Phương thức thanh toán</h2>
             <label>
-              <input type="radio" name="payment-method" defaultChecked />
+              <input type="radio" name="payment-method" checked readOnly />
               <span>
-                <strong>VietQR chuyển khoản ngân hàng</strong>
-                <small>Casso sẽ tự động xác nhận khi giao dịch về đúng nội dung chuyển khoản.</small>
+                <strong>MockAPI thanh toán demo</strong>
+                <small>Giả lập giao dịch thành công để kiểm thử luồng booking trước khi nối cổng thanh toán thật.</small>
               </span>
             </label>
           </section>
 
-          <section className="vietqr-payment-card">
+          <section className="vietqr-payment-card mockapi-payment-card">
             <div className="vietqr-payment-heading">
-              <span><QrCode size={18} /> VietQR</span>
+              <span><CreditCard size={18} /> MockAPI</span>
               <strong>{currentPaymentStatus}</strong>
             </div>
 
-            {isCreatingPayment ? (
-              <p>Đang tạo mã VietQR...</p>
-            ) : paymentInfo?.qrUrl ? (
-              <div className="vietqr-payment-layout">
-                <img src={paymentInfo.qrUrl} alt="VietQR payment code" />
-                <div className="vietqr-payment-info">
-                  <span>
-                    <small>Ngân hàng</small>
-                    <strong>{paymentInfo.bank?.bankId}</strong>
-                  </span>
-                  <span>
-                    <small>Số tài khoản</small>
-                    <strong>{paymentInfo.bank?.accountNo}</strong>
-                    <button type="button" onClick={() => handleCopy(paymentInfo.bank?.accountNo)}>
-                      <Copy size={15} /> Copy
-                    </button>
-                  </span>
-                  <span>
-                    <small>Chủ tài khoản</small>
-                    <strong>{paymentInfo.bank?.accountName || 'Hotelify'}</strong>
-                  </span>
-                  <span>
-                    <small>Số tiền</small>
-                    <strong>{formatCurrency(paymentInfo.amount)}</strong>
-                    <button type="button" onClick={() => handleCopy(paymentInfo.amount)}>
-                      <Copy size={15} /> Copy
-                    </button>
-                  </span>
-                  <span>
-                    <small>Nội dung chuyển khoản</small>
-                    <strong>{paymentInfo.transferContent}</strong>
-                    <button type="button" onClick={() => handleCopy(paymentInfo.transferContent)}>
-                      <Copy size={15} /> Copy
-                    </button>
-                  </span>
-                </div>
-              </div>
-            ) : /paid/i.test(String(currentPaymentStatus)) ? (
+            {isPaid ? (
               <div className="vietqr-paid-state">
                 <CheckCircle2 size={32} />
-                <strong>Thanh toán đã được xác nhận.</strong>
+                <strong>Thanh toán đã được xác nhận bằng MockAPI.</strong>
               </div>
             ) : (
-              <p>{paymentError || 'Chưa tạo được mã VietQR.'}</p>
+              <div className="mockapi-payment-box">
+                <p>MockAPI sẽ tạo một giao dịch thành công và cập nhật booking sang trạng thái đã thanh toán.</p>
+                <button type="button" disabled={isMockPaying} onClick={handleMockPayment}>
+                  <CreditCard size={17} />
+                  {isMockPaying ? 'Đang thanh toán...' : `Thanh toán ${formatCurrency(remainingAmount)}`}
+                </button>
+              </div>
             )}
 
             {paymentError ? <p className="vietqr-payment-error">{paymentError}</p> : null}
@@ -318,7 +289,7 @@ const PaymentPage = () => {
           </div>
           <div>
             <span>Đã thanh toán</span>
-            <strong>{formatCurrency(paymentStatus?.paidAmount || reservation.depositAmount)}</strong>
+            <strong>{formatCurrency(paidAmount)}</strong>
           </div>
           <hr />
           <div className="payment-total-row">

@@ -15,6 +15,18 @@ const roomTypeSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    area: {
+      type: String,
+      default: '',
+    },
+    guests: {
+      type: String,
+      default: '',
+    },
+    beds: {
+      type: String,
+      default: '',
+    },
     capacity: {
       type: Number,
       default: 1,
@@ -27,6 +39,18 @@ const roomTypeSchema = new mongoose.Schema(
     images: {
       type: [String],
       default: [],
+    },
+    features: {
+      type: [String],
+      default: [],
+    },
+    facilities: {
+      type: [String],
+      default: [],
+    },
+    display_order: {
+      type: Number,
+      default: 999,
     },
     is_active: {
       type: Boolean,

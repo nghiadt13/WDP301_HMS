@@ -4097,6 +4097,43 @@ button:disabled {
   color: #166534;
 }
 
+.mockapi-payment-box {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #dbe8ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.mockapi-payment-box p {
+  margin: 0;
+  color: #687589;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.mockapi-payment-box button {
+  width: max-content;
+  min-width: 220px;
+  height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: #087aa9;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mockapi-payment-box button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .payment-summary-card {
   position: sticky;
   top: 84px;

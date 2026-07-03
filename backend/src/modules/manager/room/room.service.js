@@ -1,4 +1,7 @@
 const Room = require('../../../models/room.model');
+require('../../../models/room-type.model');
+require('../../../models/amenity.model');
+require('../../../models/feature.model');
 const fs = require('fs');
 const path = require('path');
 
@@ -7,6 +10,15 @@ const POPULATE_OPTS = [
   { path: 'room_type_id', select: 'name description bed_type capacity base_price images' },
   { path: 'amenity_ids', select: 'name description' },
   { path: 'feature_ids', select: 'name description' },
+];
+
+const BOOKING_ROOM_ORDER = [
+  'PHONG DELUXE',
+  'PHONG PREMIUM',
+  'PHONG CLUB DELUXE TWIN',
+  'PHONG CLUB PADDINGTON DELUXE',
+  'PHONG GRAND SUITE',
+  'PHONG PRESIDENT SUITE',
 ];
 
 // ========== Utility ==========
@@ -22,6 +34,31 @@ const deleteImageFiles = async (imageUrls) => {
   }
 };
 
+const getBookingRoomOrder = (roomName = '') => {
+  const normalizedName = String(roomName).trim().toUpperCase();
+  const index = BOOKING_ROOM_ORDER.indexOf(normalizedName);
+  return index === -1 ? BOOKING_ROOM_ORDER.length : index;
+};
+
+const sortManagerRooms = (rooms) => {
+  return [...rooms].sort((firstRoom, secondRoom) => {
+    const firstName = String(firstRoom.roomName || '');
+    const secondName = String(secondRoom.roomName || '');
+    const firstIsBookingRoom = /^PHONG /i.test(firstName);
+    const secondIsBookingRoom = /^PHONG /i.test(secondName);
+
+    if (firstIsBookingRoom !== secondIsBookingRoom) {
+      return firstIsBookingRoom ? -1 : 1;
+    }
+
+    if (firstIsBookingRoom && secondIsBookingRoom) {
+      return getBookingRoomOrder(firstName) - getBookingRoomOrder(secondName);
+    }
+
+    return firstName.localeCompare(secondName, 'en', { numeric: true, sensitivity: 'base' });
+  });
+};
+
 // ========== Manager Room CRUD ==========
 const managerRoomService = {
   async getAll(query) {
@@ -31,7 +68,6 @@ const managerRoomService = {
       isActive,
       page = 1,
       limit = 10,
-      sort = '-createdAt',
     } = query;
 
     const filter = {};
@@ -40,24 +76,27 @@ const managerRoomService = {
     if (roomTypeId) filter.room_type_id = roomTypeId;
     if (status) filter.status = status;
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const skip = (pageNumber - 1) * limitNumber;
 
     const [rooms, total] = await Promise.all([
       Room.find(filter)
         .populate(POPULATE_OPTS)
-        .sort(sort)
-        .skip(skip)
-        .limit(Number(limit)),
+        .lean(),
       Room.countDocuments(filter),
     ]);
 
+    const sortedRooms = sortManagerRooms(rooms);
+    const pagedRooms = sortedRooms.slice(skip, skip + limitNumber);
+
     return {
-      data: rooms,
+      data: pagedRooms,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: pageNumber,
+        limit: limitNumber,
         total,
-        totalPages: Math.ceil(total / Number(limit)),
+        totalPages: Math.ceil(total / limitNumber),
       },
     };
   },
