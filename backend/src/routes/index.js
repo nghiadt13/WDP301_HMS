@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 
 // Shared routes
 const authRoutes = require('./auth.route');
@@ -23,6 +23,8 @@ const managerRoomTypeRoutes = require('../modules/manager/room-type/room-type.ro
 // Customer modules
 const customerReservationRoutes = require('../modules/customer/reservation/reservation.route');
 const customerPaymentRoutes = require('../modules/customer/payment/payment.route');
+const customerServiceRoutes = require('../modules/customer/service/service.route');
+const customerFeedbackRoutes = require('../modules/customer/feedback/feedback.route');
 
 // Shared webhook
 const cassoWebhookRoutes = require('../modules/shared/webhook/casso-webhook.route');
@@ -59,8 +61,11 @@ router.use('/manager/room-types', managerRoomTypeRoutes);
 // Customer routes
 router.use('/reservations', customerReservationRoutes);
 router.use('/payments', customerPaymentRoutes);
+router.use('/customer', customerServiceRoutes);
+router.use('/customer', customerFeedbackRoutes);
 
 // Shared webhook
 router.use('/webhooks', cassoWebhookRoutes);
 
 module.exports = router;
+

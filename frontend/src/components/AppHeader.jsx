@@ -67,6 +67,9 @@ const AppHeader = () => {
         .toUpperCase()
     : 'GU';
 
+  const roleName = String(user?.role?.name || user?.role_name || user?.role || '').toLowerCase();
+  const isCustomer = roleName.includes('customer') || roleName.includes('khách');
+
   const handleLogout = () => {
     localStorage.removeItem('hotelify_token');
     localStorage.removeItem('hotelify_user');
@@ -77,28 +80,34 @@ const AppHeader = () => {
 
   return (
     <header className="app-header">
-      <Link className="header-brand" to="/" aria-label="Hotelify home">
+      <Link className="header-brand" to="/" aria-label="Trang chủ Hotelify">
         <Building2 size={28} strokeWidth={2.2} />
         <span>Hotelify</span>
       </Link>
 
-      <nav className="header-nav" aria-label="Main navigation">
+      <nav className="header-nav" aria-label="Điều hướng chính">
         <Link to="/">Trang chủ</Link>
         <Link to="/listRoom">Danh sách phòng</Link>
         <Link to="/booking">Đặt phòng</Link>
+        {isCustomer ? (
+          <>
+            <Link to="/customer/services">Dịch vụ</Link>
+            <Link to="/customer/feedback">Góp ý</Link>
+          </>
+        ) : null}
       </nav>
 
       <div className="header-actions">
         <label className="header-search">
           <Search size={18} />
-          <input type="search" placeholder="Search placeholder" />
+          <input type="search" placeholder="Tìm kiếm" />
         </label>
 
         <Link className="header-icon-button has-dot" to="/booking" aria-label="Đặt phòng">
           <CalendarDays size={20} />
         </Link>
 
-        <button className="header-icon-button" type="button" aria-label="Notifications">
+        <button className="header-icon-button" type="button" aria-label="Thông báo">
           <Bell size={20} />
         </button>
 
@@ -122,7 +131,7 @@ const AppHeader = () => {
               </span>
               <span className="header-profile-copy">
                 <strong>{user.full_name}</strong>
-                <span>{user.role?.name || 'Guest'}</span>
+                <span>{user.role?.name || 'Khách hàng'}</span>
               </span>
             </button>
 
@@ -138,7 +147,7 @@ const AppHeader = () => {
                   )}
                   <div>
                     <strong>{user.full_name}</strong>
-                    <span>{user.email || user.role?.name || 'Guest'}</span>
+                    <span>{user.email || user.role?.name || 'Khách hàng'}</span>
                   </div>
                 </div>
                 <Link
@@ -147,7 +156,7 @@ const AppHeader = () => {
                   role="menuitem"
                   onClick={() => setIsProfileMenuOpen(false)}
                 >
-                  My Profile
+                  Hồ sơ của tôi
                 </Link>
                 <Link
                   className="header-profile-menu-item"
@@ -155,7 +164,7 @@ const AppHeader = () => {
                   role="menuitem"
                   onClick={() => setIsProfileMenuOpen(false)}
                 >
-                  Change Password
+                  Đổi mật khẩu
                 </Link>
                 <button
                   className="header-profile-menu-item"

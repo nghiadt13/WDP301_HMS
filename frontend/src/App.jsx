@@ -1,4 +1,8 @@
-import { Route, Routes } from 'react-router-dom';
+﻿import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+
+import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
+import CustomerServiceRequestsPage from './features/customer/pages/CustomerServiceRequestsPage.jsx';
+import CustomerServicesPage from './features/customer/pages/CustomerServicesPage.jsx';
 
 import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.jsx';
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
@@ -22,6 +26,27 @@ import RoomDetailPage from './pages/RoomDetailPage.jsx';
 import RoomListPage from './pages/RoomListPage.jsx';
 import RoomSearchResultsPage from './pages/RoomSearchResultsPage.jsx';
 
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('hotelify_user') || 'null');
+  } catch {
+    return null;
+  }
+};
+
+const ManagerProtectedRoute = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('hotelify_token');
+  const user = getStoredUser();
+  const roleName = String(user?.role?.name || '').toLowerCase();
+
+  if (!token || !roleName.includes('manager')) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
+};
+
 const App = () => {
   return (
     <Routes>
@@ -41,16 +66,21 @@ const App = () => {
         <Route path="profile" element={<MyProfilePage />} />
         <Route path="change-password" element={<ChangePasswordPage />} />
         <Route path="payment/:reservationId" element={<PaymentPage />} />
+        <Route path="customer/services" element={<CustomerServicesPage />} />
+        <Route path="customer/service-requests" element={<CustomerServiceRequestsPage />} />
+        <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
 
         {/* Manager routes */}
-        <Route path="manager" element={<ManagerLayout />}>
-          <Route index element={<ManagerDashboardPage />} />
-          <Route path="rooms" element={<RoomManagePage />} />
-          <Route path="rooms/add" element={<AddRoomPage />} />
-          <Route path="rooms/:id/edit" element={<EditRoomPage />} />
-          <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
-          <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
-          <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
+        <Route element={<ManagerProtectedRoute />}>
+          <Route path="manager" element={<ManagerLayout />}>
+            <Route index element={<ManagerDashboardPage />} />
+            <Route path="rooms" element={<RoomManagePage />} />
+            <Route path="rooms/add" element={<AddRoomPage />} />
+            <Route path="rooms/:id/edit" element={<EditRoomPage />} />
+            <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
+            <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
+            <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
+          </Route>
         </Route>
 
         {/* Receptionist routes */}

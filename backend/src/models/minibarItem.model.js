@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
 const minibarItemSchema = new mongoose.Schema(
   {
@@ -21,6 +21,11 @@ const minibarItemSchema = new mongoose.Schema(
       type: String,
       enum: ['in_stock', 'low_stock', 'out_of_stock'],
       default: 'in_stock',
+    },
+    quantity: {
+      type: Number,
+      min: [0, 'Quantity cannot be negative'],
+      default: 0,
     },
     image_url: {
       type: String,
@@ -46,3 +51,4 @@ const minibarItemSchema = new mongoose.Schema(
 minibarItemSchema.index({ category: 1, is_active: 1 });
 
 module.exports = mongoose.model('MinibarItem', minibarItemSchema);
+

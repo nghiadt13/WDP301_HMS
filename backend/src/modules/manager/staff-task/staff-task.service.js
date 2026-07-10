@@ -1,4 +1,4 @@
-const StaffTask = require('../../../models/staffTask.model');
+﻿const StaffTask = require('../../../models/staffTask.model');
 const User = require('../../../models/user.model');
 
 const mockStaffMembers = [
@@ -14,7 +14,10 @@ const createHttpError = (message, status = 400) => {
   return error;
 };
 
-const isValidRoomNumber = (roomNumber) => /^[1-9][0-9]{2,3}$/.test(String(roomNumber || '').trim());
+const isValidRoomNumber = (roomNumber) => {
+  const value = String(roomNumber || '').trim();
+  return /^[1-9][0-9]{2,3}$/.test(value) || /^[A-Za-z][A-Za-z0-9\s-]{1,39}$/.test(value);
+};
 
 const assertFutureOrToday = (deadline) => {
   const inputDate = new Date(deadline);
@@ -45,7 +48,7 @@ const buildStaffTaskPayload = (data) => {
   }
 
   if (!isValidRoomNumber(data.room_number)) {
-    throw createHttpError('So phong phai co 3 den 4 chu so va khong bat dau bang 0.');
+    throw createHttpError('Số phòng phải là số 3-4 chữ số hoặc mã phòng hợp lệ trong danh sách.');
   }
 
   if (!data.deadline) {
@@ -62,7 +65,7 @@ const buildStaffTaskPayload = (data) => {
     assigned_to: String(data.assigned_to || '').trim(),
     room_number: String(data.room_number).trim(),
     priority: data.priority || 'medium',
-    status: data.status || 'assigned',
+    status: data.status === 'open' ? 'assigned' : (data.status || 'assigned'),
     deadline: new Date(data.deadline),
   };
 };
@@ -115,3 +118,4 @@ const staffTaskService = {
 };
 
 module.exports = staffTaskService;
+

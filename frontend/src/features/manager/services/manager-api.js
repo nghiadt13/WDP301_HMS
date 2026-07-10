@@ -1,8 +1,10 @@
-import axiosClient from '@/api/axiosClient';
+﻿import axiosClient from '@/api/axiosClient';
 
 const unwrap = (response) => response.data?.data ?? response.data;
 
 export const managerApi = {
+  getRooms: (params) => axiosClient.get('/manager/rooms', { params }).then(unwrap),
+
   getStaffMembers: () => axiosClient.get('/manager/staff-members').then(unwrap),
   getStaffTasks: (params) => axiosClient.get('/manager/staff-tasks', { params }).then(unwrap),
   createStaffTask: (data) => axiosClient.post('/manager/staff-tasks', data).then(unwrap),
