@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 
 // Shared routes
 const authRoutes = require('./auth.route');
@@ -19,6 +19,10 @@ const managerRoomRoutes = require('../modules/manager/room/room.route');
 const managerAmenityRoutes = require('../modules/manager/amenity/amenity.route');
 const managerFeatureRoutes = require('../modules/manager/feature/feature.route');
 const managerRoomTypeRoutes = require('../modules/manager/room-type/room-type.route');
+
+// Admin modules
+const adminAccountRoutes = require('../modules/admin/account/account.route');
+const adminRoleRoutes = require('../modules/admin/role/role.route');
 
 // Customer modules
 const customerReservationRoutes = require('../modules/customer/reservation/reservation.route');
@@ -57,6 +61,13 @@ router.use('/manager/rooms', managerRoomRoutes);
 router.use('/manager/amenities', managerAmenityRoutes);
 router.use('/manager/features', managerFeatureRoutes);
 router.use('/manager/room-types', managerRoomTypeRoutes);
+
+// Admin routes (requires auth + admin role)
+const authMiddleware = require('../middlewares/auth.middleware');
+const authorize = require('../middlewares/authorize.middleware');
+
+router.use('/admin/accounts', authMiddleware, authorize('admin'), adminAccountRoutes);
+router.use('/admin/roles', authMiddleware, authorize('admin'), adminRoleRoutes);
 
 // Customer routes
 router.use('/reservations', customerReservationRoutes);
