@@ -21,7 +21,17 @@ const LoginPage = () => {
       localStorage.setItem('hotelify_token', data.token);
       localStorage.setItem('hotelify_user', JSON.stringify(data.user));
       window.dispatchEvent(new Event('hotelify-auth-change'));
-      navigate('/home');
+      
+      const roleName = String(data.user?.role?.name || '').toLowerCase();
+      if (roleName.includes('admin')) {
+        navigate('/admin');
+      } else if (roleName.includes('manager')) {
+        navigate('/manager');
+      } else if (roleName.includes('receptionist')) {
+        navigate('/receptionist');
+      } else {
+        navigate('/home');
+      }
     },
     [navigate]
   );

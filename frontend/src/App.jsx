@@ -1,4 +1,4 @@
-﻿import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 
 import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
 import CustomerServiceRequestsPage from './features/customer/pages/CustomerServiceRequestsPage.jsx';
@@ -13,6 +13,12 @@ import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPag
 import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
 import ManagerLayout from './features/manager/layouts/ManagerLayout.jsx';
+
+import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
+import AdminDashboardPage from './features/admin/pages/AdminDashboardPage.jsx';
+import AdminAccountsPage from './features/admin/pages/AdminAccountsPage.jsx';
+import AdminRolesPage from './features/admin/pages/AdminRolesPage.jsx';
+
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
@@ -41,6 +47,19 @@ const ManagerProtectedRoute = () => {
   const roleName = String(user?.role?.name || '').toLowerCase();
 
   if (!token || !roleName.includes('manager')) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
+};
+
+const AdminProtectedRoute = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('hotelify_token');
+  const user = getStoredUser();
+  const roleName = String(user?.role?.name || '').toLowerCase();
+
+  if (!token || !roleName.includes('admin')) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
@@ -80,6 +99,15 @@ const App = () => {
             <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
             <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
             <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
+          </Route>
+        </Route>
+
+        {/* Admin routes */}
+        <Route element={<AdminProtectedRoute />}>
+          <Route path="admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="accounts" element={<AdminAccountsPage />} />
+            <Route path="roles" element={<AdminRolesPage />} />
           </Route>
         </Route>
 
