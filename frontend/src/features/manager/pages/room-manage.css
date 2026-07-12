@@ -363,7 +363,7 @@
 
 /* ─── Detail Panel ───────────────────────────────────────────────────────── */
 .rm-detail-panel {
-  width: 400px;
+  width: 480px;
   flex-shrink: 0;
   overflow: hidden;
 }
