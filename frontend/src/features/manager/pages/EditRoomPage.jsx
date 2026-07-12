@@ -12,7 +12,7 @@ const toFullUrl = (url) => {
   return `${API_BASE}${url}`;
 };
 
-const BED_TYPES = ['King Bed', 'Queen Bed', 'Twin Beds', 'Sofa Bed', 'Single Bed', 'Bunk Bed'];
+const BED_TYPES = ['Giường King', 'Giường Queen', 'Giường đôi (Twin)', 'Giường Sofa', 'Giường đơn', 'Giường tầng'];
 
 const EditRoomPage = () => {
   const { id } = useParams();
@@ -106,7 +106,7 @@ const EditRoomPage = () => {
       }));
     } catch (err) {
       console.error('Upload failed:', err);
-      const msg = err.response?.data?.message || 'Failed to upload image. Please try again.';
+      const msg = err.response?.data?.message || 'Tải ảnh lên thất bại. Vui lòng thử lại.';
       alert(msg);
     } finally {
       setUploading(false);
@@ -139,10 +139,10 @@ const EditRoomPage = () => {
 
   const validate = () => {
     const errs = {};
-    if (!form.roomName.trim()) errs.roomName = 'Room name is required';
-    if (!form.room_type_id) errs.room_type_id = 'Room type is required';
+    if (!form.roomName.trim()) errs.roomName = 'Tên phòng là bắt buộc';
+    if (!form.room_type_id) errs.room_type_id = 'Loại phòng là bắt buộc';
     const priceNum = Number(form.price);
-    if (!form.price || isNaN(priceNum) || priceNum < 0) errs.price = 'Valid price is required';
+    if (!form.price || isNaN(priceNum) || priceNum < 0) errs.price = 'Giá phòng hợp lệ là bắt buộc';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -167,7 +167,7 @@ const EditRoomPage = () => {
         navigate('/manager/rooms');
       },
       onError: (err) => {
-        const msg = err.response?.data?.message || 'Failed to update room. Please try again.';
+        const msg = err.response?.data?.message || 'Cập nhật phòng thất bại. Vui lòng thử lại.';
         alert(msg);
       },
     });
@@ -179,7 +179,7 @@ const EditRoomPage = () => {
   if (roomLoading) {
     return (
       <div className="ar-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <p>Loading room data...</p>
+        <p>Đang tải dữ liệu phòng...</p>
       </div>
     );
   }
@@ -187,7 +187,7 @@ const EditRoomPage = () => {
   if (!room) {
     return (
       <div className="ar-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <p>Room not found.</p>
+        <p>Không tìm thấy phòng.</p>
       </div>
     );
   }
@@ -197,9 +197,9 @@ const EditRoomPage = () => {
       {/* Header */}
       <div className="ar-header">
         <button type="button" className="ar-back-btn" onClick={() => navigate('/manager/rooms')}>
-          <ArrowLeft size={16} /> Back to Rooms
+          <ArrowLeft size={16} /> Quay lại quản lý phòng
         </button>
-        <h1>Edit Room</h1>
+        <h1>Chỉnh sửa phòng</h1>
       </div>
 
       {/* Two-column grid */}
@@ -209,12 +209,12 @@ const EditRoomPage = () => {
           {/* Basic Information */}
           <div className="ar-card">
             <div className="ar-card-header">
-              <span className="ar-card-title">Basic Information</span>
+              <span className="ar-card-title">Thông tin cơ bản</span>
               <div className="ar-card-actions">
                 <button type="button" className="ar-btn-save" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Updating...' : 'Update Room'}
+                  {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật phòng'}
                 </button>
-                <button type="button" className="ar-btn-cancel" onClick={() => navigate('/manager/rooms')} title="Cancel">
+                <button type="button" className="ar-btn-cancel" onClick={() => navigate('/manager/rooms')} title="Hủy">
                   <X size={15} />
                 </button>
               </div>
@@ -222,28 +222,28 @@ const EditRoomPage = () => {
 
             {/* Room Name */}
             <div className="ar-field">
-              <label className="ar-label">Room Name *</label>
+              <label className="ar-label">Tên phòng *</label>
               <input
                 className="ar-input"
                 type="text"
                 name="roomName"
                 value={form.roomName}
                 onChange={handleChange}
-                placeholder="e.g. R101, Premier Garden Suite"
+                placeholder="Ví dụ: R101, Premier Garden Suite"
               />
               {errors.roomName && <div className="ar-error">{errors.roomName}</div>}
             </div>
 
             {/* Room Type */}
             <div className="ar-field">
-              <label className="ar-label">Room Type *</label>
+              <label className="ar-label">Loại phòng *</label>
               <select
                 className="ar-select"
                 name="room_type_id"
                 value={form.room_type_id}
                 onChange={handleChange}
               >
-                <option value="">-- Select type --</option>
+                <option value="">-- Chọn loại phòng --</option>
                 {roomTypes.map((rt) => (
                   <option key={rt._id} value={rt._id}>{rt.name}</option>
                 ))}
@@ -253,20 +253,20 @@ const EditRoomPage = () => {
 
             {/* About Room */}
             <div className="ar-field">
-              <label className="ar-label">About Room</label>
+              <label className="ar-label">Mô tả phòng</label>
               <textarea
                 className="ar-textarea"
                 name="description"
                 rows="5"
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Room description..."
+                placeholder="Mô tả phòng..."
               />
             </div>
 
             {/* Availability Status */}
             <div className="ar-field">
-              <label className="ar-label">Availability Status</label>
+              <label className="ar-label">Trạng thái hoạt động</label>
               <div className="ar-radio-group">
                 <label className="ar-radio-label">
                   <input
@@ -276,7 +276,7 @@ const EditRoomPage = () => {
                     checked={form.isActive === true}
                     onChange={() => handleStatusChange(true)}
                   />
-                  Active
+                  Hoạt động
                 </label>
                 <label className="ar-radio-label">
                   <input
@@ -286,21 +286,21 @@ const EditRoomPage = () => {
                     checked={form.isActive === false}
                     onChange={() => handleStatusChange(false)}
                   />
-                  Inactive
+                  Ngưng hoạt động
                 </label>
               </div>
             </div>
 
             {/* Bed Type */}
             <div className="ar-field">
-              <label className="ar-label">Bed Type</label>
+              <label className="ar-label">Loại giường</label>
               <select
                 className="ar-select"
                 name="bed_type"
                 value={form.bed_type}
                 onChange={handleChange}
               >
-                <option value="">-- Select bed type --</option>
+                <option value="">-- Chọn loại giường --</option>
                 {BED_TYPES.map((bt) => (
                   <option key={bt} value={bt}>{bt}</option>
                 ))}
@@ -311,12 +311,12 @@ const EditRoomPage = () => {
           {/* Pricing */}
           <div className="ar-card">
             <div className="ar-card-header">
-              <span className="ar-card-title">Pricing</span>
+              <span className="ar-card-title">Giá cả</span>
             </div>
 
             {/* Base Price */}
             <div className="ar-field">
-              <label className="ar-label">Base Price</label>
+              <label className="ar-label">Giá cơ bản (VNĐ)</label>
               <div className="ar-price-row">
                 <input
                   className="ar-input"
@@ -324,9 +324,9 @@ const EditRoomPage = () => {
                   name="price"
                   value={form.price}
                   onChange={handleChange}
-                  placeholder="e.g. 270"
+                  placeholder="Ví dụ: 800000"
                 />
-                <span className="ar-price-badge">/ Night</span>
+                <span className="ar-price-badge">/ Đêm</span>
               </div>
               {errors.price && <div className="ar-error">{errors.price}</div>}
             </div>
@@ -338,7 +338,7 @@ const EditRoomPage = () => {
           {/* Media */}
           <div className="ar-card">
             <div className="ar-card-header">
-              <span className="ar-card-title">Media</span>
+              <span className="ar-card-title">Hình ảnh</span>
             </div>
 
             {/* Drop zone */}
@@ -352,23 +352,23 @@ const EditRoomPage = () => {
             />
             <div className="ar-drop-zone" onClick={() => fileInputRef.current?.click()}>
               <Upload size={36} className="ar-drop-zone-icon" />
-              <p>{uploading ? 'Uploading...' : 'Drag and drop to upload Photo'}</p>
-              {!uploading && <p className="ar-drop-hint">or</p>}
+              <p>{uploading ? 'Đang tải lên...' : 'Kéo và thả để tải ảnh lên'}</p>
+              {!uploading && <p className="ar-drop-hint">hoặc</p>}
               {!uploading && (
                 <button type="button" className="ar-drop-upload-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                  Upload Photo
+                  Chọn hình ảnh
                 </button>
               )}
               <p className="ar-drop-note">
-                ① Up to 5 MB per image in JPG, PNG, WEBP<br />
-                (Recommended: at least 4 images: bedroom, bathroom, view, and living area)
+                ① Tối đa 5 MB mỗi ảnh ở dạng JPG, PNG, WEBP<br />
+                (Khuyến nghị: có ít nhất 4 ảnh: phòng ngủ, phòng tắm, tầm nhìn và khu sinh hoạt)
               </p>
             </div>
 
             {/* Thumbnails */}
             {form.images.length > 0 && (
               <>
-                <div className="ar-thumbs-label">Uploaded Files and Select The Cover Image</div>
+                <div className="ar-thumbs-label">Tệp đã tải lên (Chọn một ảnh để làm ảnh bìa)</div>
                 <div className="ar-thumbs-row">
                   {form.images.map((url, i) => (
                     <div
@@ -376,16 +376,16 @@ const EditRoomPage = () => {
                       className={`ar-thumb${coverIndex === i ? ' is-cover' : ''}`}
                       onClick={() => handleCoverSelect(i)}
                     >
-                      <img src={toFullUrl(url)} alt={`Room image ${i + 1}`} />
+                      <img src={toFullUrl(url)} alt={`Hình ảnh phòng ${i + 1}`} />
                       <button
                         type="button"
                         className="ar-thumb-remove"
                         onClick={(e) => { e.stopPropagation(); handleRemoveImage(i); }}
-                        title="Remove image"
+                        title="Xóa hình ảnh"
                       >
                         <X size={10} />
                       </button>
-                      {coverIndex === i && <div className="ar-thumb-cover">Cover</div>}
+                      {coverIndex === i && <div className="ar-thumb-cover">Ảnh bìa</div>}
                     </div>
                   ))}
                 </div>
@@ -396,12 +396,12 @@ const EditRoomPage = () => {
           {/* Amenities & Features */}
           <div className="ar-card">
             <div className="ar-card-header">
-              <span className="ar-card-title">Amenities & Features</span>
+              <span className="ar-card-title">Tiện nghi & Đặc điểm</span>
             </div>
 
             {/* Amenities */}
             <div className="ar-field">
-              <label className="ar-label">Amenities</label>
+              <label className="ar-label">Tiện nghi</label>
               <div className="ar-checkbox-grid">
                 {amenities.map((a) => (
                   <label key={a._id} className="ar-checkbox-label">
@@ -414,13 +414,13 @@ const EditRoomPage = () => {
                     <span>{a.name}</span>
                   </label>
                 ))}
-                {amenities.length === 0 && <span className="ar-empty-text">No amenities available</span>}
+                {amenities.length === 0 && <span className="ar-empty-text">Không có tiện nghi khả dụng</span>}
               </div>
             </div>
 
             {/* Features */}
             <div className="ar-field">
-              <label className="ar-label">Features</label>
+              <label className="ar-label">Đặc điểm</label>
               <div className="ar-checkbox-grid">
                 {features.map((f) => (
                   <label key={f._id} className="ar-checkbox-label">
@@ -433,7 +433,7 @@ const EditRoomPage = () => {
                     <span>{f.name}</span>
                   </label>
                 ))}
-                {features.length === 0 && <span className="ar-empty-text">No features available</span>}
+                {features.length === 0 && <span className="ar-empty-text">Không có đặc điểm khả dụng</span>}
               </div>
             </div>
           </div>

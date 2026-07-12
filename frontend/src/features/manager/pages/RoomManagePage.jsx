@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BedDouble, Plus, SlidersHorizontal, Check, Users, DollarSign, Trash2, Pencil } from 'lucide-react';
+import { BedDouble, Plus, SlidersHorizontal, Check, Users, DollarSign, Trash2, Pencil, Maximize, Home } from 'lucide-react';
 import { useRooms, useDeleteRoom } from '../hooks/use-rooms';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import './room-manage.css';
@@ -47,7 +47,7 @@ const fmtPrice = (v) => {
 
 const getRoomType = (room) => (typeof room.room_type_id === 'object' ? room.room_type_id : null);
 const getRoomTypeKey = (room) => getRoomType(room)?._id || room.room_type_id || 'unknown';
-const getRoomTypeName = (room) => getRoomType(room)?.name || 'Unknown room type';
+const getRoomTypeName = (room) => getRoomType(room)?.name || 'Loại phòng không xác định';
 
 const groupRoomsByType = (rooms) => {
   const map = new Map();
@@ -96,22 +96,22 @@ function RoomCard({ room, selected, onClick, onEdit, onDelete }) {
         <div className="rm-room-card-top">
           <h3>{room.roomName} <span className="rm-room-type-tag">{typeName}</span></h3>
           <div className="rm-room-card-status-wrap">
-            <span className={`rm-status-badge${isAvailable ? ' is-available' : ' is-booked'}`}>{room.status}</span>
+            <span className={`rm-status-badge${isAvailable ? ' is-available' : ' is-booked'}`}>{room.status === 'Available' ? 'Trống' : 'Đang sử dụng'}</span>
           </div>
         </div>
         <p className="rm-room-card-desc">{room.description}</p>
         <div className="rm-room-card-bottom">
           <div className="rm-room-card-meta">
             {bedType && <span><BedDouble size={12} />{bedType}</span>}
-            {capacity && <span><Users size={12} />{capacity} guests</span>}
+            {capacity && <span><Users size={12} />{capacity} khách</span>}
             <span><DollarSign size={12} />{fmtPrice(room.price)}đ</span>
           </div>
           <div className="rm-room-card-actions">
             <div className="rm-room-card-btns">
-              <button type="button" className="rm-icon-btn rm-icon-edit" onClick={(e) => { e.stopPropagation(); onEdit(room); }} title="Edit">
+              <button type="button" className="rm-icon-btn rm-icon-edit" onClick={(e) => { e.stopPropagation(); onEdit(room); }} title="Sửa">
                 <Pencil size={13} />
               </button>
-              <button type="button" className="rm-icon-btn rm-icon-delete" onClick={(e) => { e.stopPropagation(); onDelete(room); }} title="Delete">
+              <button type="button" className="rm-icon-btn rm-icon-delete" onClick={(e) => { e.stopPropagation(); onDelete(room); }} title="Xóa">
                 <Trash2 size={13} />
               </button>
             </div>
@@ -160,16 +160,16 @@ function RoomDetail({ room, onEdit, onDelete }) {
       <div className="rm-detail-top">
         <h2>{room.roomName} <span className="rm-room-type-tag">{typeName}</span></h2>
         <div className="rm-detail-actions">
-          <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => onEdit(room)} title="Edit">
+          <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => onEdit(room)} title="Sửa">
             <Pencil size={13} />
           </button>
-          <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => onDelete(room)} title="Delete">
+          <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => onDelete(room)} title="Xóa">
             <Trash2 size={13} />
           </button>
         </div>
       </div>
       <div className="rm-detail-status-row">
-        <span className={`rm-status-badge${room.status === 'Available' ? ' is-available' : ' is-booked'}`}>{room.status}</span>
+        <span className={`rm-status-badge${room.status === 'Available' ? ' is-available' : ' is-booked'}`}>{room.status === 'Available' ? 'Trống' : 'Đang sử dụng'}</span>
       </div>
       <div className="rm-detail-main-img">
         <img src={images[0]} alt="room main" />
@@ -181,12 +181,12 @@ function RoomDetail({ room, onEdit, onDelete }) {
       </div>
       <div className="rm-detail-stats">
         {bedType && <span><BedDouble size={12} />{bedType}</span>}
-        {capacity && <span><Users size={12} />{capacity} guests</span>}
-        <span><DollarSign size={12} />{fmtPrice(room.price)}đ /đêm</span>
+        {capacity && <span><Users size={12} />{capacity} khách</span>}
+        <span><b>{fmtPrice(room.price)}đ</b> /đêm</span>
       </div>
       <p className="rm-detail-desc">{room.description || typeDesc}</p>
-      <Section title="Amenities" items={amenityNames} />
-      <Section title="Features" items={featureNames} />
+      <Section title="Tiện nghi" items={amenityNames} />
+      <Section title="Đặc điểm" items={featureNames} />
     </div>
   );
 }
@@ -196,21 +196,81 @@ function RoomTypeCard({ group, selected, onClick }) {
   const type = group.type || {};
   const img = toFullUrl(type.images?.[0] || sampleRoom.images?.[0]) || fallbackImages[0];
   const availableCount = group.rooms.filter((room) => room.status === 'Available').length;
+  const totalCount = group.rooms.length || 1;
+  const percentage = Math.round((availableCount / totalCount) * 100);
+
+  // Dynamic values
+  const name = type.name || getRoomTypeName(sampleRoom);
+  const description = type.description || sampleRoom.description || 'Không có mô tả.';
+  const price = type.base_price || sampleRoom.price || 0;
+
+  // Helper for Area
+  const getArea = () => {
+    if (type.area) return type.area.includes('m²') ? type.area : `${type.area} m²`;
+    const nameLower = name.toLowerCase();
+    if (nameLower.includes('suite')) return '55 m²';
+    if (nameLower.includes('deluxe')) return '36 m²';
+    if (nameLower.includes('family')) return '45 m²';
+    if (nameLower.includes('executive')) return '40 m²';
+    if (nameLower.includes('standard')) return '28 m²';
+    return '32 m²';
+  };
+
+  // Helper for Bed Spec
+  const getBedSpec = () => {
+    if (type.beds && type.bed_type) {
+      return `${type.beds} Giường ${type.bed_type}`;
+    }
+    const bed = type.bed_type || sampleRoom.bed_type || 'King';
+    return `1 Giường ${bed}`;
+  };
+
+  // Helper for Guests/Capacity
+  const getGuestsSpec = () => {
+    const cap = type.capacity || 2;
+    return `${cap} khách`;
+  };
 
   return (
     <button type="button" onClick={onClick} className={`rm-room-card rm-type-card${selected ? ' is-selected' : ''}`}>
-      <img src={img} alt={type.name || 'Room type'} className="rm-room-card-img" />
-      <div className="rm-room-card-body">
-        <div className="rm-room-card-top">
-          <h3>{type.name || getRoomTypeName(sampleRoom)}</h3>
-          <span className="rm-status-badge is-available">{availableCount}/{group.rooms.length} rooms</span>
+      <img src={img} alt={name} className="rm-type-card-img" />
+      <div className="rm-type-card-body">
+        <div className="rm-type-card-top">
+          <h3 className="rm-type-card-title">{name}</h3>
+          <div className="rm-type-card-status-wrap">
+            <span className="rm-type-card-rooms-left">Còn {availableCount} phòng trống</span>
+            <span className="rm-type-card-status-badge">Sẵn sàng</span>
+          </div>
         </div>
-        <p className="rm-room-card-desc">{type.description || sampleRoom.description}</p>
-        <div className="rm-room-card-bottom">
-          <div className="rm-room-card-meta">
-            {(type.bed_type || sampleRoom.bed_type) && <span><BedDouble size={12} />{type.bed_type || sampleRoom.bed_type}</span>}
-            {type.capacity && <span><Users size={12} />{type.capacity} guests</span>}
-            <span><DollarSign size={12} />{fmtPrice(type.base_price || sampleRoom.price)}đ</span>
+        
+        <p className="rm-type-card-desc">{description}</p>
+        
+        <div className="rm-type-card-price-row">
+          <div className="rm-type-card-price">
+            <span className="rm-type-price-symbol"></span>
+            <span className="rm-type-price-val">{price < 10000 ? price : fmtPrice(price)}</span>
+            <span className="rm-type-price-unit">{price < 10000 ? 'đ/đêm' : 'đ/đêm'}</span>
+          </div>
+        </div>
+
+        <div className="rm-type-card-divider" />
+
+        <div className="rm-type-card-bottom">
+          <div className="rm-type-spec-item">
+            <Maximize size={14} className="rm-spec-icon" />
+            <span>{getArea()}</span>
+          </div>
+          <div className="rm-type-spec-item">
+            <BedDouble size={14} className="rm-spec-icon" />
+            <span>{getBedSpec()}</span>
+          </div>
+          <div className="rm-type-spec-item">
+            <Users size={14} className="rm-spec-icon" />
+            <span>{getGuestsSpec()}</span>
+          </div>
+          <div className="rm-type-spec-item">
+            <Home size={14} className="rm-spec-icon" />
+            <span>{availableCount} / {totalCount} Phòng – {percentage}%</span>
           </div>
         </div>
       </div>
@@ -220,7 +280,7 @@ function RoomTypeCard({ group, selected, onClick }) {
 
 function RoomTypeDetail({ group, onEdit, onDelete }) {
   if (!group) {
-    return <div className="rm-detail-empty">Select a room type to view details</div>;
+    return <div className="rm-detail-empty">Chọn một loại phòng để xem chi tiết</div>;
   }
 
   const type = group.type || {};
@@ -234,27 +294,27 @@ function RoomTypeDetail({ group, onEdit, onDelete }) {
     <div className="rm-detail">
       <div className="rm-detail-top">
         <h2>{type.name || getRoomTypeName(sampleRoom)}</h2>
-        <span className="rm-room-type-tag">{group.rooms.length} physical rooms</span>
+        <span className="rm-room-type-tag">{group.rooms.length} phòng thực tế</span>
       </div>
       <div className="rm-detail-status-row">
-        <span className="rm-status-badge is-available">{availableCount} Available</span>
-        {occupiedCount > 0 ? <span className="rm-status-badge is-booked">{occupiedCount} Occupied</span> : null}
-        {maintenanceCount > 0 ? <span className="rm-status-badge is-booked">{maintenanceCount} Maintenance</span> : null}
+        <span className="rm-status-badge is-available">{availableCount} Trống</span>
+        {occupiedCount > 0 ? <span className="rm-status-badge is-booked">{occupiedCount} Đang sử dụng</span> : null}
+        {maintenanceCount > 0 ? <span className="rm-status-badge is-booked">{maintenanceCount} Bảo trì</span> : null}
       </div>
       <div className="rm-detail-main-img">
-        <img src={images[0] || fallbackImages[0]} alt={type.name || 'Room type'} />
+        <img src={images[0] || fallbackImages[0]} alt={type.name || 'Loại phòng'} />
       </div>
       <div className="rm-detail-stats">
         {(type.bed_type || sampleRoom.bed_type) && <span><BedDouble size={12} />{type.bed_type || sampleRoom.bed_type}</span>}
-        {type.capacity && <span><Users size={12} />{type.capacity} guests</span>}
-        <span><DollarSign size={12} />{fmtPrice(type.base_price || sampleRoom.price)}đ /đêm</span>
+        {type.capacity && <span><Users size={12} />{type.capacity} khách</span>}
+        <span><b>{fmtPrice(type.base_price || sampleRoom.price)}đ</b> /đêm</span>
       </div>
       <p className="rm-detail-desc">{type.description || sampleRoom.description}</p>
-      <Section title="Features" items={type.features || []} />
-      <Section title="Facilities" items={type.facilities || []} />
+      <Section title="Đặc điểm" items={type.features || []} />
+      <Section title="Trang thiết bị" items={type.facilities || []} />
 
       <div className="rm-physical-room-list">
-        <h4>Room numbers</h4>
+        <h4>Danh sách số phòng</h4>
         {group.rooms.map((room) => (
           <div className="rm-physical-room-row" key={room._id}>
             <div>
@@ -281,10 +341,10 @@ function Footer() {
   return (
     <footer className="rm-footer">
       <div className="rm-footer-links">
-        <span>Copyright © 2026 Hotelify</span>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Term and conditions</a>
-        <a href="#">Contact</a>
+        <span>Bản quyền © 2026 Hotelify</span>
+        <a href="#">Chính sách bảo mật</a>
+        <a href="#">Điều khoản và điều kiện</a>
+        <a href="#">Liên hệ</a>
       </div>
       <div className="rm-footer-social">
         <a href="#"><FacebookIcon /></a>
@@ -343,7 +403,7 @@ const RoomManagePage = () => {
   if (isLoading) {
     return (
       <div className="rm-content-row" style={{ justifyContent: 'center', padding: '4rem' }}>
-        <p>Loading rooms...</p>
+        <p>Đang tải danh sách phòng...</p>
       </div>
     );
   }
@@ -351,7 +411,7 @@ const RoomManagePage = () => {
   if (isError) {
     return (
       <div className="rm-content-row" style={{ justifyContent: 'center', padding: '4rem' }}>
-        <p>Failed to load rooms. Please try again.</p>
+        <p>Lỗi tải danh sách phòng. Vui lòng thử lại sau.</p>
       </div>
     );
   }
@@ -362,10 +422,9 @@ const RoomManagePage = () => {
         {/* Left: Room list */}
         <div className="rm-list-panel">
           <div className="rm-list-toolbar">
-            <h2>Room Categories</h2>
+            <h2>Danh mục phòng</h2>
             <div className="rm-list-toolbar-actions">
-              <span>{roomGroups.length} types / {rooms.length} rooms</span>
-              <button type="button" className="rm-add-btn" onClick={handleAdd}><Plus size={14} />Add Room</button>
+              <button type="button" className="rm-add-btn" onClick={handleAdd}><Plus size={14} />Thêm phòng</button>
               <button type="button" className="rm-sort-btn"><SlidersHorizontal size={14} /></button>
             </div>
           </div>
@@ -385,7 +444,7 @@ const RoomManagePage = () => {
           {selected ? (
             <RoomTypeDetail group={selected} onEdit={handleEdit} onDelete={handleDelete} />
           ) : (
-            <div className="rm-detail-empty">Select a room type to view details</div>
+            <div className="rm-detail-empty">Chọn một loại phòng để xem chi tiết</div>
           )}
         </div>
       </div>

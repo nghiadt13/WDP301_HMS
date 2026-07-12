@@ -7,11 +7,10 @@
   --line: #eef2f7;
   --panel: #ffffff;
   display: flex;
-  min-height: 100vh;
-  background: #f8fafc;
+  gap: 24px;
   color: var(--ink);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
+  width: 100%;
 }
 
 .manager-icon { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; flex: 0 0 auto; }
@@ -45,7 +44,6 @@
 .manager-profile img { width: 42px; height: 42px; border-radius: 999px; object-fit: cover; }
 .manager-profile strong, .manager-profile small { display: block; }
 .manager-profile small { color: var(--muted); margin-top: 2px; }
-.manager-content { display: flex; gap: 24px; padding: 32px; max-height: calc(100vh - 80px); overflow-y: auto; }
 .manager-main-column { flex: 1; min-width: 720px; display: grid; gap: 24px; }
 .manager-side-column { width: 320px; flex: 0 0 320px; display: grid; align-content: start; gap: 24px; }
 .manager-grid { display: grid; gap: 16px; }
@@ -175,17 +173,13 @@
 }
 
 @media (max-width: 1080px) {
-  .manager-content { display: grid; max-height: none; }
+  .manager-dashboard { display: grid; }
   .manager-side-column { width: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .manager-kpis, .manager-charts, .manager-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .manager-greeting { grid-column: span 2; }
 }
 
 @media (max-width: 760px) {
-  .manager-header { height: auto; align-items: flex-start; flex-direction: column; padding: 20px; }
-  .manager-header-actions { width: 100%; flex-wrap: wrap; }
-  .manager-search { order: 10; width: 100%; }
-  .manager-content { padding: 20px; }
   .manager-kpis, .manager-charts, .manager-insights, .manager-side-column, .manager-source-layout, .manager-rating-layout { grid-template-columns: 1fr; }
   .manager-greeting { grid-column: auto; }
   .manager-booking-heading, .manager-booking-heading > div { align-items: stretch; flex-direction: column; }
