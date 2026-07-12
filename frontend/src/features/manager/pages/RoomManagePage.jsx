@@ -290,17 +290,26 @@ function RoomTypeDetail({ group, onEdit, onDelete }) {
   const occupiedCount = group.rooms.filter((room) => room.status === 'Occupied').length;
   const maintenanceCount = group.rooms.filter((room) => room.status === 'Maintenance').length;
 
+  const totalCount = group.rooms.length;
+  const occupancyPercentage = totalCount > 0 ? Math.round((occupiedCount / totalCount) * 100) : 0;
+
   return (
     <div className="rm-detail">
-      <div className="rm-detail-top">
-        <h2>{type.name || getRoomTypeName(sampleRoom)}</h2>
-        <span className="rm-room-type-tag">{group.rooms.length} phòng thực tế</span>
+      <div className="rm-detail-top" style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h2 style={{ margin: 0 }}>{type.name || getRoomTypeName(sampleRoom)}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '12px', color: '#6b7280' }}>Còn {availableCount} phòng trống</span>
+          <span className="rm-status-badge is-available">Trống</span>
+        </div>
       </div>
-      <div className="rm-detail-status-row">
-        <span className="rm-status-badge is-available">{availableCount} Trống</span>
-        {occupiedCount > 0 ? <span className="rm-status-badge is-booked">{occupiedCount} Đang sử dụng</span> : null}
-        {maintenanceCount > 0 ? <span className="rm-status-badge is-booked">{maintenanceCount} Bảo trì</span> : null}
+      
+      {/* Progress Bar & Occupied Info */}
+      <div className="rm-progress-track" style={{ marginBottom: '8px' }}>
+        <div className="rm-progress-bar" style={{ width: `${occupancyPercentage}%` }} />
       </div>
+      <p className="rm-detail-occ" style={{ marginBottom: '16px' }}>
+        {occupiedCount} / {totalCount} Phòng – {occupancyPercentage}% Đang sử dụng
+      </p>
       <div className="rm-detail-main-img">
         <img src={images[0] || fallbackImages[0]} alt={type.name || 'Loại phòng'} />
       </div>
