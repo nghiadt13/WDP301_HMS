@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Edit, ShieldOff, Key, User, Mail, Shield, ShieldCheck } from 'lucide-react';
+import { Search, Plus, Edit, ShieldOff, Key, User, Mail, Shield, ShieldCheck, X } from 'lucide-react';
 import { useAccounts, useCreateAccount, useUpdateAccount, useResetPassword, useRoles } from '../hooks/use-admin';
 import '../styles/AdminStyles.css';
 
@@ -67,7 +67,7 @@ const AdminAccountsPage = () => {
       const dataToSubmit = { ...formData };
       delete dataToSubmit.password; // Don't send password on edit
       updateMutation.mutate({ id: selectedAccount._id, data: dataToSubmit }, {
-        onSuccess: handleCloseModal
+        onSuccess: handleCloseModal, onError: (e) => alert(e.response?.data?.message || e.message)
       });
     } else if (modalType === 'create') {
       createMutation.mutate(formData, {
