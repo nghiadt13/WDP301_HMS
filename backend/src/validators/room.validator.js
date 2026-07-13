@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const validateRoom = (req, res, next) => {
-  const { roomName, room_type_id, price } = req.body;
+  const { roomName, room_type_id } = req.body;
   const errors = [];
 
   if (!roomName || typeof roomName !== 'string' || roomName.trim().length === 0) {
@@ -10,10 +10,6 @@ const validateRoom = (req, res, next) => {
 
   if (!room_type_id || !mongoose.Types.ObjectId.isValid(room_type_id)) {
     errors.push('room_type_id is required and must be a valid ID');
-  }
-
-  if (price === undefined || typeof price !== 'number' || price < 0) {
-    errors.push('price is required and must be a non-negative number');
   }
 
   if (errors.length > 0) {

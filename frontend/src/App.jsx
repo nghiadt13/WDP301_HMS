@@ -6,6 +6,10 @@ import CustomerServicesPage from './features/customer/pages/CustomerServicesPage
 
 import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.jsx';
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
+import ReceptionistLayout from './features/receptionist/layouts/ReceptionistLayout.jsx';
+import ReceptionistBookingListPage from './features/receptionist/pages/ReceptionistBookingListPage.jsx';
+import ReceptionistBookingDetailPage from './features/receptionist/pages/ReceptionistBookingDetailPage.jsx';
+import WalkinBookingForm from './features/receptionist/components/WalkinBookingForm.jsx';
 import RoomManagePage from './features/manager/pages/RoomManagePage.jsx';
 import AddRoomPage from './features/manager/pages/AddRoomPage.jsx';
 import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
@@ -66,6 +70,19 @@ const AdminProtectedRoute = () => {
   return <Outlet />;
 };
 
+const ReceptionistProtectedRoute = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('hotelify_token');
+  const user = getStoredUser();
+  const roleName = String(user?.role?.name || user?.role_name || user?.role || '').toLowerCase();
+
+  if (!token || !roleName.includes('receptionist')) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
+};
+
 const App = () => {
   return (
     <Routes>
@@ -112,7 +129,14 @@ const App = () => {
         </Route>
 
         {/* Receptionist routes */}
-        <Route path="receptionist" element={<ReceptionistDashboardPage />} />
+        <Route element={<ReceptionistProtectedRoute />}>
+          <Route path="receptionist" element={<ReceptionistLayout />}>
+            <Route index element={<ReceptionistDashboardPage />} />
+            <Route path="bookings" element={<ReceptionistBookingListPage />} />
+            <Route path="bookings/:id" element={<ReceptionistBookingDetailPage />} />
+            <Route path="walkin" element={<WalkinBookingForm />} />
+          </Route>
+        </Route>
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

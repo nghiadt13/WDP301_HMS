@@ -30,6 +30,9 @@ const customerPaymentRoutes = require('../modules/customer/payment/payment.route
 const customerServiceRoutes = require('../modules/customer/service/service.route');
 const customerFeedbackRoutes = require('../modules/customer/feedback/feedback.route');
 
+// Receptionist modules
+const receptionistCheckinRoutes = require('../modules/receptionist/checkin/checkin.route');
+
 // Shared webhook
 const cassoWebhookRoutes = require('../modules/shared/webhook/casso-webhook.route');
 
@@ -74,6 +77,9 @@ router.use('/reservations', customerReservationRoutes);
 router.use('/payments', customerPaymentRoutes);
 router.use('/customer', customerServiceRoutes);
 router.use('/customer', customerFeedbackRoutes);
+
+// Receptionist routes
+router.use('/receptionist', receptionistCheckinRoutes);
 
 // Shared webhook
 router.use('/webhooks', cassoWebhookRoutes);

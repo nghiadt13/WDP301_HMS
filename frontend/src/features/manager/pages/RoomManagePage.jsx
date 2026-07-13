@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BedDouble, Plus, SlidersHorizontal, Check, Users, DollarSign, Trash2, Pencil, Maximize, Home } from 'lucide-react';
-import { useRooms, useDeleteRoom } from '../hooks/use-rooms';
+import { useRooms, useDeleteRoom, useRoomTypes, useDeleteRoomType } from '../hooks/use-rooms';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import './room-manage.css';
 
@@ -80,14 +80,15 @@ const groupRoomsByType = (rooms) => {
 
 // ─── Room Card ─────────────────────────────────────────────────
 function RoomCard({ room, selected, onClick, onEdit, onDelete }) {
-  const img = toFullUrl(room.images?.[0]) || fallbackImages[0];
-  const isAvailable = room.status === 'Available';
-
-  // Populated from room_type_id
   const rt = room.room_type_id;
   const typeName = typeof rt === 'object' ? rt?.name : '';
   const bedType = typeof rt === 'object' ? rt?.bed_type : '';
   const capacity = typeof rt === 'object' ? rt?.capacity : '';
+  
+  const img = toFullUrl(typeof rt === 'object' && rt?.images?.[0] ? rt.images[0] : room.images?.[0]) || fallbackImages[0];
+  const isAvailable = room.status === 'Available';
+  const price = typeof rt === 'object' && rt?.base_price ? rt.base_price : (room.price ?? 0);
+  const description = room.description || (typeof rt === 'object' ? rt?.description : '');
 
   return (
     <div onClick={onClick} className={`rm-room-card${selected ? ' is-selected' : ''}`}>
@@ -99,12 +100,12 @@ function RoomCard({ room, selected, onClick, onEdit, onDelete }) {
             <span className={`rm-status-badge${isAvailable ? ' is-available' : ' is-booked'}`}>{room.status === 'Available' ? 'Trống' : 'Đang sử dụng'}</span>
           </div>
         </div>
-        <p className="rm-room-card-desc">{room.description}</p>
+        <p className="rm-room-card-desc">{description}</p>
         <div className="rm-room-card-bottom">
           <div className="rm-room-card-meta">
             {bedType && <span><BedDouble size={12} />{bedType}</span>}
             {capacity && <span><Users size={12} />{capacity} khách</span>}
-            <span><DollarSign size={12} />{fmtPrice(room.price)}đ</span>
+            <span><DollarSign size={12} />{fmtPrice(price)}đ</span>
           </div>
           <div className="rm-room-card-actions">
             <div className="rm-room-card-btns">
@@ -278,7 +279,8 @@ function RoomTypeCard({ group, selected, onClick }) {
   );
 }
 
-function RoomTypeDetail({ group, onEdit, onDelete }) {
+function RoomTypeDetail({ group, onEdit, onDelete, onEditRoomType, onDeleteRoomType }) {
+  const navigate = useNavigate();
   if (!group) {
     return <div className="rm-detail-empty">Chọn một loại phòng để xem chi tiết</div>;
   }
@@ -295,11 +297,61 @@ function RoomTypeDetail({ group, onEdit, onDelete }) {
 
   return (
     <div className="rm-detail">
-      <div className="rm-detail-top" style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ margin: 0 }}>{type.name || getRoomTypeName(sampleRoom)}</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#6b7280' }}>Còn {availableCount} phòng trống</span>
-          <span className="rm-status-badge is-available">Trống</span>
+      <div className="rm-detail-top" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f3f4f6', paddingBottom: '12px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
+              {type.name || getRoomTypeName(sampleRoom)}
+            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                type="button"
+                className="rm-icon-btn rm-icon-edit"
+                onClick={() => onEditRoomType(type._id)}
+                title="Sửa loại phòng"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  border: '1px solid #e5e7eb', 
+                  borderRadius: '6px',
+                  backgroundColor: '#fff',
+                  color: '#4b5563',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <Pencil size={13} />
+              </button>
+              <button
+                type="button"
+                className="rm-icon-btn rm-icon-delete"
+                onClick={() => onDeleteRoomType(type)}
+                title="Xóa loại phòng"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  border: '1px solid #fee2e2', 
+                  borderRadius: '6px',
+                  backgroundColor: '#fff5f5',
+                  color: '#ef4444',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+            <span className="rm-status-badge is-available" style={{ margin: 0 }}>Trống</span>
+            <span style={{ fontSize: '12px', color: '#6b7280' }}>Còn {availableCount} phòng trống</span>
+          </div>
         </div>
       </div>
       
@@ -323,23 +375,39 @@ function RoomTypeDetail({ group, onEdit, onDelete }) {
       <Section title="Trang thiết bị" items={type.facilities || []} />
 
       <div className="rm-physical-room-list">
-        <h4>Danh sách số phòng</h4>
-        {group.rooms.map((room) => (
-          <div className="rm-physical-room-row" key={room._id}>
-            <div>
-              <strong>{room.roomName}</strong>
-              <span>{room.status}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h4 style={{ margin: 0 }}>Danh sách số phòng</h4>
+          <button
+            type="button"
+            className="rm-add-btn"
+            style={{ padding: '4px 10px', fontSize: '12px', height: 'auto' }}
+            onClick={() => navigate(`/manager/rooms/add?roomTypeId=${group.key}`)}
+          >
+            <Plus size={12} /> Thêm phòng
+          </button>
+        </div>
+        {group.rooms.length === 0 ? (
+          <p style={{ color: '#6b7280', fontSize: '13px', fontStyle: 'italic', padding: '8px 0' }}>
+            Chưa có số phòng nào. Bấm "Thêm phòng" để thêm.
+          </p>
+        ) : (
+          group.rooms.map((room) => (
+            <div className="rm-physical-room-row" key={room._id}>
+              <div>
+                <strong>{room.roomName}</strong>
+                <span>{room.status}</span>
+              </div>
+              <div className="rm-room-card-btns">
+                <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => onEdit(room)} title="Edit">
+                  <Pencil size={13} />
+                </button>
+                <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => onDelete(room)} title="Delete">
+                  <Trash2 size={13} />
+                </button>
+              </div>
             </div>
-            <div className="rm-room-card-btns">
-              <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => onEdit(room)} title="Edit">
-                <Pencil size={13} />
-              </button>
-              <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => onDelete(room)} title="Delete">
-                <Trash2 size={13} />
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -369,23 +437,71 @@ function Footer() {
 // ─── Page ──────────────────────────────────────────────────────
 const RoomManagePage = () => {
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useRooms({ limit: 500 });
+  const { data, isLoading: roomsLoading, isError: roomsError } = useRooms({ limit: 500 });
+  const { data: rtData, isLoading: rtLoading, isError: rtError } = useRoomTypes();
+  
   const rooms = data?.data ?? [];
+  const roomTypes = rtData?.data ?? [];
+  
   const [selectedId, setSelectedId] = useState(null);
-  const roomGroups = useMemo(() => groupRoomsByType(rooms), [rooms]);
+  
+  const roomGroups = useMemo(() => {
+    const map = new Map();
+    
+    // Pre-populate with all active room types
+    roomTypes.forEach((type) => {
+      if (type.is_active !== false) {
+        map.set(type._id, {
+          key: type._id,
+          type,
+          rooms: [],
+        });
+      }
+    });
+
+    // Group rooms under their types
+    rooms.forEach((room) => {
+      const key = getRoomTypeKey(room);
+      if (map.has(key)) {
+        map.get(key).rooms.push(room);
+      } else {
+        const type = getRoomType(room);
+        map.set(key, {
+          key,
+          type,
+          rooms: [room],
+        });
+      }
+    });
+
+    return Array.from(map.values())
+      .map((group) => ({
+        ...group,
+        rooms: [...group.rooms].sort((first, second) =>
+          String(first.roomName || '').localeCompare(String(second.roomName || ''), 'en', {
+            numeric: true,
+            sensitivity: 'base',
+          })
+        ),
+      }))
+      .sort((a, b) => (a.type?.display_order ?? 99) - (b.type?.display_order ?? 99));
+  }, [roomTypes, rooms]);
 
   // Delete modal states
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteTypeOpen, setDeleteTypeOpen] = useState(false);
+  const [deleteTypeTarget, setDeleteTypeTarget] = useState(null);
 
   // Mutations
   const deleteMutation = useDeleteRoom();
+  const deleteTypeMutation = useDeleteRoomType();
 
   const selected = roomGroups.find((group) => group.key === selectedId) ?? roomGroups[0];
 
   // ─── Handlers ──────────────────────────────────────────────
   const handleAdd = () => {
-    navigate('/manager/rooms/add');
+    navigate('/manager/room-types/add');
   };
 
   const handleEdit = (room) => {
@@ -408,7 +524,21 @@ const RoomManagePage = () => {
     });
   };
 
+  const handleConfirmDeleteType = () => {
+    if (!deleteTypeTarget) return;
+    deleteTypeMutation.mutate(deleteTypeTarget._id, {
+      onSuccess: () => {
+        setDeleteTypeOpen(false);
+        setDeleteTypeTarget(null);
+        setSelectedId(null);
+      },
+    });
+  };
+
   // ─── Loading / Error ───────────────────────────────────────
+  const isLoading = roomsLoading || rtLoading;
+  const isError = roomsError || rtError;
+
   if (isLoading) {
     return (
       <div className="rm-content-row" style={{ justifyContent: 'center', padding: '4rem' }}>
@@ -433,7 +563,7 @@ const RoomManagePage = () => {
           <div className="rm-list-toolbar">
             <h2>Danh mục phòng</h2>
             <div className="rm-list-toolbar-actions">
-              <button type="button" className="rm-add-btn" onClick={handleAdd}><Plus size={14} />Thêm phòng</button>
+              <button type="button" className="rm-add-btn" onClick={handleAdd}><Plus size={14} />Thêm loại phòng mới</button>
               <button type="button" className="rm-sort-btn"><SlidersHorizontal size={14} /></button>
             </div>
           </div>
@@ -451,7 +581,16 @@ const RoomManagePage = () => {
         {/* Right: Detail */}
         <div className="rm-detail-panel">
           {selected ? (
-            <RoomTypeDetail group={selected} onEdit={handleEdit} onDelete={handleDelete} />
+            <RoomTypeDetail
+              group={selected}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onEditRoomType={(typeId) => navigate(`/manager/room-types/${typeId}/edit`)}
+              onDeleteRoomType={(type) => {
+                setDeleteTypeTarget(type);
+                setDeleteTypeOpen(true);
+              }}
+            />
           ) : (
             <div className="rm-detail-empty">Chọn một loại phòng để xem chi tiết</div>
           )}
@@ -466,6 +605,15 @@ const RoomManagePage = () => {
         onConfirm={handleConfirmDelete}
         roomName={deleteTarget?.roomName}
         isDeleting={deleteMutation.isPending}
+      />
+
+      {/* Delete room type confirmation modal */}
+      <DeleteConfirmModal
+        isOpen={deleteTypeOpen}
+        onClose={() => { setDeleteTypeOpen(false); setDeleteTypeTarget(null); }}
+        onConfirm={handleConfirmDeleteType}
+        roomName={deleteTypeTarget?.name}
+        isDeleting={deleteTypeMutation.isPending}
       />
     </>
   );

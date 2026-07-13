@@ -17,11 +17,11 @@ const sidebarItems = [
 
 const ManagerSidebar = () => {
   const location = useLocation();
-  const [roomsOpen, setRoomsOpen] = useState(() => location.pathname.startsWith('/manager/rooms'));
+  const [roomsOpen, setRoomsOpen] = useState(() => location.pathname.startsWith('/manager/rooms') || location.pathname.startsWith('/manager/room-types'));
 
   const isActive = (item) => {
     if (item.to) return location.pathname === item.to;
-    if (item.matchPath) return location.pathname.startsWith(item.matchPath);
+    if (item.matchPath) return location.pathname.startsWith('/manager/rooms') || location.pathname.startsWith('/manager/room-types');
     return false;
   };
 
@@ -82,12 +82,6 @@ const ManagerSidebar = () => {
           );
         })}
       </nav>
-      <div className="rm-promo">
-        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
-        <h2>Quản lý thông minh, phục vụ tốt hơn</h2>
-        <p>Tự động hóa thủ tục, giám sát hiệu suất và phòng trống.</p>
-        <button type="button">Nâng cấp bản Pro</button>
-      </div>
     </aside>
   );
 };

@@ -1,15 +1,11 @@
 const Room = require('../../../models/room.model');
 require('../../../models/room-type.model');
-require('../../../models/amenity.model');
-require('../../../models/feature.model');
 const fs = require('fs');
 const path = require('path');
 
 // ========== Constants ==========
 const POPULATE_OPTS = [
-  { path: 'room_type_id', select: 'name description bed_type capacity base_price images' },
-  { path: 'amenity_ids', select: 'name description' },
-  { path: 'feature_ids', select: 'name description' },
+  { path: 'room_type_id', select: 'name description bed_type capacity base_price images features facilities' },
 ];
 
 const BOOKING_ROOM_ORDER = [
@@ -20,19 +16,6 @@ const BOOKING_ROOM_ORDER = [
   'PHONG GRAND SUITE',
   'PHONG PRESIDENT SUITE',
 ];
-
-// ========== Utility ==========
-const deleteImageFiles = async (imageUrls) => {
-  if (!imageUrls || !Array.isArray(imageUrls)) return;
-  const uploadDir = path.join(__dirname, '../../../../uploads/rooms');
-  for (const url of imageUrls) {
-    const filename = url.split('/').pop();
-    const filePath = path.join(uploadDir, filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-  }
-};
 
 const getBookingRoomOrder = (roomName = '') => {
   const normalizedName = String(roomName).trim().toUpperCase();
@@ -110,6 +93,11 @@ const managerRoomService = {
   async create(data) {
     const existing = await Room.findOne({ roomName: data.roomName });
     if (existing) throw { status: 409, message: 'Room name already exists' };
+
+    const RoomType = require('../../../models/room-type.model');
+    const roomType = await RoomType.findById(data.room_type_id);
+    if (!roomType) throw { status: 400, message: 'Invalid room type ID' };
+
     const room = await Room.create(data);
     return await room.populate(POPULATE_OPTS);
   },
@@ -117,12 +105,6 @@ const managerRoomService = {
   async update(id, data) {
     const existingRoom = await Room.findById(id);
     if (!existingRoom) throw { status: 404, message: 'Room not found' };
-
-    const existingImages = existingRoom.images || [];
-    const newImages = data.images || [];
-    const removedImages = existingImages.filter((img) => !newImages.includes(img));
-
-    await deleteImageFiles(removedImages);
 
     const room = await Room.findByIdAndUpdate(id, data, {
       new: true,
@@ -145,7 +127,6 @@ const managerRoomService = {
     const room = await Room.findById(id);
     if (!room) throw { status: 404, message: 'Room not found' };
 
-    await deleteImageFiles(room.images);
     await Room.findByIdAndDelete(id);
     return { message: 'Room permanently deleted' };
   },
