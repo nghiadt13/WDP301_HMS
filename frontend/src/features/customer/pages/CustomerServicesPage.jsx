@@ -105,7 +105,7 @@ const CustomerServicesPage = () => {
         getCustomerRooms()
       ]);
       setServices(serviceData);
-      setServiceRequests(requestData);
+      setServiceRequests(requestData.filter((request) => request.status !== 'canceled'));
       setRooms(roomData);
     } catch (error) {
       if (!handleAuthError(error)) {
@@ -164,7 +164,7 @@ const CustomerServicesPage = () => {
       setIsSubmitting(true);
       const response = await requestHotelService(selectedService.id, requestForm);
       setServiceRequests((currentRequests) => [response.request, ...currentRequests]);
-      setSuccessMessage('Gửi yêu cầu dịch vụ thành công.');
+      setSuccessMessage('Gửi yêu cầu dịch vụ thành công. Yêu cầu đã được chuyển đến lễ tân.');
       closeServiceModal();
     } catch (error) {
       if (!handleAuthError(error)) {
@@ -181,7 +181,7 @@ const CustomerServicesPage = () => {
         <div>
           <span className="customer-chip">Dịch vụ khách hàng</span>
           <h1>Xem dịch vụ khách sạn</h1>
-          <p>Xem các dịch vụ khách sạn, gửi yêu cầu cho phòng đã thanh toán và hủy các yêu cầu đang chờ xử lý.</p>
+          <p>Xem các dịch vụ khách sạn, gửi yêu cầu cho booking đã thanh toán và hủy các yêu cầu đang chờ xử lý.</p>
         </div>
       </div>
 

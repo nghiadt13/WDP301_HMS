@@ -1,4 +1,4 @@
-﻿const customerService = require('./service.service');
+const customerService = require('./customer-service.service');
 
 const customerServiceController = {
   async listHotelServices(req, res, next) {

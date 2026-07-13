@@ -47,6 +47,11 @@ const customerServiceRequestSchema = new mongoose.Schema(
       enum: ['requested', 'canceled', 'handled'],
       default: 'requested',
     },
+    assigned_role: {
+      type: String,
+      trim: true,
+      default: 'receptionist',
+    },
     requested_at: {
       type: Date,
       default: Date.now,

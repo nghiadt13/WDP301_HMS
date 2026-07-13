@@ -6,12 +6,12 @@ const { createHttpError } = require('../../../utils/error.utils');
 
 const { ObjectId } = mongoose.Types;
 
-const CANCELED_STATUS_PATTERN = /cancel|huy|hủy/i;
+const CANCELED_STATUS_PATTERN = /cancel|canceled|cancelled|huy|hủy/i;
 
-const isFullyPaidReservation = (reservation = {}) => {
-  const paymentStatus = String(reservation.payment_status || '').trim().toLowerCase();
-  const totalAmount = Number(reservation.total_amount || 0);
-  const paidAmount = Number(reservation.deposit_amount || 0);
+const isPaidReservation = (reservation = {}) => {
+  const paymentStatus = String(reservation.payment_status || reservation.paymentStatus || '').trim().toLowerCase();
+  const totalAmount = Number(reservation.total_amount || reservation.totalAmount || 0);
+  const paidAmount = Number(reservation.deposit_amount || reservation.depositAmount || reservation.paid_amount || 0);
 
   return paymentStatus === 'paid' || (totalAmount > 0 && paidAmount >= totalAmount);
 };
@@ -153,12 +153,19 @@ const mapServiceRequest = (request) => ({
   handledAt: request.handled_at,
 });
 
-const mapServiceRoom = (reservation, room) => ({
+const getReservationRoomName = (reservation, room = null, roomType = null) =>
+  room?.roomName
+  || reservation.room_number
+  || reservation.assigned_room
+  || roomType?.name
+  || 'Phòng đã đặt';
+
+const mapServiceRoom = (reservation, room, roomType = null) => ({
   id: String(reservation._id),
   reservationId: String(reservation._id),
   roomId: reservation.room_id ? String(reservation.room_id) : '',
-  name: room?.roomName || reservation.room_number || reservation.assigned_room || 'Phòng đã đặt',
-  rawName: room?.roomName || reservation.room_number || reservation.assigned_room || '',
+  name: getReservationRoomName(reservation, room, roomType),
+  rawName: getReservationRoomName(reservation, room, roomType),
   bookingCode: reservation.booking_code || '',
   bookingStatus: reservation.booking_status || '',
   checkInDate: reservation.check_in_date || null,
@@ -186,26 +193,29 @@ const getCustomerServiceReservation = async (reservationId, user) => {
   const db = mongoose.connection.db;
   const reservation = await db.collection('reservations').findOne({
     _id: new ObjectId(reservationId),
-    customer_id: user._id,
+    customer_id: { $in: [user._id, String(user._id)] },
   });
 
   if (!reservation) {
     throw createHttpError('Không tìm thấy booking thuộc tài khoản của bạn.', 404);
   }
 
-  if (CANCELED_STATUS_PATTERN.test(String(reservation.booking_status || ''))) {
+  if (CANCELED_STATUS_PATTERN.test(String(reservation.booking_status || reservation.status || ''))) {
     throw createHttpError('Không thể gửi yêu cầu dịch vụ cho booking đã hủy.');
   }
 
-  if (!isFullyPaidReservation(reservation)) {
-    throw createHttpError('Bạn cần thanh toán phòng trước khi gửi yêu cầu dịch vụ.');
+  if (!isPaidReservation(reservation)) {
+    throw createHttpError('Bạn cần thanh toán booking trước khi gửi yêu cầu dịch vụ.');
   }
 
   const room = reservation.room_id
     ? await db.collection('rooms').findOne({ _id: reservation.room_id })
     : null;
+  const roomType = reservation.room_type_id
+    ? await db.collection('room_types').findOne({ _id: reservation.room_type_id })
+    : null;
 
-  return { reservation, room };
+  return { reservation, room, roomType };
 };
 
 const serviceModule = {
@@ -221,7 +231,10 @@ const serviceModule = {
   },
 
   async listCustomerServiceRequests(user) {
-    const requests = await CustomerServiceRequest.find({ customer_id: user._id }).sort({ requested_at: -1 }).lean();
+    const requests = await CustomerServiceRequest.find({
+      customer_id: user._id,
+      status: { $ne: 'canceled' },
+    }).sort({ requested_at: -1 }).lean();
     return requests.map(mapServiceRequest);
   },
 
@@ -230,20 +243,24 @@ const serviceModule = {
     const reservations = await db
       .collection('reservations')
       .find({
-        customer_id: user._id,
+        customer_id: { $in: [user._id, String(user._id)] },
         booking_status: { $not: CANCELED_STATUS_PATTERN },
+        status: { $not: CANCELED_STATUS_PATTERN },
       })
       .sort({ check_in_date: -1, created_at: -1 })
       .toArray();
 
-    const paidReservations = reservations.filter(isFullyPaidReservation);
+    const paidReservations = reservations.filter(isPaidReservation);
 
     return Promise.all(
       paidReservations.map(async (reservation) => {
         const room = reservation.room_id
           ? await db.collection('rooms').findOne({ _id: reservation.room_id })
           : null;
-        return mapServiceRoom(reservation, room);
+        const roomType = reservation.room_type_id
+          ? await db.collection('room_types').findOne({ _id: reservation.room_type_id })
+          : null;
+        return mapServiceRoom(reservation, room, roomType);
       })
     );
   },
@@ -254,8 +271,8 @@ const serviceModule = {
 
     const reservationId = String(body.reservationId || body.reservation_id || '').trim();
     const note = String(body.note || '').trim();
-    const { reservation, room } = await getCustomerServiceReservation(reservationId, user);
-    const roomNumber = room?.roomName || reservation.room_number || reservation.assigned_room || '';
+    const { reservation, room, roomType } = await getCustomerServiceReservation(reservationId, user);
+    const roomNumber = getReservationRoomName(reservation, room, roomType);
 
     if (roomNumber.length < 1 || roomNumber.length > 80) {
       throw createHttpError('Vui lòng chọn phòng hợp lệ.');
@@ -275,6 +292,7 @@ const serviceModule = {
       room_number: roomNumber,
       note,
       status: 'requested',
+      assigned_role: 'receptionist',
       requested_at: new Date(),
     });
 

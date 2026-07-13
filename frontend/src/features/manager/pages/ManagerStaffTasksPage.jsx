@@ -244,7 +244,6 @@ const ManagerStaffTasksPage = () => {
               {isEditing && <label>Trạng thái<select name="status" onChange={handleChange} value={form.status}>{Object.entries(statuses).filter(([value]) => value !== 'cancelled').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
               <label>Hạn hoàn thành<input min={todayInput()} name="deadline" onChange={handleChange} required type="date" value={form.deadline} /></label>
               <label>Mô tả<input name="description" onChange={handleChange} value={form.description} /></label>
-              {isEditing && <p className="manager-action-note manager-ops-wide">Hoàn thành nghĩa là nhân viên đã xử lý xong công việc. Hủy nghĩa là nhiệm vụ tạo nhầm, bị trùng hoặc không còn cần thực hiện.</p>}
               <div className="manager-ops-actions">
                 <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo nhiệm vụ'}</button>
                 {isEditing && <button className="manager-ops-secondary" onClick={handleClose} type="button">Đánh dấu hoàn thành</button>}

@@ -5,12 +5,14 @@ const { createHttpError } = require('../../../utils/error.utils');
 
 const { ObjectId } = mongoose.Types;
 
-const CANCELED_STATUS_PATTERN = /cancel|huy|hủy/i;
-const REVIEWABLE_STATUS_PATTERN =
-  /checked[\s-]?out|completed|finished|hoan[\s-]?tat|hoàn[\s-]?tất|da[\s-]?tra[\s-]?phong|đã[\s-]?trả[\s-]?phòng/i;
+const CANCELED_STATUS_PATTERN = /cancel|canceled|cancelled|huy|hủy/i;
+const isPaidReservation = (reservation = {}) => {
+  const paymentStatus = String(reservation.payment_status || reservation.paymentStatus || '').trim().toLowerCase();
+  const totalAmount = Number(reservation.total_amount || reservation.totalAmount || 0);
+  const paidAmount = Number(reservation.deposit_amount || reservation.depositAmount || reservation.paid_amount || 0);
 
-const isReviewableReservation = (reservation = {}) =>
-  REVIEWABLE_STATUS_PATTERN.test(String(reservation.booking_status || reservation.status || ''));
+  return paymentStatus === 'paid' || (totalAmount > 0 && paidAmount >= totalAmount);
+};
 
 const mapFeedbackHistoryItem = (historyItem) => ({
   roomNumber: historyItem.room_number || '',
@@ -38,12 +40,19 @@ const mapCustomerFeedback = (feedback) => ({
   history: Array.isArray(feedback.feedback_history) ? feedback.feedback_history.map(mapFeedbackHistoryItem) : [],
 });
 
-const mapFeedbackRoom = (reservation, room) => ({
+const getReservationRoomName = (reservation, room = null, roomType = null) =>
+  room?.roomName
+  || reservation.room_number
+  || reservation.assigned_room
+  || roomType?.name
+  || 'Phòng đã đặt';
+
+const mapFeedbackRoom = (reservation, room, roomType = null) => ({
   reservationId: String(reservation._id),
   bookingCode: reservation.booking_code || '',
   roomId: reservation.room_id ? String(reservation.room_id) : '',
-  roomNumber: room?.roomName || reservation.room_number || reservation.assigned_room || '',
-  roomName: room?.roomName || reservation.room_number || reservation.assigned_room || 'Phòng đã đặt',
+  roomNumber: getReservationRoomName(reservation, room, roomType),
+  roomName: getReservationRoomName(reservation, room, roomType),
   roomImage: Array.isArray(room?.images) ? room.images[0] || '' : room?.image_url || '',
   bookingStatus: reservation.booking_status || '',
   checkInDate: reservation.check_in_date || null,
@@ -58,26 +67,29 @@ const getReservationForFeedback = async (reservationId, user) => {
   const db = mongoose.connection.db;
   const reservation = await db.collection('reservations').findOne({
     _id: new ObjectId(reservationId),
-    customer_id: user._id,
+    customer_id: { $in: [user._id, String(user._id)] },
   });
 
   if (!reservation) {
     throw createHttpError('Không tìm thấy booking thuộc tài khoản của bạn.', 404);
   }
 
-  if (CANCELED_STATUS_PATTERN.test(String(reservation.booking_status || ''))) {
+  if (CANCELED_STATUS_PATTERN.test(String(reservation.booking_status || reservation.status || ''))) {
     throw createHttpError('Không thể góp ý cho booking đã hủy.', 400);
   }
 
-  if (!isReviewableReservation(reservation)) {
-    throw createHttpError('Chỉ có thể góp ý sau khi booking đã hoàn tất/check-out.', 400);
+  if (!isPaidReservation(reservation)) {
+    throw createHttpError('Bạn cần thanh toán booking trước khi gửi góp ý.', 400);
   }
 
   const room = reservation.room_id
     ? await db.collection('rooms').findOne({ _id: reservation.room_id })
     : null;
+  const roomType = reservation.room_type_id
+    ? await db.collection('room_types').findOne({ _id: reservation.room_type_id })
+    : null;
 
-  return { reservation, room };
+  return { reservation, room, roomType };
 };
 
 const normalizeFeedbackPayload = async (body, user) => {
@@ -107,8 +119,8 @@ const normalizeFeedbackPayload = async (body, user) => {
     throw createHttpError('Nội dung góp ý không được vượt quá 1000 ký tự.');
   }
 
-  const { reservation, room } = await getReservationForFeedback(reservationId, user);
-  const roomNumber = room?.roomName || reservation.room_number || reservation.assigned_room || '';
+  const { reservation, room, roomType } = await getReservationForFeedback(reservationId, user);
+  const roomNumber = getReservationRoomName(reservation, room, roomType);
 
   return {
     reservation_id: reservation._id,
@@ -129,20 +141,24 @@ const customerFeedbackService = {
     const reservations = await db
       .collection('reservations')
       .find({
-        customer_id: user._id,
+        customer_id: { $in: [user._id, String(user._id)] },
         booking_status: { $not: CANCELED_STATUS_PATTERN },
+        status: { $not: CANCELED_STATUS_PATTERN },
       })
       .sort({ check_out_date: -1, check_in_date: -1, created_at: -1 })
       .toArray();
 
-    const reviewableReservations = reservations.filter(isReviewableReservation);
+    const paidReservations = reservations.filter(isPaidReservation);
 
     const rooms = await Promise.all(
-      reviewableReservations.map(async (reservation) => {
+      paidReservations.map(async (reservation) => {
         const room = reservation.room_id
           ? await db.collection('rooms').findOne({ _id: reservation.room_id })
           : null;
-        return mapFeedbackRoom(reservation, room);
+        const roomType = reservation.room_type_id
+          ? await db.collection('room_types').findOne({ _id: reservation.room_type_id })
+          : null;
+        return mapFeedbackRoom(reservation, room, roomType);
       })
     );
 

@@ -42,7 +42,7 @@ const CustomerServiceRequestsPage = () => {
   const loadServiceRequests = async () => {
     try {
       const data = await getCustomerServiceRequests();
-      setServiceRequests(data);
+      setServiceRequests(data.filter((request) => request.status !== 'canceled'));
     } catch (error) {
       if (!handleAuthError(error)) {
         setErrorMessage('Không thể tải lịch sử yêu cầu dịch vụ. Vui lòng kiểm tra backend đã chạy chưa.');
@@ -66,10 +66,8 @@ const CustomerServiceRequestsPage = () => {
     setSuccessMessage('');
 
     try {
-      const response = await cancelCustomerServiceRequest(requestId);
-      setServiceRequests((currentRequests) =>
-        currentRequests.map((request) => (request.id === requestId ? response.request : request))
-      );
+      await cancelCustomerServiceRequest(requestId);
+      setServiceRequests((currentRequests) => currentRequests.filter((request) => request.id !== requestId));
       setSuccessMessage('Hủy yêu cầu dịch vụ thành công.');
     } catch (error) {
       if (!handleAuthError(error)) {
