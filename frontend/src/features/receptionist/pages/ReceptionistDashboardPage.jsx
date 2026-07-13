@@ -154,7 +154,7 @@ const ReceptionistDashboardPage = () => {
                         </span>
                       </td>
                       <td><span className={getStatusClass(b.bookingStatus)}>{getStatusLabel(b.bookingStatus)}</span></td>
-                      <td><button className="receptionist-link-button" type="button" onClick={() => navigate(`/receptionist/bookings/${b.id}`)}>xem chi tiết</button></td>
+                      <td><button className="receptionist-link-button" type="button" onClick={() => navigate(`/receptionist/bookings/${b.id}`)}>Xem chi tiết</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -181,7 +181,7 @@ const ReceptionistDashboardPage = () => {
                       <td>{dates}</td>
                       <td>{payment}</td>
                       <td><span className="receptionist-status">{status}</span></td>
-                      <td><button className="receptionist-link-button" type="button" onClick={() => navigate('/receptionist/bookings')}>xem chi tiết</button></td>
+                      <td><button className="receptionist-link-button" type="button" onClick={() => navigate('/receptionist/bookings')}>Xem chi tiết</button></td>
                     </tr>
                   ))}
                 </tbody>

@@ -203,7 +203,7 @@ const ReceptionistBookingListPage = () => {
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                       >
                         <Eye size={16} />
-                        xem chi tiết
+                        Xem chi tiết
                       </button>
                     </td>
                   </tr>
