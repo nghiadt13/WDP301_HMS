@@ -3,25 +3,25 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown } from 'lucide-react';
 
 const sidebarItems = [
-  { icon: Home, label: 'Dashboard', to: '/manager' },
-  { icon: Inbox, label: 'Inbox' },
-  { icon: Calendar, label: 'Calendar' },
-  { icon: Megaphone, label: 'Campaigns', hasSub: true },
-  { icon: BedDouble, label: 'Rooms', hasSub: true, matchPath: '/manager/rooms' },
-  { icon: Sparkles, label: 'Staff Tasks', to: '/manager/staff-tasks' },
-  { icon: Package, label: 'Minibar Items', to: '/manager/minibar-items' },
-  { icon: Wallet, label: 'Finance', hasSub: true },
-  { icon: Star, label: 'Customer Feedback', to: '/manager/feedback', badge: 5 },
-  { icon: LogIn, label: 'Register & Login' },
+  { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
+  { icon: Inbox, label: 'Hộp thư' },
+  { icon: Calendar, label: 'Lịch' },
+  { icon: Megaphone, label: 'Chiến dịch', hasSub: true },
+  { icon: BedDouble, label: 'Phòng', hasSub: true, matchPath: '/manager/rooms' },
+  { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-tasks' },
+  { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar-items' },
+  { icon: Wallet, label: 'Tài chính', hasSub: true },
+  { icon: Star, label: 'Ý kiến khách hàng', to: '/manager/feedback', badge: 5 },
+  { icon: LogIn, label: 'Đăng ký & Đăng nhập' },
 ];
 
 const ManagerSidebar = () => {
   const location = useLocation();
-  const [roomsOpen, setRoomsOpen] = useState(() => location.pathname.startsWith('/manager/rooms'));
+  const [roomsOpen, setRoomsOpen] = useState(() => location.pathname.startsWith('/manager/rooms') || location.pathname.startsWith('/manager/room-types'));
 
   const isActive = (item) => {
     if (item.to) return location.pathname === item.to;
-    if (item.matchPath) return location.pathname.startsWith(item.matchPath);
+    if (item.matchPath) return location.pathname.startsWith('/manager/rooms') || location.pathname.startsWith('/manager/room-types');
     return false;
   };
 
@@ -35,7 +35,7 @@ const ManagerSidebar = () => {
         {sidebarItems.map((item) => {
           const { icon: Icon, label, to, hasSub, badge, matchPath } = item;
           const active = isActive(item);
-          const isRooms = label === 'Rooms';
+          const isRooms = label === 'Phòng';
 
           const content = (
             <>
@@ -59,8 +59,8 @@ const ManagerSidebar = () => {
                 </button>
                 {roomsOpen && (
                   <ul className="rm-submenu">
-                    <li><Link to="/manager/rooms" className={`rm-submenu-item${location.pathname === '/manager/rooms' ? ' is-active' : ''}`}>Rooms</Link></li>
-                    <li><span className="rm-submenu-item">Create New Room</span></li>
+                    <li><Link to="/manager/rooms" className={`rm-submenu-item${location.pathname === '/manager/rooms' ? ' is-active' : ''}`}>Phòng</Link></li>
+                    <li><Link to="/manager/rooms/add" className={`rm-submenu-item${location.pathname === '/manager/rooms/add' ? ' is-active' : ''}`}>Thêm phòng mới</Link></li>
                   </ul>
                 )}
               </div>
@@ -82,12 +82,6 @@ const ManagerSidebar = () => {
           );
         })}
       </nav>
-      <div className="rm-promo">
-        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
-        <h2>Manage Smarter, Serve Better</h2>
-        <p>Automate check-ins, monitor occupancy, and track performance.</p>
-        <button type="button">Upgrade to Pro</button>
-      </div>
     </aside>
   );
 };

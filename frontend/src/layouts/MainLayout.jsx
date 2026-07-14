@@ -4,7 +4,7 @@ import AppHeader from '../components/AppHeader.jsx';
 
 const MainLayout = () => {
   const location = useLocation();
-  const hiddenPrefixes = ['/login', '/register', '/manager', '/receptionist'];
+  const hiddenPrefixes = ['/login', '/register', '/manager', '/receptionist', '/admin'];
   const shouldShowHeader = !hiddenPrefixes.some((prefix) => location.pathname.startsWith(prefix));
 
   return (

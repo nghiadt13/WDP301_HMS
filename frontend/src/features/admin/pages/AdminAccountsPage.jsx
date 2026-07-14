@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Search, Plus, Edit, ShieldOff, Key, User, Mail, Shield, ShieldCheck, X } from 'lucide-react';
-import { useAccounts, useCreateAccount, useUpdateAccount, useResetPassword, useRoles } from '../hooks/use-admin';
+import { Search, Plus, Edit, ShieldOff, Key, User, Mail, Shield, ShieldCheck, X, Trash2 } from 'lucide-react';
+import { useAccounts, useCreateAccount, useUpdateAccount, useResetPassword, useRoles, useDeleteAccount } from '../hooks/use-admin';
 import '../styles/AdminStyles.css';
 
 const AdminAccountsPage = () => {
@@ -13,6 +13,7 @@ const AdminAccountsPage = () => {
   const createMutation = useCreateAccount();
   const updateMutation = useUpdateAccount();
   const resetMutation = useResetPassword();
+  const deleteMutation = useDeleteAccount();
 
   const [modalType, setModalType] = useState(null); // 'create', 'edit', 'reset'
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -47,7 +48,7 @@ const AdminAccountsPage = () => {
         login_account: account.login_account,
         full_name: account.full_name,
         phone_number: account.phone_number || '',
-        role_id: account.role_id?._id || '',
+        role_id: account.role?.id || '',
         status: account.status,
         password: ''
       });
@@ -66,7 +67,7 @@ const AdminAccountsPage = () => {
     if (modalType === 'edit') {
       const dataToSubmit = { ...formData };
       delete dataToSubmit.password; // Don't send password on edit
-      updateMutation.mutate({ id: selectedAccount._id, data: dataToSubmit }, {
+      updateMutation.mutate({ id: selectedAccount.id, data: dataToSubmit }, {
         onSuccess: handleCloseModal, onError: (e) => alert(e.response?.data?.message || e.message)
       });
     } else if (modalType === 'create') {
@@ -78,7 +79,7 @@ const AdminAccountsPage = () => {
 
   const handleResetSubmit = (e) => {
     e.preventDefault();
-    resetMutation.mutate({ id: selectedAccount._id, new_password: resetData.new_password }, {
+    resetMutation.mutate({ id: selectedAccount.id, new_password: resetData.new_password }, {
       onSuccess: () => {
         alert('Password reset successfully!');
         handleCloseModal();
@@ -88,7 +89,13 @@ const AdminAccountsPage = () => {
 
   const handleToggleStatus = (account) => {
     const newStatus = account.status === 'active' ? 'inactive' : 'active';
-    updateMutation.mutate({ id: account._id, data: { status: newStatus } });
+    updateMutation.mutate({ id: account.id, data: { status: newStatus } });
+  };
+
+  const handleDeleteAccount = (account) => {
+    if (window.confirm(`Are you sure you want to permanently delete account: ${account.login_account}?`)) {
+      deleteMutation.mutate(account.id);
+    }
   };
 
   return (
@@ -133,7 +140,7 @@ const AdminAccountsPage = () => {
                 </thead>
                 <tbody>
                   {accounts.map((acc) => (
-                    <tr key={acc._id}>
+                    <tr key={acc.id}>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -150,8 +157,8 @@ const AdminAccountsPage = () => {
                       <td><strong>{acc.login_account}</strong></td>
                       <td>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', width: 'fit-content' }}>
-                          <Shield size={14} color={acc.role_id?.name?.includes('Admin') ? '#ef4444' : '#3b82f6'} />
-                          {acc.role_id?.name || 'No Role'}
+                          <Shield size={14} color={acc.role?.name?.includes('Admin') ? '#ef4444' : '#3b82f6'} />
+                          {acc.role?.name || 'No Role'}
                         </span>
                       </td>
                       <td>
@@ -165,6 +172,9 @@ const AdminAccountsPage = () => {
                           <button onClick={() => handleOpenModal('reset', acc)} className="admin-icon-button" title="Reset Password"><Key size={16}/></button>
                           <button onClick={() => handleToggleStatus(acc)} className="admin-icon-button" title={acc.status === 'active' ? 'Deactivate' : 'Activate'}>
                             {acc.status === 'active' ? <ShieldOff size={16} color="#ef4444" /> : <ShieldCheck size={16} color="#10b981" />}
+                          </button>
+                          <button onClick={() => handleDeleteAccount(acc)} className="admin-icon-button" title="Delete Account" disabled={deleteMutation.isPending}>
+                            <Trash2 size={16} color="#ef4444" />
                           </button>
                         </div>
                       </td>

@@ -6,6 +6,10 @@ import CustomerServicesPage from './features/customer/pages/CustomerServicesPage
 
 import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.jsx';
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
+import ReceptionistLayout from './features/receptionist/layouts/ReceptionistLayout.jsx';
+import ReceptionistBookingListPage from './features/receptionist/pages/ReceptionistBookingListPage.jsx';
+import ReceptionistBookingDetailPage from './features/receptionist/pages/ReceptionistBookingDetailPage.jsx';
+import WalkinBookingForm from './features/receptionist/components/WalkinBookingForm.jsx';
 import RoomManagePage from './features/manager/pages/RoomManagePage.jsx';
 import AddRoomPage from './features/manager/pages/AddRoomPage.jsx';
 import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
@@ -18,6 +22,7 @@ import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
 import AdminDashboardPage from './features/admin/pages/AdminDashboardPage.jsx';
 import AdminAccountsPage from './features/admin/pages/AdminAccountsPage.jsx';
 import AdminRolesPage from './features/admin/pages/AdminRolesPage.jsx';
+import AdminProfilePage from './features/admin/pages/AdminProfilePage.jsx';
 
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
@@ -66,10 +71,27 @@ const AdminProtectedRoute = () => {
   return <Outlet />;
 };
 
+const ReceptionistProtectedRoute = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('hotelify_token');
+  const user = getStoredUser();
+  const roleName = String(user?.role?.name || user?.role_name || user?.role || '').toLowerCase();
+
+  if (!token || !roleName.includes('receptionist')) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
+};
+
+import { Toaster } from 'react-hot-toast';
+
 const App = () => {
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
+    <>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route element={<MainLayout />}>
         {/* Public routes */}
         <Route index element={<HomePage />} />
         <Route path="home" element={<HomePage />} />
@@ -108,15 +130,24 @@ const App = () => {
             <Route index element={<AdminDashboardPage />} />
             <Route path="accounts" element={<AdminAccountsPage />} />
             <Route path="roles" element={<AdminRolesPage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
           </Route>
         </Route>
 
         {/* Receptionist routes */}
-        <Route path="receptionist" element={<ReceptionistDashboardPage />} />
+        <Route element={<ReceptionistProtectedRoute />}>
+          <Route path="receptionist" element={<ReceptionistLayout />}>
+            <Route index element={<ReceptionistDashboardPage />} />
+            <Route path="bookings" element={<ReceptionistBookingListPage />} />
+            <Route path="bookings/:id" element={<ReceptionistBookingDetailPage />} />
+            <Route path="walkin" element={<WalkinBookingForm />} />
+          </Route>
+        </Route>
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    </>
   );
 };
 

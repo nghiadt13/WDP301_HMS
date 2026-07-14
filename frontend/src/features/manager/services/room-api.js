@@ -11,6 +11,10 @@ export const roomApi = {
 
 export const roomTypeApi = {
   getAll: () => axiosClient.get('/manager/room-types').then((res) => res.data),
+  getById: (id) => axiosClient.get(`/manager/room-types/${id}`).then((res) => res.data),
+  create: (data) => axiosClient.post('/manager/room-types', data).then((res) => res.data),
+  update: (id, data) => axiosClient.put(`/manager/room-types/${id}`, data).then((res) => res.data),
+  remove: (id) => axiosClient.delete(`/manager/room-types/${id}`).then((res) => res.data),
 };
 
 export const amenityApi = {

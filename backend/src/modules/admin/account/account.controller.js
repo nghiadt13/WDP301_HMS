@@ -25,6 +25,11 @@ const accountController = {
   resetPassword: asyncHandler(async (req, res) => {
     const result = await accountService.resetPassword(req.params.id, req.body.new_password);
     res.send(result);
+  }),
+
+  delete: asyncHandler(async (req, res) => {
+    const result = await accountService.deleteAccount(req.params.id);
+    res.send(result);
   })
 };
 

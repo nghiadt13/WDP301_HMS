@@ -73,7 +73,7 @@
 .receptionist-status.pending { background: #fef3c7; color: #b45309; }
 .receptionist-status.checked-in { background: #dcfce7; color: #15803d; }
 .receptionist-status.check-out { background: #fee2e2; color: #dc2626; }
-.receptionist-link-button { border: 0; background: transparent; color: var(--blue-dark); cursor: pointer; font-weight: 800; }
+.receptionist-link-button { border: 0; background: transparent; color: var(--blue-dark); cursor: pointer; font-weight: normal; }
 .receptionist-action-card { min-height: 164px; }
 .receptionist-action-card span { width: 40px; height: 40px; margin-bottom: 16px; background: #eff6ff; color: var(--blue-dark); }
 .receptionist-action-card p { margin: 8px 0 0; line-height: 1.5; font-size: 13px; }

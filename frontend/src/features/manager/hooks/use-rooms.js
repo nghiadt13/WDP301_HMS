@@ -45,6 +45,43 @@ export const useRoomTypes = () =>
     queryFn: () => roomTypeApi.getAll(),
   });
 
+export const useRoomType = (id) =>
+  useQuery({
+    queryKey: ['roomType', id],
+    queryFn: () => roomTypeApi.getById(id),
+    enabled: !!id,
+  });
+
+export const useCreateRoomType = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: roomTypeApi.create,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['roomTypes'] }),
+  });
+};
+
+export const useUpdateRoomType = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => roomTypeApi.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['roomTypes'] });
+      qc.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+};
+
+export const useDeleteRoomType = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: roomTypeApi.remove,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['roomTypes'] });
+      qc.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+};
+
 export const useAmenities = () =>
   useQuery({
     queryKey: ['amenities'],

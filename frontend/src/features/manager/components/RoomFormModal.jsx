@@ -103,7 +103,7 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
       }));
     } catch (err) {
       console.error('Upload failed:', err);
-      const msg = err.response?.data?.message || 'Failed to upload image. Please try again.';
+      const msg = err.response?.data?.message || 'Tải ảnh lên thất bại. Vui lòng thử lại.';
       alert(msg);
     } finally {
       setUploading(false);
@@ -131,9 +131,9 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.roomName.trim()) errs.roomName = 'Room name is required';
-    if (!form.room_type_id) errs.room_type_id = 'Room type is required';
-    if (!form.price || Number(form.price) < 0) errs.price = 'Valid price required';
+    if (!form.roomName.trim()) errs.roomName = 'Tên phòng là bắt buộc';
+    if (!form.room_type_id) errs.room_type_id = 'Loại phòng là bắt buộc';
+    if (!form.price || Number(form.price) < 0) errs.price = 'Giá phòng hợp lệ là bắt buộc';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -162,7 +162,7 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
     <div className="rm-modal-overlay" onClick={onClose}>
       <div className="rm-modal" onClick={(e) => e.stopPropagation()}>
         <div className="rm-modal-header">
-          <h3>{isEdit ? 'Edit Room' : 'Add New Room'}</h3>
+          <h3>{isEdit ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}</h3>
           <button type="button" className="rm-modal-close" onClick={onClose}>
             <X size={18} />
           </button>
@@ -172,16 +172,16 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
           <div className="rm-form-grid">
             {/* Room Name */}
             <div className="rm-form-group">
-              <label>Room Name *</label>
-              <input name="roomName" value={form.roomName} onChange={handleChange} placeholder="e.g. R101, R202" />
+              <label>Tên phòng *</label>
+              <input name="roomName" value={form.roomName} onChange={handleChange} placeholder="Ví dụ: R101, R202" />
               {errors.roomName && <span className="rm-form-error">{errors.roomName}</span>}
             </div>
 
             {/* Room Type (dropdown) */}
             <div className="rm-form-group">
-              <label>Room Type *</label>
+              <label>Loại phòng *</label>
               <select name="room_type_id" value={form.room_type_id} onChange={handleChange}>
-                <option value="">-- Select type --</option>
+                <option value="">-- Chọn loại phòng --</option>
                 {roomTypes.map((rt) => (
                   <option key={rt._id} value={rt._id}>{rt.name}</option>
                 ))}
@@ -191,20 +191,20 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
 
             {/* Price */}
             <div className="rm-form-group">
-              <label>Price (VND) *</label>
-              <input name="price" type="number" min="0" step="1000" value={form.price} onChange={handleChange} placeholder="e.g. 800000" />
+              <label>Giá (VNĐ) *</label>
+              <input name="price" type="number" min="0" step="1000" value={form.price} onChange={handleChange} placeholder="Ví dụ: 800000" />
               {errors.price && <span className="rm-form-error">{errors.price}</span>}
             </div>
 
             {/* Status — only show when editing */}
             {isEdit && (
               <div className="rm-form-group">
-                <label>Status</label>
+                <label>Trạng thái</label>
                 <select name="status" value={form.status} onChange={handleChange}>
-                  <option value="Available">Available</option>
-                  <option value="Occupied">Occupied</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="OutOfService">Out of Service</option>
+                  <option value="Available">Sẵn sàng</option>
+                  <option value="Occupied">Đang sử dụng</option>
+                  <option value="Maintenance">Bảo trì</option>
+                  <option value="OutOfService">Ngưng hoạt động</option>
                 </select>
               </div>
             )}
@@ -212,13 +212,13 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
 
           {/* Description */}
           <div className="rm-form-group">
-            <label>Description</label>
-            <textarea name="description" rows="3" value={form.description} onChange={handleChange} placeholder="Room description..." />
+            <label>Mô tả</label>
+            <textarea name="description" rows="3" value={form.description} onChange={handleChange} placeholder="Mô tả phòng..." />
           </div>
 
           {/* Image Upload */}
           <div className="rm-form-group">
-            <label>Images</label>
+            <label>Hình ảnh</label>
             <input
               type="file"
               ref={fileInputRef}
@@ -234,10 +234,10 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
               disabled={uploading}
             >
               {uploading ? (
-                <>Uploading...</>
+                <>Đang tải lên...</>
               ) : (
                 <>
-                  <Upload size={14} /> Choose Images
+                  <Upload size={14} /> Chọn hình ảnh
                 </>
               )}
             </button>
@@ -245,12 +245,12 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
               <div className="rm-image-preview-grid">
                 {form.images.map((url, i) => (
                   <div key={i} className="rm-image-preview-item">
-                    <img src={toFullUrl(url)} alt={`Room image ${i + 1}`} />
+                    <img src={toFullUrl(url)} alt={`Hình ảnh phòng ${i + 1}`} />
                     <button
                       type="button"
                       className="rm-image-remove-btn"
                       onClick={() => handleRemoveImage(i)}
-                      title="Remove image"
+                      title="Xóa hình ảnh"
                     >
                       <X size={12} />
                     </button>
@@ -262,7 +262,7 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
 
           {/* Amenities (checkboxes) */}
           <div className="rm-form-group">
-            <label>Amenities</label>
+            <label>Tiện nghi</label>
             <div className="rm-amenity-grid">
               {amenities.map((a) => (
                 <label key={a._id} className="rm-amenity-check">
@@ -279,7 +279,7 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
 
           {/* Features (checkboxes from DB) */}
           <div className="rm-form-group">
-            <label>Features</label>
+            <label>Đặc điểm</label>
             <div className="rm-amenity-grid">
               {features.map((f) => (
                 <label key={f._id} className="rm-amenity-check">
@@ -295,9 +295,9 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
           </div>
 
           <div className="rm-modal-footer">
-            <button type="button" className="rm-btn-cancel" onClick={onClose}>Cancel</button>
+            <button type="button" className="rm-btn-cancel" onClick={onClose}>Hủy</button>
             <button type="submit" className="rm-btn-save" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : isEdit ? 'Update Room' : 'Add Room'}
+              {isSubmitting ? 'Đang lưu...' : isEdit ? 'Cập nhật phòng' : 'Thêm phòng'}
             </button>
           </div>
         </form>

@@ -38,13 +38,13 @@ const mapCustomerFeedback = (feedback) => ({
   history: Array.isArray(feedback.feedback_history) ? feedback.feedback_history.map(mapFeedbackHistoryItem) : [],
 });
 
-const mapFeedbackRoom = (reservation, room) => ({
+const mapFeedbackRoom = (reservation, room, roomType) => ({
   reservationId: String(reservation._id),
   bookingCode: reservation.booking_code || '',
   roomId: reservation.room_id ? String(reservation.room_id) : '',
   roomNumber: room?.roomName || reservation.room_number || reservation.assigned_room || '',
   roomName: room?.roomName || reservation.room_number || reservation.assigned_room || 'Phòng đã đặt',
-  roomImage: Array.isArray(room?.images) ? room.images[0] || '' : room?.image_url || '',
+  roomImage: Array.isArray(roomType?.images) ? roomType.images[0] || '' : room?.image_url || '',
   bookingStatus: reservation.booking_status || '',
   checkInDate: reservation.check_in_date || null,
   checkOutDate: reservation.check_out_date || null,
@@ -142,7 +142,11 @@ const customerFeedbackService = {
         const room = reservation.room_id
           ? await db.collection('rooms').findOne({ _id: reservation.room_id })
           : null;
-        return mapFeedbackRoom(reservation, room);
+        let roomType = null;
+        if (room && room.room_type_id) {
+          roomType = await db.collection('room_types').findOne({ _id: room.room_type_id });
+        }
+        return mapFeedbackRoom(reservation, room, roomType);
       })
     );
 

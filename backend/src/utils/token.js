@@ -8,12 +8,13 @@ const getJwtSecret = () => {
   return process.env.JWT_SECRET;
 };
 
-const signAuthToken = (user, role) => {
+const signAuthToken = (user, role, sessionId) => {
   return jwt.sign(
     {
       sub: user._id.toString(),
       role_id: user.role_id.toString(),
-      role_name: role?.name || null
+      role_name: role?.name || null,
+      session_id: sessionId || null
     },
     getJwtSecret(),
     {

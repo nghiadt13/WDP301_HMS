@@ -12,6 +12,16 @@ export const useRoles = (params = {}) => {
   });
 };
 
+export const useDashboardStats = () => {
+  return useQuery({
+    queryKey: ['admin', 'dashboard', 'stats'],
+    queryFn: async () => {
+      const response = await axiosClient.get('/admin/dashboard/stats');
+      return response.data;
+    }
+  });
+};
+
 export const useCreateRole = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -30,6 +40,19 @@ export const useUpdateRole = () => {
   return useMutation({
     mutationFn: async ({ id, data }) => {
       const response = await axiosClient.put(`/admin/roles/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'roles'] });
+    }
+  });
+};
+
+export const useDeleteRole = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const response = await axiosClient.delete(`/admin/roles/${id}`);
       return response.data;
     },
     onSuccess: () => {
@@ -80,6 +103,19 @@ export const useResetPassword = () => {
   return useMutation({
     mutationFn: async ({ id, new_password }) => {
       const response = await axiosClient.put(`/admin/accounts/${id}/reset-password`, { new_password });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'accounts'] });
+    }
+  });
+};
+
+export const useDeleteAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const response = await axiosClient.delete(`/admin/accounts/${id}`);
       return response.data;
     },
     onSuccess: () => {

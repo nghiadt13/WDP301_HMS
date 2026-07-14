@@ -69,6 +69,10 @@ const AppHeader = () => {
 
   const roleName = String(user?.role?.name || user?.role_name || user?.role || '').toLowerCase();
   const isCustomer = roleName.includes('customer') || roleName.includes('khách');
+  const isManager = roleName.includes('manager');
+  const isReceptionist = roleName.includes('receptionist');
+  const hasDashboard = isManager || isReceptionist;
+  const dashboardUrl = isManager ? '/manager' : isReceptionist ? '/receptionist' : '';
 
   const handleLogout = () => {
     localStorage.removeItem('hotelify_token');
@@ -150,22 +154,35 @@ const AppHeader = () => {
                     <span>{user.email || user.role?.name || 'Khách hàng'}</span>
                   </div>
                 </div>
-                <Link
-                  className="header-profile-menu-item"
-                  to="/profile"
-                  role="menuitem"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                >
-                  Hồ sơ của tôi
-                </Link>
-                <Link
-                  className="header-profile-menu-item"
-                  to="/change-password"
-                  role="menuitem"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                >
-                  Đổi mật khẩu
-                </Link>
+                {hasDashboard ? (
+                  <Link
+                    className="header-profile-menu-item"
+                    to={dashboardUrl}
+                    role="menuitem"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                  >
+                    Quản lý
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      className="header-profile-menu-item"
+                      to="/profile"
+                      role="menuitem"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Hồ sơ của tôi
+                    </Link>
+                    <Link
+                      className="header-profile-menu-item"
+                      to="/change-password"
+                      role="menuitem"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      Đổi mật khẩu
+                    </Link>
+                  </>
+                )}
                 <button
                   className="header-profile-menu-item"
                   type="button"

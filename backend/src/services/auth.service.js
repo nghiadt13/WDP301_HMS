@@ -1,7 +1,9 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const Role = require('../models/role.model');
 const User = require('../models/user.model');
+const SecurityLog = require('../models/security-log.model');
 const asyncHandler = require('../utils/async-handler');
 const { verifyGoogleIdToken } = require('../utils/google-auth');
 const { signAuthToken } = require('../utils/token');
@@ -26,8 +28,15 @@ const isTermsAccepted = (value) => {
   return value === true || value === 'true' || value === 'on' || value === 1 || value === '1';
 };
 
-const sendAuthResponse = (res, statusCode, user, role, message) => {
-  const token = signAuthToken(user, role);
+const getClientIp = (req) => {
+  let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || 'Unknown IP';
+  if (ip === '::1') return '127.0.0.1';
+  if (ip.includes('::ffff:')) return ip.split(':').pop();
+  return ip.split(',')[0].trim();
+};
+
+const sendAuthResponse = (res, statusCode, user, role, message, sessionId) => {
+  const token = signAuthToken(user, role, sessionId);
 
   res.status(statusCode).send({
     message,
@@ -142,7 +151,17 @@ const register = asyncHandler(async (req, res) => {
     accepted_terms_at: new Date()
   });
 
-  sendAuthResponse(res, 201, user, customerRole, 'Account created successfully');
+  const sessionId = crypto.randomUUID();
+
+  await SecurityLog.create({
+    event_type: 'SUCCESSFUL_LOGIN',
+    ip_address: getClientIp(req),
+    target_account: user.login_account,
+    session_id: sessionId,
+    details: req.headers['user-agent'] || 'Unknown Device'
+  }).catch(err => console.error('Failed to write security log:', err));
+
+  sendAuthResponse(res, 201, user, customerRole, 'Account created successfully', sessionId);
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -172,6 +191,12 @@ const login = asyncHandler(async (req, res) => {
 
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
+    await SecurityLog.create({
+      event_type: 'FAILED_LOGIN',
+      ip_address: getClientIp(req),
+      target_account: identifier,
+      details: 'Invalid password provided'
+    }).catch(err => console.error('Failed to write security log:', err));
     return res.status(401).send({ message: 'Invalid email or password' });
   }
 
@@ -180,7 +205,18 @@ const login = asyncHandler(async (req, res) => {
     return res.status(403).send({ message: 'This account role is not active' });
   }
 
-  sendAuthResponse(res, 200, user, role, 'Login successfully');
+  const sessionId = crypto.randomUUID();
+
+  // Log successful login
+  await SecurityLog.create({
+    event_type: 'SUCCESSFUL_LOGIN',
+    ip_address: getClientIp(req),
+    target_account: user.login_account,
+    session_id: sessionId,
+    details: req.headers['user-agent'] || 'Unknown Device'
+  }).catch(err => console.error('Failed to write security log:', err));
+
+  sendAuthResponse(res, 200, user, role, 'Login successfully', sessionId);
 });
 
 const googleLogin = asyncHandler(async (req, res) => {
@@ -231,7 +267,18 @@ const googleLogin = asyncHandler(async (req, res) => {
     return res.status(403).send({ message: 'This account role is not active' });
   }
 
-  sendAuthResponse(res, 200, user, role, 'Login with Google successfully');
+  const sessionId = crypto.randomUUID();
+
+  // Log successful google login
+  await SecurityLog.create({
+    event_type: 'SUCCESSFUL_LOGIN',
+    ip_address: getClientIp(req),
+    target_account: user.login_account,
+    session_id: sessionId,
+    details: req.headers['user-agent'] || 'Unknown Device'
+  }).catch(err => console.error('Failed to write security log:', err));
+
+  sendAuthResponse(res, 200, user, role, 'Login with Google successfully', sessionId);
 });
 
 const changePassword = asyncHandler(async (req, res) => {
@@ -281,10 +328,51 @@ const me = asyncHandler(async (req, res) => {
   });
 });
 
+const recentSessions = asyncHandler(async (req, res) => {
+  const sessions = await SecurityLog.find({
+    target_account: req.user.login_account,
+    event_type: 'SUCCESSFUL_LOGIN',
+    is_revoked: false
+  })
+    .sort({ createdAt: -1 })
+    .limit(10);
+
+  res.send({
+    message: 'Recent sessions retrieved successfully',
+    data: sessions,
+    current_session_id: req.user_session_id
+  });
+});
+
+const logout = asyncHandler(async (req, res) => {
+  const sessionId = req.user_session_id;
+  if (sessionId) {
+    await SecurityLog.updateMany({ session_id: sessionId }, { is_revoked: true });
+  }
+  res.send({ message: 'Logged out successfully' });
+});
+
+const revokeSession = asyncHandler(async (req, res) => {
+  const logId = req.params.id;
+  const log = await SecurityLog.findOne({ _id: logId, target_account: req.user.login_account });
+  
+  if (!log) {
+    return res.status(404).send({ message: 'Session not found' });
+  }
+  
+  log.is_revoked = true;
+  await log.save();
+  
+  res.send({ message: 'Session revoked successfully' });
+});
+
 module.exports = {
   changePassword,
   googleLogin,
   login,
+  logout,
   me,
+  recentSessions,
+  revokeSession,
   register
 };

@@ -8,7 +8,7 @@ $FrontendPort = 5173
 
 function Kill-PortProcess {
     param([int]$Port)
-    $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+    $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
     if ($connections) {
         $pids = $connections | Select-Object -ExpandProperty OwningProcess -Unique
         foreach ($procId in $pids) {
@@ -45,7 +45,7 @@ $maxRetries = 3
 
 foreach ($port in @($BackendPort, $FrontendPort)) {
     for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
-        $busy = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+        $busy = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
         if (-not $busy) {
             Write-Host "[OK]   Port $port is free" -ForegroundColor Green
             break
