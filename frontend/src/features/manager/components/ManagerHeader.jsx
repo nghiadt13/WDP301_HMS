@@ -10,6 +10,7 @@ const getPageTitle = (pathname) => {
   if (pathname === '/manager/staff-tasks') return 'Nhiệm vụ nhân viên';
   if (pathname === '/manager/minibar-items') return 'Quản lý Minibar';
   if (pathname === '/manager/feedback') return 'Ý kiến khách hàng';
+  if (pathname === '/manager/policies') return 'Quản lý chính sách';
   return 'Bảng điều khiển';
 };
 

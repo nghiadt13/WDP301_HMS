@@ -4,12 +4,14 @@ const express = require('express');
 const authRoutes = require('./auth.route');
 const homeRoutes = require('./home.route');
 const profileRoutes = require('./profile.route');
+const policyRoutes = require('./policy.route');
 const uploadRoutes = require('./upload.route');
 
 // Manager sub-modules
 const managerStaffTaskRoutes = require('../modules/manager/staff-task/staff-task.route');
 const managerMinibarRoutes = require('../modules/manager/minibar/minibar.route');
 const managerCustomerFeedbackRoutes = require('../modules/manager/customer-feedback/customer-feedback.route');
+const managerPolicyRoutes = require('../modules/manager/policy/policy.route');
 
 // Public room routes (list, search, detail, calendar)
 const publicRoomRoutes = require('./room.route');
@@ -27,7 +29,6 @@ const adminRoleRoutes = require('../modules/admin/role/role.route');
 // Customer modules
 const customerReservationRoutes = require('../modules/customer/reservation/reservation.route');
 const customerPaymentRoutes = require('../modules/customer/payment/payment.route');
-const customerServiceRoutes = require('../modules/customer/service/service.route');
 const customerFeedbackRoutes = require('../modules/customer/feedback/feedback.route');
 
 // Shared webhook
@@ -46,12 +47,14 @@ router.get('/health', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/home', homeRoutes);
 router.use('/profile', profileRoutes);
+router.use('/policies', policyRoutes);
 router.use('/upload', uploadRoutes);
 
 // Manager operation sub-routes (mounted on /manager)
 router.use('/manager', managerStaffTaskRoutes);
 router.use('/manager', managerMinibarRoutes);
 router.use('/manager', managerCustomerFeedbackRoutes);
+router.use('/manager', managerPolicyRoutes);
 
 // Public room routes (no auth required)
 router.use('/rooms', publicRoomRoutes);
@@ -72,7 +75,6 @@ router.use('/admin/roles', authMiddleware, authorize('admin'), adminRoleRoutes);
 // Customer routes
 router.use('/reservations', customerReservationRoutes);
 router.use('/payments', customerPaymentRoutes);
-router.use('/customer', customerServiceRoutes);
 router.use('/customer', customerFeedbackRoutes);
 
 // Shared webhook

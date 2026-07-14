@@ -14,7 +14,7 @@ const staffTaskSchema = new mongoose.Schema(
     },
     staff_type: {
       type: String,
-      enum: ['housekeeping', 'technical'],
+      enum: ['housekeeping'],
       default: 'housekeeping',
     },
     assigned_staff_id: {
@@ -30,6 +30,11 @@ const staffTaskSchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: [true, 'Room number is required'],
+    },
+    room_type: {
+      type: String,
+      trim: true,
+      default: '',
     },
     priority: {
       type: String,

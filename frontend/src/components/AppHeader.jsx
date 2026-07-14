@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Building2, CalendarDays, Search } from 'lucide-react';
 
 const readStoredUser = () => {
@@ -12,6 +12,7 @@ const readStoredUser = () => {
 };
 
 const AppHeader = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(readStoredUser);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
@@ -77,6 +78,7 @@ const AppHeader = () => {
     setUser(null);
     setIsProfileMenuOpen(false);
     window.dispatchEvent(new Event('hotelify-auth-change'));
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -92,7 +94,7 @@ const AppHeader = () => {
         <Link to="/booking">Đặt phòng</Link>
         {isCustomer ? (
           <>
-            <Link to="/customer/services">Dịch vụ</Link>
+            <Link to="/customer/policies">Chính sách</Link>
             <Link to="/customer/feedback">Góp ý</Link>
           </>
         ) : null}

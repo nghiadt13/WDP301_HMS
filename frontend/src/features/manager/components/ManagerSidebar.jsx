@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown } from 'lucide-react';
+import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, FileText } from 'lucide-react';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
@@ -10,6 +10,7 @@ const sidebarItems = [
   { icon: BedDouble, label: 'Phòng', hasSub: true, matchPath: '/manager/rooms' },
   { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-tasks' },
   { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar-items' },
+  { icon: FileText, label: 'Chính sách', to: '/manager/policies' },
   { icon: Wallet, label: 'Tài chính', hasSub: true },
   { icon: Star, label: 'Ý kiến khách hàng', to: '/manager/feedback', badge: 5 },
   { icon: LogIn, label: 'Đăng ký & Đăng nhập' },

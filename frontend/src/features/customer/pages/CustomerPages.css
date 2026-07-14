@@ -1111,14 +1111,116 @@
   margin-top: 8px;
 }
 
+.customer-policy-group-header span,
+.customer-policy-card-number {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.customer-policy-list {
+  display: grid;
+  gap: 24px;
+}
+
+.customer-policy-group {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.customer-policy-group-header {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+
+.customer-policy-group-header h2 {
+  color: var(--ink);
+  font-size: 22px;
+  margin: 4px 0 0;
+}
+
+.customer-policy-group-header > span {
+  background: #eef6ff;
+  border-radius: 999px;
+  color: #2563eb;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+}
+
+.customer-policy-items {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.customer-policy-card {
+  align-items: flex-start;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 18px;
+}
+
+.customer-policy-card-icon {
+  align-items: center;
+  background: #ecfccb;
+  border: 1px solid #d9f99d;
+  border-radius: 12px;
+  color: #5f8f00;
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.customer-policy-card h3 {
+  color: var(--ink);
+  font-size: 18px;
+  margin: 4px 0 8px;
+}
+
+.customer-policy-card p {
+  color: var(--muted);
+  line-height: 1.65;
+  margin: 0;
+}
+
 @media (max-width: 1180px) {
   .customer-feedback-stats,
   .customer-feedback-board.enhanced,
-  .feedback-selected-room {
+  .feedback-selected-room,
+  .customer-policy-items {
     grid-template-columns: 1fr;
   }
 
   .customer-feedback-hero-score {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .customer-policy-group {
+    padding: 18px;
+  }
+
+  .customer-policy-group-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .customer-policy-card {
+    grid-template-columns: 1fr;
   }
 }

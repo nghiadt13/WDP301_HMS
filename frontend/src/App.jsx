@@ -1,8 +1,7 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 
 import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
-import CustomerServiceRequestsPage from './features/customer/pages/CustomerServiceRequestsPage.jsx';
-import CustomerServicesPage from './features/customer/pages/CustomerServicesPage.jsx';
+import CustomerPoliciesPage from './features/customer/pages/CustomerPoliciesPage.jsx';
 
 import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.jsx';
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
@@ -12,6 +11,7 @@ import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
 import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPage.jsx';
 import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
+import ManagerPoliciesPage from './features/manager/pages/ManagerPoliciesPage.jsx';
 import ManagerLayout from './features/manager/layouts/ManagerLayout.jsx';
 
 import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
@@ -38,6 +38,17 @@ const getStoredUser = () => {
   } catch {
     return null;
   }
+};
+
+const AuthenticatedRoute = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('hotelify_token');
+
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
 };
 
 const ManagerProtectedRoute = () => {
@@ -82,12 +93,13 @@ const App = () => {
         <Route path="rooms/:roomId" element={<RoomDetailPage />} />
 
         {/* Authenticated routes */}
-        <Route path="profile" element={<MyProfilePage />} />
-        <Route path="change-password" element={<ChangePasswordPage />} />
-        <Route path="payment/:reservationId" element={<PaymentPage />} />
-        <Route path="customer/services" element={<CustomerServicesPage />} />
-        <Route path="customer/service-requests" element={<CustomerServiceRequestsPage />} />
-        <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
+        <Route element={<AuthenticatedRoute />}>
+          <Route path="profile" element={<MyProfilePage />} />
+          <Route path="change-password" element={<ChangePasswordPage />} />
+          <Route path="payment/:reservationId" element={<PaymentPage />} />
+          <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
+          <Route path="customer/policies" element={<CustomerPoliciesPage />} />
+        </Route>
 
         {/* Manager routes */}
         <Route element={<ManagerProtectedRoute />}>
@@ -99,6 +111,7 @@ const App = () => {
             <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
             <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
             <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
+            <Route path="policies" element={<ManagerPoliciesPage />} />
           </Route>
         </Route>
 
