@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import axiosClient from '../api/axiosClient';
 import registerResortImage from '../assets/register-resort.png';
+import PasswordInput from '../components/PasswordInput';
+import { getApiValidationErrors, getPasswordValidationErrors } from '../utils/passwordValidation';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ const RegisterPage = () => {
     accepted_terms: false
   });
   const [errorMessage, setErrorMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
@@ -29,6 +32,19 @@ const RegisterPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrorMessage('');
+    setValidationErrors([]);
+
+    const passwordErrors = getPasswordValidationErrors(formData.password);
+    if (passwordErrors.length > 0) {
+      setValidationErrors(passwordErrors);
+      return;
+    }
+
+    if (formData.password !== formData.confirm_password) {
+      setErrorMessage('Password confirmation does not match.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -39,6 +55,12 @@ const RegisterPage = () => {
       window.dispatchEvent(new Event('hotelify-auth-change'));
       navigate('/home');
     } catch (error) {
+      const apiValidationErrors = getApiValidationErrors(error);
+      if (apiValidationErrors.length > 0) {
+        setValidationErrors(apiValidationErrors);
+        return;
+      }
+
       setErrorMessage(
         error.response?.data?.message ||
           'Cannot connect to the server. Please check that the backend is running.'
@@ -89,20 +111,21 @@ const RegisterPage = () => {
 
             <label className="register-field">
               <span>Password</span>
-              <input
-                type="password"
+              <PasswordInput
                 name="password"
                 placeholder="Enter Password"
                 value={formData.password}
                 onChange={handleChange}
                 autoComplete="new-password"
               />
+              <small className="password-requirement">
+                At least 8 characters with uppercase, lowercase, number, and special character.
+              </small>
             </label>
 
             <label className="register-field">
               <span>Confirm Password</span>
-              <input
-                type="password"
+              <PasswordInput
                 name="confirm_password"
                 placeholder="Enter Confirm Password"
                 value={formData.confirm_password}
@@ -135,6 +158,13 @@ const RegisterPage = () => {
           </label>
 
           {errorMessage ? <p className="register-error">{errorMessage}</p> : null}
+          {validationErrors.length > 0 ? (
+            <ul className="password-error-list">
+              {validationErrors.map((error) => (
+                <li key={error}>{error}</li>
+              ))}
+            </ul>
+          ) : null}
 
           <div className="register-actions">
             <button type="submit" disabled={isSubmitting}>

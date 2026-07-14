@@ -15,7 +15,7 @@ const bannerItems = Array.from({ length: 9 }, (_, index) => {
 });
 
 const lobbyContent = {
-  eyebrow: 'Paddington Bayview Ha Long',
+  eyebrow: '',
   title: 'Khong gian sanh khach san',
   description:
     'Trai nghiem khu sanh rong, sang va sang trong voi cac goc tiep khach duoc thiet ke cho ca nghi duong lan cong tac.',

@@ -23,6 +23,32 @@ const parseDateOnly = (value) => {
 };
 
 /**
+ * Parse a hotel check-in date. Hotelify check-in starts at 12:00.
+ * @param {string} value - Date string in YYYY-MM-DD format
+ * @returns {Date|null}
+ */
+const parseHotelCheckInDate = (value) => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+  const date = new Date(`${value}T12:00:00.000+07:00`);
+  return date;
+};
+
+/**
+ * Parse a hotel check-out date. Hotelify check-out ends at 11:00.
+ * @param {string} value - Date string in YYYY-MM-DD format
+ * @returns {Date|null}
+ */
+const parseHotelCheckOutDate = (value) => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+  const date = new Date(`${value}T11:00:00.000+07:00`);
+  return date;
+};
+
+/**
  * Convert a Date to YYYY-MM-DD string.
  * @param {Date} date
  * @returns {string}
@@ -60,6 +86,8 @@ module.exports = {
   addDays,
   addMonths,
   getMonthStart,
+  parseHotelCheckInDate,
+  parseHotelCheckOutDate,
   parseDateOnly,
   parsePositiveInteger,
   toDateKey,

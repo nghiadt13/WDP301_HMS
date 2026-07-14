@@ -14,13 +14,16 @@ const bookingSchema = new mongoose.Schema({
   special_request:    { type: String, default: '' },
   total_amount:       { type: Number, default: 0 },
   deposit_amount:     { type: Number, default: 0 },
-  payment_status:     { type: String, enum: ['Unpaid', 'DepositPaid', 'Paid'], default: 'Unpaid' },
+  payment_status:     { type: String, enum: ['Unpaid', 'DepositPaid', 'Paid', 'Refunded'], default: 'Unpaid' },
   booking_status:     {
     type: String,
-    enum: ['Pending', 'Confirmed', 'CheckedIn', 'CheckedOut', 'Completed', 'Canceled', 'Checked-in', 'Checked-out'],
+    enum: ['Pending', 'PendingPayment', 'Confirmed', 'CheckedIn', 'CheckedOut', 'Completed', 'Canceled', 'Checked-in', 'Checked-out'],
     default: 'Pending'
   },
   source:             { type: String, enum: ['Website', 'OTA', 'Walk-in', 'Phone', 'Other'], default: 'Website' },
+  payment_expires_at: { type: Date, default: null },
+  refund_status:      { type: String, default: '' },
+  cancel_reason:      { type: String, default: '' },
   canceled_at:        { type: Date, default: null },
   created_at:         { type: Date, default: Date.now },
   updated_at:         { type: Date, default: Date.now }

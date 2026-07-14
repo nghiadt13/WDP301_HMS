@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import axiosClient from '../api/axiosClient';
 import hotelLoginImage from '../assets/hotel-login.png';
+import PasswordInput from '../components/PasswordInput';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -184,8 +185,7 @@ const LoginPage = () => {
 
             <label className="login-field">
               <span>Password</span>
-              <input
-                type="password"
+              <PasswordInput
                 name="password"
                 placeholder="Enter Password"
                 autoComplete="new-password"
@@ -205,6 +205,10 @@ const LoginPage = () => {
             <span>Remember Me</span>
           </label>
 
+          <Link className="forgot-password-link" to="/forgot-password">
+            Forgot Password?
+          </Link>
+
           <div className="login-divider">
             <span>or</span>
           </div>
@@ -216,7 +220,7 @@ const LoginPage = () => {
                 {isGoogleSubmitting ? <span>Signing in with Google...</span> : null}
               </>
             ) : (
-              <button type="button" disabled>
+              <button type="button" disabled title="Set VITE_GOOGLE_CLIENT_ID in frontend/.env and GOOGLE_CLIENT_ID in backend/.env">
                 Google login is not configured
               </button>
             )}

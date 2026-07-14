@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { createHttpError } = require('../../../utils/error.utils');
+const { parseHotelCheckInDate, parseHotelCheckOutDate } = require('../../../utils/date.utils');
 
 const Booking = require('../../../models/booking.model');
 const User = require('../../../models/user.model');
@@ -13,12 +14,24 @@ const generateWalkInCode = () => {
   return `BKG-WALKIN-${suffix}`;
 };
 
+const parseStayRange = (checkInDate, checkOutDate) => {
+  const checkIn = parseHotelCheckInDate(checkInDate);
+  const checkOut = parseHotelCheckOutDate(checkOutDate);
+
+  if (!checkIn || !checkOut || checkOut <= checkIn) {
+    throw createHttpError('Invalid stay dates', 400);
+  }
+
+  return { checkIn, checkOut };
+};
+
 const getBookedRoomsCount = async (roomTypeId, checkInDate, checkOutDate) => {
+  const stayRange = parseStayRange(checkInDate, checkOutDate);
   const bookings = await Booking.find({
     room_type_id: roomTypeId,
     booking_status: { $nin: ['Canceled', 'CheckedOut', 'Completed'] },
-    check_in_date: { $lt: new Date(checkOutDate) },
-    check_out_date: { $gt: new Date(checkInDate) }
+    check_in_date: { $lt: stayRange.checkOut },
+    check_out_date: { $gt: stayRange.checkIn }
   });
   return bookings.reduce((sum, b) => sum + (b.room_quantity || 1), 0);
 };
@@ -467,7 +480,8 @@ const checkinService = {
       throw createHttpError(`Only ${availableCount} room(s) available for this type`, 409);
     }
 
-    const nights = Math.max(1, Math.round((new Date(checkOutDate) - new Date(checkInDate)) / (24 * 60 * 60 * 1000)));
+    const stayRange = parseStayRange(checkInDate, checkOutDate);
+    const nights = Math.max(1, Math.round((stayRange.checkOut - stayRange.checkIn) / (24 * 60 * 60 * 1000)));
     const totalAmount = (roomType.base_price || 0) * nights * roomCount;
 
     const now = new Date();
@@ -476,8 +490,8 @@ const checkinService = {
       customer_id: null,
       room_type_id: roomTypeId,
       room_id: null,
-      check_in_date: new Date(checkInDate),
-      check_out_date: new Date(checkOutDate),
+      check_in_date: stayRange.checkIn,
+      check_out_date: stayRange.checkOut,
       guest_count: guestCount || 1,
       adult_count: adultCount || 1,
       child_count: childCount || 0,
@@ -524,12 +538,14 @@ const checkinService = {
       throw createHttpError('roomTypeId, checkInDate, and checkOutDate are required', 400);
     }
 
+    const stayRange = parseStayRange(checkInDate, checkOutDate);
+
     // Exclude rooms assigned to overlapping active booking rooms
     const overlappingBookingRooms = await BookingRoom.find({
       room_id: { $ne: null },
       status: { $in: ['Pending', 'CheckedIn'] },
-      check_in_date: { $lt: new Date(checkOutDate) },
-      check_out_date: { $gt: new Date(checkInDate) }
+      check_in_date: { $lt: stayRange.checkOut },
+      check_out_date: { $gt: stayRange.checkIn }
     });
 
     const assignedRoomIds = overlappingBookingRooms.map(br => br.room_id.toString());

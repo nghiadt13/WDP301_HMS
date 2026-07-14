@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 
+const User = require('../models/user.model');
 const asyncHandler = require('../utils/async-handler');
+const { createHttpError } = require('../utils/error.utils');
+const { expirePendingReservations } = require('../utils/reservation-status.utils');
 
 const toDate = (value) => (value ? new Date(value) : null);
 
@@ -29,6 +32,10 @@ const mapStatus = (status) => {
 
   if (normalizedStatus.includes('checkedin')) {
     return 'Checked-In';
+  }
+
+  if (normalizedStatus.includes('pendingpayment')) {
+    return 'Pending Payment';
   }
 
   return status || 'Pending';
@@ -126,6 +133,7 @@ const enrichReservation = async (db, reservation) => {
 const getProfileDashboard = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
   const customerId = req.user._id;
+  await expirePendingReservations(db);
 
   const reservations = await db
     .collection('reservations')
@@ -218,6 +226,47 @@ const getProfileDashboard = asyncHandler(async (req, res) => {
   });
 });
 
+const updateProfile = asyncHandler(async (req, res) => {
+  const allowedFields = ['full_name', 'email', 'phone_number', 'address', 'avatar'];
+  const update = {};
+
+  allowedFields.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+      update[field] = String(req.body[field] || '').trim();
+    }
+  });
+
+  if (Object.prototype.hasOwnProperty.call(update, 'email')) {
+    update.email = update.email.toLowerCase();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(update.email)) {
+      throw createHttpError('Email is invalid.', 400);
+    }
+
+    const existingEmailUser = await User.exists({
+      _id: { $ne: req.user._id },
+      email: update.email
+    });
+
+    if (existingEmailUser) {
+      throw createHttpError('Email is already used by another account.', 409);
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(update, 'full_name') && !update.full_name) {
+    throw createHttpError('Full name is required.', 400);
+  }
+
+  Object.assign(req.user, update);
+  await req.user.save();
+
+  res.send({
+    message: 'Profile updated successfully.',
+    user: req.user.toSafeObject(req.role)
+  });
+});
+
 module.exports = {
-  getProfileDashboard
+  getProfileDashboard,
+  updateProfile
 };

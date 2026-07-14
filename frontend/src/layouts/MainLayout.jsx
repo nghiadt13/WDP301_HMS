@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 
 import AppHeader from '../components/AppHeader.jsx';
+import AppFooter from '../components/AppFooter.jsx';
 
 const MainLayout = () => {
   const location = useLocation();
@@ -11,6 +12,7 @@ const MainLayout = () => {
     <main className="app-shell min-h-screen">
       {shouldShowHeader ? <AppHeader /> : null}
       <Outlet />
+      <AppFooter />
     </main>
   );
 };

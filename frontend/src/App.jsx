@@ -26,12 +26,14 @@ import AdminRolesPage from './features/admin/pages/AdminRolesPage.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import MyProfilePage from './pages/MyProfilePage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import RoomDetailPage from './pages/RoomDetailPage.jsx';
 import RoomListPage from './pages/RoomListPage.jsx';
 import RoomSearchResultsPage from './pages/RoomSearchResultsPage.jsx';
@@ -92,6 +94,8 @@ const App = () => {
         <Route path="home" element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="booking" element={<BookingPage />} />
         <Route path="listRoom" element={<RoomListPage />} />
         <Route path="rooms" element={<RoomListPage />} />

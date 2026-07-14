@@ -19,6 +19,14 @@ const authController = {
 
   register(req, res, next) {
     return authService.register(req, res, next);
+  },
+
+  requestPasswordReset(req, res, next) {
+    return authService.requestPasswordReset(req, res, next);
+  },
+
+  resetPassword(req, res, next) {
+    return authService.resetPassword(req, res, next);
   }
 };
 
