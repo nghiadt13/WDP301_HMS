@@ -18,6 +18,7 @@ import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItem
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
 import ManagerLayout from './features/manager/layouts/ManagerLayout.jsx';
 
+
 import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
 import AdminDashboardPage from './features/admin/pages/AdminDashboardPage.jsx';
 import AdminAccountsPage from './features/admin/pages/AdminAccountsPage.jsx';
@@ -141,6 +142,7 @@ const App = () => {
             <Route path="walkin" element={<WalkinBookingForm />} />
           </Route>
         </Route>
+
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

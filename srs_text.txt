@@ -1,0 +1,3388 @@
+Hotel Management System
+Software Requirement Specification
+– Hanoi,May 2026 –
+Record of change
+s
+Date
+A*
+M, D
+In charge
+Change Description
+20/5/2026
+A
+NghiaDT
+20/5/2026
+Tinnvt
+*A - Added M - Modified D - Deleted
+Table of Contents
+ TOC \h \u \z \t &quot;Heading 1,1,Heading 2,2,Heading 3,3,&quot;I. Overview
+4
+1. Introduction
+4
+2. System Functions
+5
+3. Entity Relationship Diagram
+6
+II. Functional Requirements
+7
+1. &lt;&lt;Feature Name 1&gt;&gt;
+7
+a. &lt;&lt;Function Name 1&gt;&gt;
+7
+b. &lt;&lt;Function Name 2&gt;&gt;
+7
+2. &lt;&lt;Feature Name 2&gt;&gt;
+7
+I. Overview
+1. Introduction
+The 
+Hotel Management System (HMS)
+ is a software project designed to provide a complete digital platform for managing the daily operations of a 4-star hotel. The main purpose of this project is to replace many manual hotel management processes with a more organized, efficient, and user-friendly system. Through this platform, the hotel can manage reservations, room availability, guest information, housekeeping activities, service requests, billing, payments, and reports in one centralized system.
+The platform supports multiple types of users, including
+ Receptionists, Staff, Managers, and Admins
+. Each actor has specific functions based on their role in the hotel. Guests can register an account, log in, search for available rooms, view room details, make online reservations, cancel bookings, request additional services, report room issues, view their current bill, and submit reviews after their stay. This helps improve the guest experience by allowing customers to interact with the hotel more easily through an online system.
+For hotel employees, the system provides useful tools to support daily work. Receptionists can manage booking lists, create walk-in reservations, modify or cancel reservations, check guests in and out, generate invoices, process payments, add extra charges, and view real-time room status. Staff members, especially housekeeping employees, can view assigned tasks, update room cleaning status, report room issues, and process guest service requests. These features help hotel operations become faster, clearer, and easier to track.
+The platform also provides management and administration features. Managers can manage room information, room types, room pricing, maintenance blocks, housekeeping assignments, staff task progress, occupancy reports, revenue summaries, and reservation overviews. Admins can manage internal user accounts, configure system settings, view system activity logs, manage service and amenity catalogs, and access full revenue reports for higher-level decision-making.
+Overall, the HMS platform is capable of supporting both 
+customer-facing services
+ and 
+internal hotel operations
+. It improves communication between guests and hotel staff, reduces manual paperwork, keeps room and booking information updated in real time, and provides useful reports for monitoring hotel performance. With its use case–driven design, this project creates a clear foundation for further system analysis, design diagrams, database design, and future software development.
+     
+   
+2. System Functions
+a. Screen Flow
+b. Screen Details
+b.1. Public Screen
+#
+Feature
+Screen
+Description
+1
+Account Access
+Register Account
+Allows a new customer to create an account by entering required personal and login information. The system validates required fields and prepares the account for login.
+2
+Authentication
+Login Page
+Authenticates users with valid credentials and redirects them to the appropriate dashboard based on their role.
+3
+Password Recovery
+Forgot Password
+Allows a customer to start password recovery by providing account information such as email. The system verifies the request before reset.
+4
+Password Recovery
+Reset Password
+Allows the customer to set a new password after the forgot-password verification step is completed successfully.
+5
+Authentication
+Role Determination
+Determines the authenticated user role and redirects the user to the corresponding dashboard.
+6
+Room Viewing
+View Room List
+Displays room types or available rooms for browsing before login, including basic room information such as room name, amenities, capacity, and price range.
+7
+Room Viewing
+View Room Detail
+Shows detailed room information such as description, images, amenities, capacity, bed type, and nightly price. Login is required before making a reservation.
+ 
+ 
+b.2. Customer
+ 
+#
+Feature
+Screen
+Description
+8
+Room Search and Reservation
+View Room List
+Displays available rooms or room types for browsing, including basic information such as room type, capacity, price, and availability status.
+9
+Room Search and Reservation
+Search Available Rooms
+Allows the customer to search for available rooms by criteria such as date range, room type, capacity, or other booking conditions
+10
+Room Search and Reservation
+View Room Detail
+Shows detailed information for a selected room or room type, including description, images, amenities, price, and reservation action.
+11
+Room Search and Reservation
+Make Online Reservation
+Allows the customer to create an online reservation by selecting room, stay dates, guest information, and booking details.
+12
+Room Search and Reservation
+Pay Reservation Deposit
+Allows the customer to pay the required reservation deposit to confirm or secure the booking.
+13
+Room Search and Reservation
+Cancel Reservation
+Allows the customer to cancel an eligible reservation according to the cancellation policy and current reservation status.
+14
+Room Search and Reservation
+View Reservation History
+Displays the customer's previous and current reservations, including booking status, stay dates, payment information, and cancellation status.
+15
+Service, Issue and Feedback
+Request Service
+Allows the customer to request hotel services during a stay, such as room service or support from hotel staff.
+16
+Service, Issue and Feedback
+Report Room Issue
+Allows the customer to report room-related issues such as broken equipment, missing amenities, or maintenance problems.
+17
+Service, Issue and Feedback
+Send Feedback
+Allows the customer to submit feedback or ratings about the hotel, service quality, room experience, or stay experience.
+b.3. Receptionist
+ 
+#
+Feature
+Screen
+Description
+18
+Booking Management
+View Booking List
+Displays a list of reservations and bookings for receptionist review, filtering, and operational handling.
+19
+Booking Management
+View Booking Detail
+Shows complete information for a selected booking, including customer, room, date, payment, and booking status details.
+20
+Booking Management
+Search Booking
+Allows the receptionist to find bookings by customer information, booking code, room, date, or booking status.
+21
+Booking Management
+Create Walk-in Booking
+Allows the receptionist to create a booking for a guest who arrives directly at the hotel without making an online reservation.
+22
+Booking Management
+Modify Booking
+Allows the receptionist to update eligible booking details such as room, date, guest information, or related booking information.
+23
+Booking Management
+Cancel Booking
+Allows the receptionist to cancel a booking according to hotel policy and current booking state.
+24
+Booking Management
+Record Deposit Payment
+Allows the receptionist to record an offline deposit payment made at the counter for a booking.
+25
+Check-in and Room Assignment
+Process Check-in
+Allows the receptionist to confirm guest arrival, verify booking information, and start the guest stay.
+26
+Check-in and Room Assignment
+Assign Room
+Allows the receptionist to assign an available room to a booking or active stay based on room availability and booking requirements.
+27
+Check-out, Inspection and Billing
+Process Check-out
+Allows the receptionist to start guest check-out, confirm stay completion, and prepare inspection and billing activities.
+28
+Check-out, Inspection and Billing
+Create Room Inspection Request
+Creates a request for housekeeping staff to inspect the room after check-out before finalizing billing.
+29
+Check-out, Inspection and Billing
+View Inspection Result
+Allows the receptionist to view housekeeping inspection results, including room condition and any reported damage or missing items.
+30
+Check-out, Inspection and Billing
+Add Charge to Bill
+Allows the receptionist to add approved extra charges to the guest bill, such as damage, minibar, or additional services.
+31
+Check-out, Inspection and Billing
+Generate Invoice
+Generates the final invoice based on room charges, deposits, services, additional charges, and payment status.
+32
+Check-out, Inspection and Billing
+Process Final Payment
+Allows the receptionist to record and confirm the final payment before completing the check-out process.
+33
+Customer and Service Operations
+Manage Customer Profile
+Allows the receptionist to view or update customer information needed for booking, check-in, stay management, or service handling.
+34
+Customer and Service Operations
+View Room Status Board
+Displays room status information such as available, occupied, dirty, cleaning, maintenance, or ready for assignment.
+35
+Customer and Service Operations
+Handle Customer Service Request
+Allows the receptionist to receive, review, and route customer service requests to the appropriate staff group when needed.
+b.4. Housekeeping
+#
+Feature
+Screen
+Description
+36
+Cleaning Task Management
+View Assigned Cleaning Tasks
+Displays cleaning tasks assigned to housekeeping staff, including room, task status, priority, and assignment information.
+37
+Cleaning Task Management
+Update Cleaning Task Status
+Allows housekeeping staff to update progress or completion status of assigned cleaning tasks.
+38
+Service Request Handling
+View Service Request List
+Displays service requests assigned to housekeeping staff for handling during guest stays or hotel operations.
+39
+Service Request Handling
+Process Service Request
+Allows housekeeping staff to process assigned service requests and update the result or completion status.
+40
+Room Inspection and Issue Report
+Inspect Room After Check-out
+Allows housekeeping staff to inspect a room after guest check-out and record the room condition.
+41
+Room Inspection and Issue Report
+Report Room Issue
+Allows housekeeping staff to report damage, missing amenities, or maintenance issues found in a room.
+b.5. Manager
+#
+Feature
+Screen
+Description
+45
+Room and Room Type Management
+Manage Room
+Allows the manager to create, update, deactivate, or manage hotel room records and room operational status.
+46
+Room and Room Type Management
+Manage Room Type
+Allows the manager to manage room type information such as room type name, capacity, amenities, price, and description.
+47
+Staff Task Management
+Staff Task Management
+Allows the manager to create, assign, monitor, and manage tasks for housekeeping staff and technical staff.
+48
+Minibar Item Management
+Minibar Item Management
+Allows the manager to manage minibar items, including item information, price, and availability.
+49
+Operational Reports
+View Reservation Overview
+Allows the manager to view reservation-related operational information such as booking volume, upcoming stays, and reservation status summary.
+50
+Operational Reports
+View Revenue Summary
+Allows the manager to view revenue information summarized from bookings, payments, services, and hotel operations.
+51
+Operational Reports
+View Occupancy Report
+Allows the manager to view room occupancy information, such as how many rooms are occupied, available, or unused within a selected period.
+52
+Customer Feedback Management
+Customer Feedback Management 
+Allows the manager to view and manage customer feedback to monitor service quality and support improvement decisions.
+b.6. Admin
+#
+Feature
+Screen
+Description
+53
+Internal Account Management
+Manage Internal Account
+Allows the admin to create, update, activate, deactivate, or manage internal staff accounts for system access.
+54
+Internal Account Management
+Reset Staff Password
+Allows the admin to reset passwords for internal staff accounts when employees forget passwords or access must be restored securely.
+55
+Role Management
+Manage Role
+Allows the admin to manage system roles and role-related access control for internal users.
+56
+Profile Management
+Admin Profile
+Allows the admin to view and update permitted admin profile information.
+c. User Authorization
+Screen
+Customer
+Receptionist
+Housekeeping
+Manager
+Admin
+HomePage
+X
+X
+X
+X
+X
+Login
+X
+X
+X
+X
+X
+Logout
+X
+X
+X
+X
+X
+Forget Password
+X
+ 
+ 
+ 
+ 
+Forgot Password Request
+X
+ 
+ 
+ 
+ 
+Reset Password
+X
+ 
+ 
+ 
+ 
+Manage Profile
+X
+X
+X
+X
+X
+View Profile
+X
+X
+X
+X
+X
+Update Profile
+X
+X
+X
+X
+X
+Change Password
+X
+X
+X
+X
+X
+View Room List
+X
+X
+ 
+X
+ 
+View Room Detail
+X
+X
+ 
+X
+ 
+Search Available Rooms
+X
+X
+ 
+X
+ 
+View Rating
+X
+X
+X
+X
+X
+Make Online Reservation
+X
+ 
+ 
+ 
+ 
+Pay Reservation
+X
+ 
+ 
+ 
+ 
+Cancel Reservation
+X
+X
+ 
+ 
+ 
+View Reservation History
+X
+ 
+ 
+ 
+ 
+View Booking List
+ 
+X
+ 
+X
+ 
+View Booking Detail
+ 
+X
+ 
+X
+ 
+Create Walk-in Reservation
+ 
+X
+ 
+ 
+ 
+Create Customer Reservation
+ 
+X
+ 
+ 
+ 
+Check-in Process
+ 
+X
+ 
+ 
+ 
+Check-out Process
+ 
+X
+ 
+ 
+Extend Customer Stay
+ 
+X
+ 
+ 
+ 
+Change Customer Room
+ 
+X
+ 
+ 
+ 
+Generate Invoice
+ 
+X
+ 
+ 
+ 
+Add Charge to Bill
+ 
+X
+ 
+ 
+ 
+Search Customer Profile
+ 
+X
+ 
+X
+ 
+View Customer Profile Detail
+ 
+X
+ 
+X
+ 
+Request Service
+X
+ 
+ 
+ 
+ 
+Cancel Service
+X
+ 
+ 
+ 
+ 
+View Customer Service Request
+ 
+X
+X
+ 
+ 
+View Room Status Board
+ 
+X
+X
+X
+ 
+Report Room Issue
+X
+ 
+X
+ 
+ 
+Send Inspection Request
+ 
+X
+ 
+ 
+ 
+View Inspection Result
+ 
+X
+X
+ 
+ 
+Inspect Room After Check-out
+ 
+ 
+X
+ 
+ 
+View Assigned Cleaning Tasks
+ 
+ 
+X
+ 
+ 
+Update Cleaning Task Report
+ 
+ 
+X
+ 
+ 
+Assign Task
+ 
+X
+ 
+X
+ 
+Assign Housekeeping Task
+ 
+ 
+ 
+X
+ 
+View Staff Task Overview
+ 
+ 
+ 
+X
+ 
+View Assigned Technical Requests
+ 
+ 
+ 
+ 
+ 
+View Technical Request Detail
+ 
+ 
+ 
+ 
+ 
+Update Technical Work Progress
+ 
+ 
+ 
+ 
+ 
+Report Technical Work Result
+ 
+ 
+ 
+ 
+ 
+Update Room Technical Status
+ 
+ 
+ 
+ 
+Send Feedback
+X
+ 
+ 
+ 
+ 
+View Revenue Summary
+ 
+ 
+ 
+X
+ 
+Add New Room
+ 
+ 
+ 
+X
+ 
+Edit Room Information
+ 
+ 
+ 
+X
+ 
+Deactivate Room
+ 
+ 
+ 
+X
+ 
+Block Room for Maintenance
+ 
+ 
+ 
+X
+ 
+View Manager Account
+ 
+ 
+ 
+X
+ 
+Account Management
+ 
+ 
+ 
+ 
+X
+Deactivate Account
+ 
+ 
+ 
+ 
+X
+In which:
+Role 1: &lt;&lt;
+Customer: A customer who has registered an account on the system can book rooms, request services, make payments, and manage their personal information.
+&gt;&gt;
+Role 2: &lt;&lt;
+Housekeeping: Room attendants receive assigned cleaning tasks and update room status upon completion of duties.
+&gt;&gt;
+Role 3: &lt;&lt;Receptionist: A front desk staff member responsible for receiving and processing reservation requests, handling check-in/check-out procedures, processing payments, and assisting guests throughout their stay.&gt;&gt;
+Role 4:&lt;&lt;Manager: Manages the hotel, oversees all operational activities, reviews revenue and activity reports, manages staff, and handles customer feedback.&gt;&gt;
+Role 5:&lt;&lt;Admin: System administrator, with full authority to manage user accounts, assign roles and permissions, and configure the system.&gt;&gt;
+d. Non-Screen Functions
+#
+Feature
+System Function
+Description
+1
+Authentication 
+Google OAuth 2.0 API 
+The API authenticates users via Google Account, returning a token to create a login session for the customer.
+2
+Notification 
+Email Notification Service 
+The service automatically sends emails (via Email Service) confirming bookings, payments, or system notifications to the Customer.
+3
+Payment 
+Payment Gateway Integration API 
+The API communicates with the Payment Gateway to process top-ups, confirm transactions, and return payment information to the receptionist.
+4
+Housekeeping Task 
+Housekeeping Task Assignment Job 
+Batch jobs automatically assign Housekeeping Task Information to the Housekeeping department based on room status (check-out, dirty, etc.).
+5
+Room Management 
+Room Status Auto-Update Job 
+Cron jobs periodically update room status (available/occupied/cleaning) based on booking data and Housekeeping Update Information.
+6
+Maintenance 
+Maintenance Request Dispatch Service 
+The service listens for maintenance requests, automatically sends Maintenance Requests to Technical Staff, and updates Maintenance Information in the system.
+7
+Reporting 
+Scheduled Report Generation Job 
+Cron jobs run periodically (daily/weekly/monthly) to automatically compile and generate Activity Reports and Revenue Reports for managers.
+8
+Booking 
+Booking Confirmation Notification Service 
+The system automatically sends booking confirmation information (Booking Management Information, Room Information) to customers after successful payment.
+3. Entity Relationship Diagram
+3.1 Conceptual ERD (Chen Notation) 
+                                    
+Entities Description
+#
+Entity
+Description
+1
+ROLE 
+Represents the permission group assigned to a user. Each role determines the user's access rights within the hotel management system, such as Guest, Receptionist, Housekeeping Staff, Maintenance Staff, and Manager.
+2
+USER 
+Represents all users of the hotel management system. A user can make reservations, submit feedback, and perform system functions according to their assigned role.
+3
+RESERVATION 
+Represents a room booking made by a user. It stores reservation information such as check-in/check-out dates, booking status, reserved room, requested services, and generated invoice.
+4
+ROOM 
+Represents an individual hotel room available for reservation. Each room belongs to a room type and can be reserved by different reservations over time.
+5
+ROOM_TYPE
+ 
+Represents a category of rooms with common characteristics such as room size, capacity, facilities, and standard pricing. Multiple rooms may belong to the same room type.
+6
+SERVICE
+ 
+Represents additional hotel services available to guests during their stay, such as airport transfer, spa, laundry, restaurant, or room service. Services can be requested during a reservation.
+7
+INVOICE
+Represents the billing information generated for a reservation. It summarizes room charges, requested services, taxes, and other applicable fees.
+8
+PAYMENT 
+ 
+Represents a payment transaction made for an invoice. It records payment information including payment method, amount, transaction status, and payment time. Multiple payment records may exist if partial payments are supported.
+9
+FEEDBACK 
+Represents reviews or comments submitted by users after their stay. Feedback is used to evaluate service quality and improve customer satisfaction.
+3.2
+ 
+4. Use Case Diagram
+   a. Customer use case diagram
+   
+  
+b. Receptionist use case diagram
+  
+ 
+c. Housekeeping use case diagram 
+ 
+d. Manager use case diagram
+  
+e. Admin use case diagram 
+5. Use Case Description
+ID
+Use Case
+Actors
+Use Case Description
+UC-001
+Login
+Customer, Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff
+Allows users to log in with an email and password. The system validates the credentials and grants access based on the user's role.
+UC-002
+Logout
+Customer, Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff
+Allows authenticated users to log out of the current session securely.
+UC-003
+Manage Profile
+Customer, Manager
+Allows the user to manage personal profile information. This includes viewing profile details, updating personal information such as full name, phone number, address, avatar, and email, and changing the account password when permitted. 
+UC-004
+View Room List
+Customer
+Allows the customer to view the list of room types or available rooms displayed by the hotel, including basic information such as room name, capacity, amenities, and price range.
+UC-005
+View Room Detail
+Customer
+Allows the customer to view detailed room information, including description, images, amenities, capacity, bed type, and nightly price.
+UC-006
+Make Online Reservation
+Customer
+Allows the customer to make an online reservation by selecting an available room or room type, entering guest and contact information, reviewing booking details, and confirming the reservation.
+UC-007
+Pay Reservation 
+Customer
+Allows the customer to pay a reservation deposit after creating an online reservation. The system records the deposit and updates the booking payment status.
+UC-008
+Cancel Reservation
+Customer
+Allows the customer to cancel a previously created reservation before check-in according to the hotel's cancellation policy.
+UC-009
+View Reservation History
+Customer
+Allows the customer to view all personal reservations, including pending, active, completed, and canceled bookings. 
+UC-010
+Send Feedback
+Customer
+Allows the customer to submit a rating and feedback about room quality, service quality, and overall hotel experience after check-out.
+UC-011
+View Booking List
+Receptionist
+Allows the receptionist to view the daily booking list, including upcoming arrivals, current stays, and expected check-outs .
+UC-012
+View Booking Detail
+Receptionist
+Allows the receptionist to view full details of a selected booking, including guest information, reserved room type, stay dates, deposit status, payment status, special requests, and booking status.
+UC-013
+Search Booking
+Receptionist
+Allows the receptionist to search bookings by booking code, guest name, phone number, email, ID card number, passport number, date, or booking status.
+UC-014
+Record Deposit Payment
+Receptionist
+Allows the receptionist to record a reservation deposit payment for bookings made at the front desk or through offline payment channels.
+UC-015
+Process Check-in
+Receptionist
+Allows the receptionist to check in a guest by finding the booking, verifying guest information, confirming stay details, assigning a room, and changing the room status to Occupied.
+UC-016
+Assign Room
+Receptionist
+Allows the receptionist to assign a specific available room to a guest based on the reserved room type, stay dates, room availability, and guest requirements.
+UC-017
+Process Check-out
+Receptionist
+Allows the receptionist to check out a guest by confirming the stay completion, creating an inspection request, finalizing the bill, processing payment, and changing the room status to Dirty for cleaning. 
+UC-018
+Create Room Inspection Request
+Receptionist
+Allows the receptionist to create a room inspection request after a guest checks out. The request is sent to housekeeping staff to inspect the room, check minibar or paid items, report damage, and prepare the room for cleaning.
+UC-019
+View Inspection Result
+Receptionist
+Allows the receptionist to view the result of a room inspection, including room condition, damage report, minibar or paid item usage, lost items, and whether additional charges should be added to the bill.
+UC-020
+Add Charge to Bill
+Receptionist
+Allows the receptionist to manually add a charge to a guest bill, such as minibar usage, damage fee, late check-out fee, or a special front-desk service.
+UC-021
+Generate Invoice
+Receptionist
+Allows the receptionist to generate the official final invoice, including room charges, service fees, minibar charges, damage fees, deposits, and final payable amount.
+UC-022
+Gather Guest Information
+Receptionist
+Receptionist records the identity information of the representative guest for each room in the booking during check-in, including full name, contact details, ID/Passport number, and photos of the ID document, in order to verify guest identity and complete the check-in process. 
+UC-023
+View Room Status Board 
+Receptionist
+Allows the receptionist to view a real-time room status board for all hotel rooms, including Available, Occupied, Dirty, Cleaning, and Maintenance. 
+UC-024
+View Assigned Cleaning Tasks
+Housekeeping Staff
+Allows housekeeping staff to view assigned cleaning tasks for the current shift, including room number, task type, priority level, deadline, and task status.
+UC-025
+Update Cleaning Task Status
+Housekeeping Staff
+Allows housekeeping staff to update cleaning task status, such as Not Started, In Progress, and Completed. The room status may also be updated from Dirty to Cleaning and from Cleaning to Available after cleaning is completed.
+UC-026
+Inspect Room After Check-out
+Housekeeping Staff
+Allows housekeeping staff to inspect the room after guest check-out. This includes checking room condition, recording minibar or paid item consumption, recording lost or damaged items, reporting damage if found, and preparing the room for cleaning.
+UC-027
+Report Room Issue
+Housekeeping Staff 
+Allows housekeeping staff to report issues or damage found in a room, such as broken equipment, missing amenities, or required repairs. The system may change the room status to Maintenance and notify technical staff or the manager.
+UC-028
+Manage Room
+Manager
+Allows the manager to manage hotel room records using CRUD-style operations. This includes adding new rooms, viewing room information, editing room details such as room number, floor, room type, capacity, amenities, images, and description, deactivating rooms that should not be reserved and deactivating rooms for maintenance during a defined period.
+UC-029
+Manage Room Type
+Manager
+Allows the manager to manage system-wide room type categories using CRUD operations. This includes creating new room types, viewing room type details, editing room type information such as name, capacity, bed type, base price, amenities, and description, and deleting or deactivating room types that are no longer used.
+UC-030
+Manage Staff Task
+Manager
+Allows the manager to manage staff tasks. This includes creating and assigning tasks to housekeeping or technical staff, viewing staff task overview, updating task information such as priority or deadline, reassigning tasks when needed, and canceling or closing tasks that are no longer required.
+UC-031
+Manage Minibar Item
+Manager
+Allows the manager to manage minibar items using CRUD operations. This includes adding new minibar items, viewing item details, editing item information such as name, category, price, stock status, and description, and deleting or deactivating items that are no longer available.
+UC-032
+View Reservation Overview
+Manager
+Allows the manager to view a reservation overview, including new bookings, current stays, upcoming arrivals, and upcoming check-outs by day or week.
+UC-033
+View Revenue Summary
+Manager
+Allows the manager to view operational revenue summaries by day, week, or month, including room revenue, service revenue, minibar revenue, and total revenue for business monitoring.
+UC-034
+Manage Customer Feedback
+Manager
+Allows the manager to manage customer feedback records. This includes viewing customer feedback, filtering feedback by rating or date, responding to customer feedback, updating response status, and archiving feedback that has already been handled. Feedback should usually be retained for historical service quality analysis instead of being permanently deleted.
+UC-035
+Manage Internal Account
+Admin
+Allows the admin to manage internal employee accounts using CRUD-style operations. This includes creating new internal accounts for staff, viewing account lists and account details, editing account information such as name, email, role, and active status, deactivating accounts that should no longer access the system.
+UC-036
+Manage Role
+Admin
+Allows the admin to manage user roles and permissions. This includes creating roles, viewing role details, editing role names or permission sets, assigning roles to internal accounts, and deleting or deactivating roles that are no longer used.
+UC-037
+Reset Staff Password
+Admin
+Allows the admin to reset passwords for internal staff accounts when employees forget their passwords or when account access must be restored securely.
+UC-038
+Reset Forgot Password
+Customer 
+Allows the customer to reset the forgotten password in the Login Page.
+UC-039
+Register
+Customer
+Allows a new customer to create a personal account on the system. The user inputs required registration details such as full name, email, phone number, and password. The system validates the inputs, checks for email uniqueness, creates a new customer profile with the default &quot;Customer&quot; role, and secures the account setup. 
+UC-040
+View Occupancy Report 
+Manager
+Allows the manager to view and analyze hotel room occupancy statistics over a specified period (day, week, month, or year). The system calculates and displays key operational metrics, including the total number of occupied rooms, vacancy rates, room utilization statistics by room type.
+UC-041
+Manage Policy
+Manager
+Allows the manager to create, view, update, hide, show, and delete hotel policies displayed to customers. Each policy includes a title, policy group, content, and visibility status. The system automatically manages the display order so that active policies can be shown clearly on the customer policy screen.
+UC-042
+View Hotel Policies
+Customer
+Allows the customer to view active hotel policies published by the manager, including check-in time, check-out time, full payment requirement, cancellation rules, stay regulations, and feedback policy before or after making a reservation.
+UC-043
+Update Feedback
+Customer
+Allows the customer to update previously submitted feedback for a valid non-canceled booking. The system saves the previous feedback content into feedback history before updating the current feedback, so the feedback update history is preserved.
+UC-044
+View Manager Response
+Customer
+Allows the customer to view the manager’s response to submitted feedback. The system displays the feedback status and manager response if a response has been provided.
+UC-045
+Respond to Feedback
+Manager
+Allows the manager to respond to customer feedback. The manager reviews feedback details, enters a response, saves it, and the system updates the feedback status so the customer can view the response.
+6. Business workflow
+a. Booking process
+  
+ b. CheckIn process
+ 
+ c. CheckOut process
+ 
+II. Functional Requirements
+1. Authentication Feature
+1.1. Login
+UC Code
+UC-001
+UC Name
+Login 
+Actor
+Customer
+, 
+Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff
+Description
+User logs in with email and password to access the system.
+Trigger Event
+User submits login form with credentials
+Preconditions
+User account exists in the system.
+The user account was not locked by the admin.
+Main Flow
+No.
+Performed by
+Action
+1
+Ú·
+User enters email and password and submits the login form.
+2
+System 
+System checks if the user exists.
+3
+System 
+System verifies the password.
+4
+System 
+The system checks if the account is locked and will block login to the system if necessary.
+5
+System 
+If credentials are valid and user is active, system generates Access Token and Refresh Token.
+6
+System 
+System sets refresh token in a secure cookie and returns access token and user info.
+Alternative Flow
+No.
+Performed by
+Action
+5a
+System 
+Error: If credentials are invalid, system returns an error.
+5b
+System 
+Error: If user is not found, system returns an error.
+5c
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+6a
+System 
+Partial success: If the user's account is banned, the system will return an error.
+Postconditions
+User is authenticated and receives tokens, or receives an error message.
+1.2
+. Register
+UC Code
+UC-052
+UC Name
+Register
+Actor
+Customer
+Description
+Allows a new customer to create a personal account in the system by providing required registration information. 
+Trigger Event
+User submits the registration form with personal and login information. 
+Preconditions
+The user has not logged in yet
+The email used for registration does not already exist in the system. 
+Main Flow
+No.
+Performed by
+Action
+1
+User 
+User opens the registration page. 
+2
+User 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+User 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+1.3. LogOut
+UC Code
+UC-002
+UC Name
+LogOut
+Actor
+Customer
+, 
+Receptionist, Admin, Manager, Housekeeping Staff, Technical Staff
+Description
+User logs out of the system to end the current authenticated session securely. 
+Trigger Event
+User clicks the logout button or chooses the logout option from the system menu 
+Preconditions
+User is already logged in to the system. 
+User has a valid active session or refresh token. 
+Main Flow
+No.
+Performed by
+Action
+1
+User
+User clicks the logout button or selects the logout option. 
+2
+System 
+System receives the logout request from the user. 
+3
+System 
+System verifies the current user session or refresh token. 
+4
+System 
+System removes or invalidates the refresh token from the server/session storage. 
+5
+System 
+System clears the refresh token cookie from the browser. 
+6
+System 
+System ends the current authenticated session. 
+7
+System 
+System redirects the user to the login page or public home page. 
+8
+System 
+System displays a successful logout message. 
+Alternative Flow
+No.
+Performed by
+Action
+3a
+System 
+Error: If the session or refresh token is invalid, expired, or not found, the system clears local authentication data and redirects the user to the login page. 
+4b
+System 
+Error: If the system fails to invalidate the refresh token, the system still clears the client-side cookie and informs the user to log in again. 
+5a
+System 
+Error: If the logout request is unauthorized, the system rejects the request and redirects the user to the login page. 
+7a
+System 
+Partial success: If redirection fails, the system displays a message asking the user to reload the page or return to the login page manually. 
+Postconditions
+The user is logged out successfully, the current session is ended, authentication tokens are removed or invalidated, and the user is redirected to the login page or public home page. 
+2. Receptionist 
+2.1. View Booking List
+View Booking List screen
+UC Code
+UC-014
+UC Name
+View Booking List
+Actor
+Receptionist
+Description
+Allows the receptionist to view the daily booking list, including upcoming arrivals, current stays, and expected check-outs.
+Trigger Event
+The receptionist opens the booking list screen to review daily hotel operations.
+Preconditions
+The receptionist is authenticated and authorized.
+Booking data is available in the system.
+The system date or selected operating date is available.
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Opens the booking list function from the receptionist workspace.
+2
+System
+Displays bookings for the current date, including upcoming arrivals, current stays, and expected check-outs.
+3
+Receptionist
+Selects a date, booking status, or list category if a filtered view is needed.
+4
+System
+Refreshes the booking list based on the selected criteria.
+5
+Receptionist
+Reviews guest name, booking code, room type, stay dates, deposit status, and booking status.
+6
+Receptionist
+Selects a booking when more details or follow-up processing is required.
+Alternative
+Flow
+No.
+Performed by
+Action
+2a
+System
+If no booking exists for the selected date or status, the system displays an empty list message.
+4a
+System
+If booking data cannot be loaded, the system shows an error message and keeps the previous screen state.
+2.2
+. View Booking Detail
+View Booking Detail screen
+UC Code
+UC-015
+UC Name
+View Booking Detail
+Actor
+Receptionist 
+Description
+Allows the receptionist to view full details of a selected booking, including guest information, reserved room type, stay dates, deposit status, payment status, special requests, and booking status.
+Trigger Event
+The receptionist selects a booking from a booking list or search result.
+Preconditions
+The receptionist is authenticated and authorized.
+The selected booking exists in the system.
+Main Flow
+N
+o
+Performed by
+Action
+1
+Receptionist
+Selects a booking to view its detailed information.
+2
+System
+Retrieves the booking, guest, room, payment, and request information.
+3
+System
+Displays booking code, guest information, reserved room type, stay dates, booking status, and special requests.
+4
+System
+Displays deposit status, payment status, assigned room information, and related operational actions when available.
+5
+Receptionist
+Reviews the information and decides whether to modify, cancel, check in, or return to the previous list.
+Alternative
+ 
+Flow
+No.
+Performed by
+Action
+2a
+System
+If the booking no longer exists, the system shows a message and returns the receptionist to the booking list.
+4a
+System
+If some related information is unavailable, the system displays available details and marks missing sections clearly.
+2.3. Process Check-in
+Process check-in screen
+UC Code
+UC-021
+UC Name
+Process Check-in
+Actor
+Receptionist
+Description
+Allows the receptionist to check in a guest by finding the booking, verifying guest information, confirming stay details, assigning a room, and changing the room status to Occupied.
+Trigger Event
+The guest arrives at the hotel and requests check-in for an existing booking.
+Preconditions
+The receptionist is authenticated and authorized.
+The guest has a valid booking eligible for check-in.
+Guest identity information can be verified.
+An available room can be assigned for the booking.
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Searches for and selects the guest booking.
+2
+System
+Displays booking details, guest information, reserved room type, stay dates, deposit status, and booking status.
+3
+Receptionist
+Verifies guest identity and confirms stay details with the guest.
+4
+System
+Checks whether the booking is eligible for check-in and whether deposit requirements are satisfied.
+5
+Receptionist
+Assigns a specific available room or confirms the previously assigned room.
+6
+System
+Updates the booking or stay status to Checked in.
+7
+System
+Changes the assigned room status to Occupied.
+8
+Receptionist
+Provides check-in confirmation and room information to the guest.
+Alternative
+Flow
+No.
+Performed by
+Action
+1a
+System
+If no matching booking is found, the system shows a message and check-in cannot continue.
+3a
+Receptionist
+If guest identity cannot be verified, the receptionist stops check-in and asks the guest for valid information.
+4a
+System
+If the booking is canceled, completed, or not yet eligible for check-in, the system prevents check-in and shows the reason.
+4b
+System
+If a required deposit is unpaid, the system warns the receptionist and requires deposit handling before check-in if hotel policy requires it.
+5a
+System
+If no suitable room is available, the system asks the receptionist to assign another valid room or contact the manager for resolution.
+2.4. Gather Guest Information
+Gather Guest Information screen
+UC Code
+UC-012
+UC Name
+Gather Guest Information
+Actor
+Receptionist
+Description
+The receptionist records the identity information of the representative guest for each room in the booking during the check-in process.
+Trigger Event
+The receptionist proceeds to Step 2 (Guest Information) of the Check-in Wizard after Step 1 (Verify Condition) has passed.
+Preconditions
+The booking has passed condition verification (UC-011).
+Each room in the booking has been assigned and is in &quot;Ready&quot; status.
+Main Flow
+No.
+Performed by
+Action
+1
+System
+For each room, 
+the system
+ displays the available account information of the booking owner (full name, phone number, email).
+2
+Receptionist
+The receptionist 
+confirms whether the representative guest for the room is the booking owner or a different person.
+3
+Receptionist
+Receptionis
+t
+ captures or uploads photos of the front and back sides of the guest's ID document (National ID / Passport).
+4
+Receptionist
+The receptionist
+ manually enters the ID/Passport number based on the physical document presented by the guest.
+5
+Receptionist
+The receptionist checks the confirmation box declaring that the entered information has been personally verified against the physical document presented by the guest.
+6
+System
+The system
+ validates that all required fields (ID photos, ID number, confirmation checkbox) are completed for every room in the booking.
+7
+System
+If validation passes, 
+the system
+ enables the &quot;Next&quot; button and proceeds to Step 3 (Assign Physical Room).
+Alternative Flow
+No.
+Performed by
+Action
+2a
+Receptionist
+If the representative guest is not the booking owner, the receptionist selects &quot;Enter different guest&quot; and manually inputs the guest's full name and phone number.
+6a
+System
+Error: If one or both ID photos are missing for a room, 
+the system
+ keeps the &quot;Next&quot; button disabled and highlights the missing photo(s).
+6b
+System
+Error: If the ID/Passport number field is empty, 
+the system
+ keeps the &quot;Next&quot; button disabled and prompts the receptionist to enter it.
+6c
+System
+Error: If the confirmation checkbox is not checked, the system blocks progression to Step 3 until it is confirmed.
+Postconditions
+Identity information (full name, ID number, ID photos) is recorded for the representative guest of each room.
+The booking is ready to proceed to Step 3 - Assign Physical Room.
+2.5. Assign Room
+Assign room screen
+UC Code
+UC-013
+UC Name
+Assign Physical Room
+Actor
+Receptionist
+Description
+The receptionist assigns a specific physical room to each room slot in the booking during check-in.
+Trigger Event
+The receptionist proceeds to Step 3 (Assign Physical Room) of the Check-in Wizard after Step 2 (Guest Information) has been completed.
+Preconditions
+Guest information has been recorded for every room in the booking (UC-012).
+At least one physical room in &quot;Available&quot; and &quot;Clean&quot; status exists for each booked room type.
+Main Flow
+No.
+Performed by
+Action
+1
+System
+For each room slot in the booking, the system displays a dropdown list of physical rooms that are Available, Clean, and match the booked room type.
+2
+Receptionist
+The receptionist selects a physical room from the dropdown for each room slot.
+3
+System
+Once a physical room is selected for a room slot, the system removes that room from the dropdown options of the remaining room slots.
+4
+Receptionist
+The receptionist clicks &quot;Next&quot; after assigning a physical room to every room slot.
+5
+System
+The system validates that every room slot has a distinct physical room assigned.
+6
+System
+If validation passes, the system proceeds to Step 4 (Complete).
+Alternative Flow
+No.
+Performed by
+Action
+4a
+Receptionist
+If the receptionist clicks &quot;Next&quot; while one or more room slots have no physical room selected, the system disables &quot;Next&quot; and highlights the missing selection(s).
+5a
+System
+Error: If two room slots are assigned the same physical room, system blocks progression and displays an error indicating the conflicting room code.
+5b
+System
+Error: If the physical room selected is no longer Available (e.g. taken by another concurrent check-in), system removes it from the list and prompts receptionist to reselect.
+Postconditions
+Each room slot in the booking is linked to a distinct, specific physical room.
+The booking is ready to proceed to Step 4 - Complete.
+2.9. Process Check-out
+UC Code
+UC-023
+UC Name
+Process Check-out
+Actor
+Receptionist
+Description
+Allows the receptionist to check out a guest by confirming the stay completion, creating an inspection request, finalizing the bill, processing payment, and changing the room status to Dirty for cleaning.
+ 
+Trigger Event
+Guest requests check-out or the receptionist starts check-out for an active stay.
+ 
+Preconditions
+ The receptionist is authenticated and authorized.
+ The guest has an active checked-in booking or stay.
+ The assigned room and guest stay information are available.
+ 
+The current bill can be calculated from room charges and service usage.
+ 
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Searches for and selects the active booking or current stay.
+2
+System
+Displays booking, guest, room, stay dates, deposit, and current bill information.
+3
+Receptionist
+Confirms that the guest is ready to check out.
+4
+System
+Creates a room inspection request for the assigned room.
+5
+System
+Calculates the current payable amount based on room charges, services, deposits, and recorded charges.
+6
+Receptionist
+Reviews the bill and confirms whether final payment should be processed.
+7
+System
+After checkout confirmation, update the booking or stay status to Checked out.
+8
+System
+Change the room status to Dirty so housekeeping can clean the room.
+Alternative Flow
+No.
+Performed by
+Action
+1a
+System
+Error: If no active stay is found, the system shows a message and stops check-out.
+4a
+System
+Warning: If an inspection request already exists, the system links the existing request instead of creating a duplicate.
+6a
+System
+Warning: If payment is still pending, the system keeps the bill unpaid and prevents final completion when required by policy.
+8a
+System
+Error: If the room status cannot be updated, the system keeps the stay unchanged and informs the receptionist.
+Postconditions
+The stay is checked out, an inspection request is created or linked, and the room is marked Dirty; otherwise, the stay remains active and an error is shown.
+ 
+2.10. Create Room Inspection Request
+UC Code
+UC-024
+UC Name
+Create Room Inspection Request
+Actor
+Receptionist
+Description
+Allows the receptionist to create a room inspection request after a guest checks out. The request is sent to housekeeping staff to inspect the room, check minibar or paid items, report damage, and prepare the room for cleaning.
+ 
+ 
+Trigger Event
+The receptionist
+ submits an inspection request after or during guest check-out.
+  
+Preconditions
+ The receptionist is authenticated and authorized.
+ The booking or room has just completed or is completing check-out.
+ The room exists and is assigned to the guest stay.
+ 
+The room does not already have an active duplicate inspection request.
+  
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Selects the checked-out booking or room that requires inspection.
+2
+System
+Displays room, guest, checkout time, and current room status.
+3
+Receptionist
+Enters inspection notes, priority, and optional housekeeping assignment.
+4
+System
+Validates the selected room and checks for duplicate active inspection requests.
+5
+System
+Creates the room inspection request with Pending or Assigned status.
+6
+System
+Sends the request to housekeeping staff for inspection and cleaning preparation.
+7
+System
+Links the inspection request to the booking, room, and checkout record.
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System
+Error: If the room does not exist, the system rejects the request.
+4b
+System
+Error: If an active inspection request already exists, the system prevents duplicate creation.
+6a
+System
+Warning: If no housekeeping staff is available, the request remains Pending for later assignment.
+7a
+System
+Error: If required information is missing, the system asks the receptionist to complete the form.
+Postconditions
+A room inspection request is created and sent or queued for housekeeping; otherwise, no request is created and an error is displayed.
+ 
+2.11. View Inspection Result
+UC Code
+UC-025
+View Inspection Result
+Actor
+Receptionist
+Description
+Allows the receptionist to view the result of a room inspection, including room condition, damage report, minibar or paid item usage, lost items, and whether additional charges should be added to the bill.
+ 
+ 
+Trigger Event
+Receptionist opens the inspection result for a checked-out room or booking.
+   
+Preconditions
+ Receptionist is authenticated and authorized.
+ A room inspection request exists for the selected booking or room.
+ Housekeeping has submitted or updated the inspection result.
+  
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Searches for or opens the booking, room, or inspection request.
+2
+System
+Retrieves the latest inspection result for the selected room.
+3
+System
+Displays room condition, minibar usage, paid items, lost items, and damage details.
+4
+Receptionist
+Reviews the inspection result and determines whether extra charges are needed.
+5
+System
+Provides an option to continue to Add Charge to Bill when additional fees are required.
+6
+Receptionist
+Closes the result view or proceeds to add charges.
+Alternative Flow
+No.
+Performed by
+Action
+2a
+System
+Error: If no inspection request exists, the system informs the receptionist.
+2b
+System
+Warning: If inspection is still pending, the system shows Pending status and no final result.
+3a
+System
+Warning: If result data is incomplete, the system shows available information and marks missing fields.
+5a
+System
+If no charge is needed, the system allows the receptionist to continue checkout or invoice processing.
+Postconditions
+The receptionist has reviewed the inspection result and may add charges to the guest bill if necessary.
+ 
+2.12. Add Charge to Bill
+UC Code
+UC-026
+Add Charge to Bill
+Actor
+Receptionist
+Description
+Allows the receptionist to manually add a charge to a guest bill, such as minibar usage, damage fee, late check-out fee, or a special front-desk service.
+ 
+  
+Trigger Event
+Receptionist selects Add Charge to Bill from a bill, booking, checkout, or inspection result.
+ 
+Preconditions
+ Receptionist is authenticated and authorized.
+ A guest bill or booking exists.
+ The bill is not finalized as Paid or locked.
+  
+The charge type and amount are known
+.
+  
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Opens the guest bill or selected booking.
+2
+Receptionist
+Selects a charge type such as minibar, damage, late check-out, or service fee.
+3
+Receptionist
+Enters amount, quantity, reason, and optional notes.
+4
+System
+Validates required fields, charge amount, and bill status.
+5
+System
+Adds the charge item to the bill.
+6
+System
+Recalculates subtotal, taxes or fees if applicable, deposit deduction, and final payable amount.
+7
+System
+Records the action for audit and displays the updated bill.
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System
+Error: If amount is invalid or negative, the system rejects the charge.
+4b
+System
+Error: If the bill is already paid or locked, the system prevents modification.
+4c
+System
+Warning: If a similar charge already exists, the system asks the receptionist to confirm or cancel.
+5a
+System
+Error: If saving fails, the bill remains unchanged and the system shows an error.
+Postconditions
+The bill is updated with the additional charge and the payable amount is recalculated; otherwise, no charge is added. 
+ 
+2.13. Generate Invoice
+UC Code
+UC-027
+Generate Invoice
+Actor
+Receptionist
+Description
+Allows the receptionist to generate the official final invoice, including room charges, service fees, minibar charges, damage fees, deposits, and final payable amount.
+ 
+  
+Trigger Event
+Receptionist chooses to generate the final invoice for a guest bill or checkout.
+    
+Preconditions
+ Receptionist is authenticated and authorized.
+ A guest booking or stay exists.
+ Room charges, service charges, deposits, and additional charges have been recorded.
+ 
+The invoice has not already been finalized, unless regeneration is allowed.
+   
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Selects the booking or bill for invoice generation.
+2
+System
+Collects room charges, service fees, minibar charges, damage fees, deposits, and discounts if any.
+3
+System
+Calculates subtotal, deductions, and final payable amount.
+4
+Receptionist
+Reviews invoice information and confirms generation.
+5
+System
+Generates an invoice number and creates the official invoice record.
+6
+System
+Sets invoice status to Unpaid or Pending Payment.
+7
+System
+Displays the invoice for printing, exporting, or payment processing.
+Alternative Flow
+No.
+Performed by
+Action
+2a
+System
+Warning: If inspection result is pending, the system warns that extra charges may not be complete.
+3a
+System
+Error: If calculation data is missing or inconsistent, the system stops generation.
+4a
+Receptionist
+Cancels invoice generation to update bill information first.
+5a
+System
+Error: If an invoice already exists and regeneration is not allowed, the system displays the existing invoice.
+Postconditions
+An official invoice is generated and ready for final payment; otherwise, no invoice is created.
+ 
+2.14. Process Final Payment
+UC Code
+UC-028
+Process Final Payment
+Actor
+Receptionist
+Description
+Allows the receptionist to record final payment by cash, credit card, or bank transfer and update the invoice status to Paid.
+ 
+  
+Trigger Event
+Guest pays the final invoice amount and receptionist submits payment information.
+    
+Preconditions
+ Receptionist is authenticated and authorized.
+ A final invoice exists.
+ The invoice has a payable amount greater than or equal to zero.
+ 
+ The selected payment method is supported.
+   
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Opens the final invoice for the guest.
+2
+Receptionist
+Selects payment method: cash, credit card, or bank transfer.
+3
+Receptionist
+Enters paid amount, transaction reference if any, and payment notes.
+4
+System
+Validates invoice status, amount, and payment method.
+5
+System
+Records the final payment transaction.
+6
+System
+Updates invoice status to Paid when the paid amount satisfies the payable amount.
+7
+System
+Displays payment confirmation and receipt information.
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System
+Error: If the invoice is already Paid, the system prevents duplicate payment.
+4b
+System
+Error: If payment amount is invalid or insufficient, the system returns an error or keeps invoice unpaid.
+4c
+System
+Error: If card or bank transfer verification fails, the payment is not recorded as successful.
+5a
+System
+Error: If saving payment fails, the invoice status remains unchanged.
+Postconditions
+The final payment is recorded and the invoice is marked Paid; otherwise, payment is rejected and invoice status remains unchanged.
+ 
+2.15. Manage Customer Profile
+UC Code
+UC-029
+Manage Customer Profile
+Actor
+Receptionist
+Description
+Allows the receptionist to manage guest profile records. This includes searching customer profiles, viewing customer profile details, creating or recording customer information during booking/check-in, and editing customer information when required. Historical customer records should not be hard-deleted by the receptionist.
+ 
+  
+Trigger Event
+Receptionist searches, views, creates, or edits customer profile information during booking or check-in. 
+   
+Preconditions
+- Receptionist is authenticated and authorized.
+- Customer information is available or can be entered.
+- 
+The system can validate customer identity fields such as phone number, email, ID card, or passport
+.
+   
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Searches for a customer profile by name, phone number, email, ID card, or passport.
+2
+System
+Displays matching customer profile records.
+3
+Receptionist
+Opens a profile to view details or chooses to create a new profile.
+4
+Receptionist
+Creates or edits allowed customer information fields.
+5
+System
+Validates required fields and checks for duplicate identity information.
+6
+System
+Saves the new or updated customer profile.
+7
+System
+Keeps historical records and displays the updated profile information.
+Alternative Flow
+No.
+Performed by
+Action
+2a
+System
+If no profile is found, the system allows the receptionist to create a new profile.
+5a
+System
+Error: If duplicate email, phone, ID card, or passport is found, the system asks for confirmation or correction.
+5b
+System
+Error: If required information is missing or invalid, the system rejects the update.
+7a
+System
+Restriction: The receptionist cannot hard-delete historical customer records.
+Postconditions
+Customer profile information is viewed, created, or updated; historical customer data remains retained.
+ 
+2.16. View Room Status Board
+UC Code
+UC-030
+View Room Status Board
+Actor
+Receptionist
+Description
+Allows the receptionist to view a real-time room status board for all hotel rooms, including Available, Occupied, Dirty, Cleaning, and Maintenance.
+ 
+  
+Trigger Event
+Receptionist opens the room status board from the front desk workspace.
+    
+Preconditions
+ Receptionist is authenticated and authorized.
+ Room records exist in the system.
+ 
+The system has current room status information.
+   
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Opens the room status board.
+2
+System
+Loads all room records and their latest statuses.
+3
+System
+Displays room number, room type, floor, current status, and related booking or task information if available.
+4
+Receptionist
+Filters or sorts rooms by status, floor, room type, or availability.
+5
+System
+Refreshes the board to show real-time updates such as Available, Occupied, Dirty, Cleaning, or Maintenance.
+6
+Receptionist
+Selects a room to view more operational details if needed.
+Alternative Flow
+No.
+Performed by
+Action
+2a
+System
+Error: If room data cannot be loaded, the system shows an error message.
+3a
+System
+Warning: If a room has conflicting status information, the system highlights the conflict.
+4a
+Receptionist
+Clears filters to return to the full room status board.
+5a
+System
+If real-time refresh fails, the system keeps the last loaded status and shows a warning.
+Postconditions
+Receptionist can see current room statuses and use the information for check-in, check-out, cleaning, and maintenance coordination.
+  
+2.6. Record Deposit Payment
+UC Code
+UC-020
+UC Name
+Record Deposit Payment
+Actor
+Receptionist
+Description
+Allows the receptionist to record a reservation deposit payment for bookings made at the front desk or through offline payment channels.
+Trigger Event
+A guest pays a reservation deposit by cash, card, bank transfer, or another offline channel.
+Preconditions
+The receptionist is authenticated and authorized.
+The booking exists and requires or accepts a deposit payment.
+The payment amount and payment method are available.
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Searches for and selects the booking that will receive a deposit payment.
+2
+System
+Displays booking information, required deposit, paid deposit amount, and remaining deposit amount.
+3
+Receptionist
+Enters payment amount, payment method, payment date, and transaction reference if available.
+4
+System
+Validates the payment amount and payment details.
+5
+Receptionist
+Confirms the deposit payment record.
+6
+System
+Saves the payment record and updates the booking deposit status.
+7
+System
+Displays the updated deposit status and payment confirmation information.
+Alternative
+Flow
+No.
+Performed by
+Action
+1a
+System
+If the booking is not found, the system shows an error message and stops the payment recording process.
+4a
+System
+If the amount is invalid or exceeds the allowed deposit amount, the system asks the receptionist to correct it.
+4b
+System
+If required payment reference information is missing, the system asks the receptionist to complete the payment details.
+2.17. Handle Customer Service Request
+UC Code
+UC-031
+Handle Customer Service Request
+Actor
+Receptionist
+Description
+Allows the receptionist to receive, review, and handle customer service requests. This includes checking request details, assigning the request to suitable staff, tracking request status, and updating the request result when necessary.
+ 
+  
+Trigger Event
+A customer submits a service request or receptionist opens the customer service request list.
+   
+Preconditions
+ Receptionist is authenticated and authorized.
+ A customer service request exists or can be recorded.
+ 
+Service catalog and staff assignment information are available
+.
+ 
+Main Flow
+No.
+Performed by
+Action
+1
+Receptionist
+Opens the customer service request list.
+2
+System
+Displays pending, assigned, in-progress, and completed service requests.
+3
+Receptionist
+Selects a request and reviews customer, room, service type, priority, and notes.
+4
+Receptionist
+Assigns the request to suitable housekeeping or technical staff when needed.
+5
+System
+Updates request status to Assigned or In Progress and notifies the assigned staff.
+6
+Receptionist
+Tracks request progress and updates the result when staff report completion.
+7
+System
+Stores the request history and final status.
+Alternative Flow
+No.
+Performed by
+Action
+3a
+System
+Error: If the request no longer exists or was canceled, the system shows the latest status.
+4a
+System
+Warning: If no suitable staff is available, the request remains Pending.
+4b
+System
+Error: If the selected staff role cannot handle the service type, the system rejects assignment.
+6a
+Receptionist
+If the request cannot be completed, receptionist records the reason and keeps the status Pending or Escalated.
+Postconditions
+The service request is reviewed, assigned, tracked, and updated; otherwise, it remains pending with a clear status.
+ 
+3
+. Housekeeping Feature 
+3.1
+. View Assigned Cleaning Tasks 
+UC Code
+UC-032 
+UC Name
+View Assigned Cleaning Tasks 
+Actor
+Housekeeping Staff 
+Description
+Allows housekeeping staff to view assigned cleaning tasks for the current shift, including room number, task type, priority level, deadline, and task status.
+Trigger Event
+Housekeeping Staff clicks the 
+Assigned Tasks
+ menu from the dashboard .
+Preconditions
+The user is authenticated as Housekeeping Staff.
+ At least one cleaning task is assigned to the user 
+Main Flow
+No.
+Performed by
+Action
+1
+Housekeeping Staff 
+Open the Housekeeping Dashboard . 
+2
+Housekeeping Staff 
+Selects the Assigned Tasks menu 
+3
+System
+Retrieves assigned cleaning tasks from the database 
+4
+System
+Displays task information including room number, priority, deadline, and status 
+5
+Housekeeping Staff 
+Reviews task information and selects a task if needed . 
+Alternative Flow
+No.
+Performed by
+Action
+1
+System 
+No assigned tasks are found . 
+2
+Housekeeping Staff 
+Selects 
+Report Issue
+ and enters the issue description. 
+3
+System 
+Displays &quot;No Assigned Tasks Available&quot;. 
+Postconditions
+ Assigned task list is displayed
+ No data is modified in the system.
+ Task information becomes available for further processi
+ng
+ 
+3.2
+.
+Update Cleaning Task Status
+ 
+UC Code
+UC-033
+UC Name
+Update Cleaning Task Status 
+Actor
+Housekeeping Staff 
+Description
+Allows housekeeping staff to update cleaning task status, such as Not Started, In Progress, and Completed. The room status may also be updated from Dirty to Cleaning and from Cleaning to Available after cleaning is completed .
+Trigger Event
+Housekeeping Staff selects a cleaning task and clicks 
+Update Status
+ .
+Preconditions
+ The user is authenticated as Housekeeping Staff.
+ The cleaning task is assigned to the logged-in user.• Task status is Not Started or In Progress. 
+Main Flow
+No.
+Performed by
+Action
+1
+Housekeeping Staff 
+Opens a cleaning task from the task list.
+2
+System
+Displays task details and room information.
+3
+Housekeeping Staff 
+Updates task status to In Progress.
+4
+System
+Updates Room.Status from Dirty to Cleaning.
+5
+System
+Completes room cleaning activities.
+6
+Housekeeping Staff 
+Updates task status to Completed and enters notes.
+7
+Housekeeping Staff 
+Validates submitted information.
+8
+System
+Updates HousekeepingTask.Status to Completed.
+9
+System
+Updates Room.Status from Cleaning to Available.
+10
+System
+Saves changes and displays a success notification.
+Alternative Flow
+No.
+Performed by
+Action
+A1
+Housekeeping Staff
+Detects equipment damage or maintenance issues during cleaning.
+A2
+Housekeeping Staff
+Selects Report Room Issue and enters issue information.
+A3
+System
+Creates a Maintenance Request.
+A4
+System
+Updates Room.Status to Maintenance.
+A5
+System
+Notifies Technical Staff.
+Postconditions
+ HousekeepingTask.Status is updated.
+ Room.Status changes according to cleaning progress.
+ Task completion information is stored.
+ Audit log is recorded  
+3.3. View Service Request List 
+UC Code
+UC-034
+UC Name
+View Service Request List  
+Actor
+Housekeeping Staff 
+Description
+Allows housekeeping staff to view the list of pending service requests assigned to them, including request type, room number, priority, and deadline
+Trigger Event
+Housekeeping Staff clicks the 
+Service Requests
+ menu 
+Preconditions
+• User is authenticated as Housekeeping Staff.
+• Service requests exist in the system 
+Main Flow
+No.
+Performed by
+Action
+1
+Housekeeping Staff
+Opens the Service Requests screen.
+2
+System
+Retrieves assigned service requests from the database.
+3
+System
+Displays request information including room number, request type, priority, and status.
+4
+Housekeeping Staff
+Reviews request details.
+5
+Housekeeping Staff
+Selects a request for further processing if necessary.
+Alternative Flow
+No.
+Performed by
+Action
+A1
+System
+No assigned service requests are found.
+A2
+System
+Displays &quot;No Service Requests Available&quot;.
+Postconditions
+ HousekeepingTask.Status is updated.
+ Room.Status changes according to cleaning progress.
+ Task completion information is stored.
+ Audit log is recorded  
+3.4
+. Process Service Request  
+UC Code
+UC-035
+UC Name
+Process Service Request   
+Actor
+Housekeeping Staff 
+Description
+Allows housekeeping staff to process additional service requests from guests, such as extra towels, pillows, room cleaning, or laundry support, and update the request status after completion 
+Trigger Event
+Housekeeping Staff selects a service request and clicks 
+Process Request
+ 
+Preconditions
+• User is authenticated as Housekeeping Staff
+.• Service request is assigned to the logged-in user.
+• Service request status is Pending or Assigned.
+• Related room information exists in the system 
+Main Flow
+No.
+Performed by
+Action
+1
+Housekeeping Staff
+Opens the Service Request List screen.
+2
+Housekeeping Staff
+Selects a service request from the list.
+3
+System
+Displays service request details.
+4
+Housekeeping Staff
+Reviews request information and required service.
+5
+Housekeeping Staff
+Performs the requested service.
+6
+Housekeeping Staff
+Updates request status to Completed.
+7
+Housekeeping Staff
+Enters completion notes if necessary.
+8
+System
+Validates submitted information.
+9
+System
+Updates ServiceRequest.Status to Completed.
+10
+System
+Records completion history and displays a success notification.
+Alternative Flow
+No.
+Performed by
+Action
+A1
+Housekeeping Staff
+Cannot complete the requested service.
+A2
+Housekeeping Staff
+Updates request status to Unable to Complete.
+A3
+Housekeeping Staff
+Enters reason for failure.
+A4
+System
+Records the reason and notifies Receptionist for further handling.
+Postconditions
+ ServiceRequest.Status is updated to Completed
+ Completion time is recorded
+ Service processing history is stored.
+ Customer request status is updated in real time.
+ Audit log is recorded. 
+3.5
+. Inspect Room After Check-out   
+UC Code
+UC-036
+UC Name
+Inspect Room After Check-out    
+Actor
+Housekeeping Staff 
+Description
+Allows housekeeping staff to inspect the room after guest check-out. This includes checking room condition, recording minibar or paid item consumption, recording lost or damaged items, reporting damage if found, and preparing the room for cleaning  
+Trigger Event
+Housekeeping Staff opens a Room Inspection Request assigned after guest check-out 
+Preconditions
+• User is authenticated as Housekeeping Staff.
+• A Room Inspection Request exists.
+• Guest has completed check-out.
+• Room status is Dirty.
+• Inspection request status is Pending  
+Main Flow
+No.
+Performed by
+Action
+1
+Housekeeping Staff
+Opens the assigned Room Inspection Request.
+2
+System
+Displays room information and inspection form.
+3
+Housekeeping Staff
+Inspects room condition, furniture, amenities, and inventory.
+4
+Housekeeping Staff
+Verifies minibar items and room assets.
+5
+Housekeeping Staff
+Records inspection notes and findings.
+6
+Housekeeping Staff
+Submits the inspection report.
+7
+System
+Validates inspection information.
+8
+System
+Saves inspection results.
+9
+System
+Updates InspectionRequest.Status to Completed.
+10
+System
+Creates a Housekeeping Cleaning Task for the room.
+11
+System
+Records inspection history and displays a confirmation message.
+Alternative Flow
+No.
+Performed by
+Action
+A1
+Housekeeping Staff
+Detects minibar consumption during inspection.
+A2
+Housekeeping Staff
+Records minibar items and quantities consumed.
+A3
+System
+Calculates additional charges.
+A4
+System
+Creates InvoiceItem records and associates them with the guest invoice.
+A5
+System
+Notifies Receptionist to review the additional charges.
+A6
+Housekeeping Staff
+Detects damaged furniture, equipment, or room facilities.
+A7
+Housekeeping Staff
+Records damage information and supporting notes.
+A8
+System
+Creates a Maintenance Request.
+A9
+System
+Updates Room.Status to Maintenance.
+A10
+System
+Notifies Technical Staff and Receptionist.
+Postconditions
+ Inspection result is stored in the database
+ Inspection request status is updated to Completed.
+ Cleaning task is automatically generated
+ Room inspection history is recorded.
+ Inspection information is available for Receptionists and Managers . 
+3.6
+.Report Room Issue    
+UC Code
+UC-037
+UC Name
+Report Room Issue     
+Actor
+Housekeeping Staff 
+Description
+Allows housekeeping staff to report issues or damage found in a room, such as broken equipment, missing amenities, or required repairs. The system may change the room status to Maintenance and notify technical staff or the manager 
+Trigger Event
+Housekeeping Staff clicks the 
+Report Room Issue
+ button from a room task or room detail screen 
+Preconditions
+User is authenticated as Housekeeping Staff.
+The room exists in the system.
+ Housekeeping Staff has permission to report room issues 
+Main Flow
+No.
+Performed by
+Action
+1
+Housekeeping Staff
+Opens the room information screen.
+2
+Housekeeping Staff
+Clicks Report Room Issue.
+3
+System
+Displays the Room Issue Report form.
+4
+Housekeeping Staff
+Enters issue category, description, and priority level.
+5
+Housekeeping Staff
+Upload supporting photos if available.
+6
+Housekeeping Staff
+Submits the report.
+7
+System
+Validates the issue information.
+8
+System
+Creates a Maintenance Request record.
+9
+System
+Updates Room.Status to Maintenance.
+10
+System
+Assigns the request to Technical Staff.
+11
+System
+Sends notifications and displays a success message.
+Alternative Flow
+No.
+Performed by
+Action
+none
+none
+No alternative flow is defined for this use case 
+Postconditions
+ 
+Maintenance Request is created.
+ Room issue information is stored.
+ Room.Status is updated to Maintenance.
+ Technical Staff is notified.
+ Audit log is recorded
+ 
+4
+. Manager
+  
+4.1.Manage Room
+    
+4
+.1.1. Create Room
+5. Customer
+   5.1.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer change their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+5.2.Reset forgot Password
+UC Code
+UC-051
+UC Name
+Reset Forgot Password
+Actor
+Customer
+Description
+Customer resets their forgotten password by verifying their account through email and creating a new password. 
+Trigger Event
+Customer submits the reset password form after receiving a valid reset password link or verification code. 
+Preconditions
+Customer account exists in the system.  
+Customer has requested password recovery. 
+The reset password link or verification code is valid and not expired. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+Customer opens the forgot password page from the login page. 
+2
+Customer 
+Customer enters the registered email address and submits the request. 
+3
+System 
+System checks whether the email exists in the system. 
+4
+System 
+System generates a reset password token or verification code. 
+5
+System 
+System sends the reset password link or verification code to the customer's email. 
+6
+Customer 
+Customer opens the reset password link or enters the verification code. 
+7
+System 
+System validates the reset token or verification code. 
+8
+Customer 
+Customer enters new password and confirm new password. 
+9
+Customer 
+Customer submits the reset password form. 
+10
+System 
+System validates the required fields and password format. 
+11
+System 
+System checks whether the new password and confirm new password match. 
+12
+System 
+System encrypts the new password. 
+13
+System 
+System updates the customer's password in the system. 
+14
+System 
+System invalidates the used reset token or verification code. 
+15
+System 
+System displays a successful password reset message and redirects the customer to the login page. 
+Alternative Flow
+No.
+Performed by
+Action
+3a 
+System 
+Error: If the email does not exist, system displays an error message or informs the customer that the request cannot be processed. 
+5a 
+System 
+Error: If the email service fails, system displays a message asking the customer to try again later. 
+7a 
+System 
+Error: If the reset token or verification code is invalid, system rejects the request and displays an error message. 
+7b
+System 
+Error: If the reset token or verification code is expired, system asks the customer to request a new password reset link. 
+10a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+11a 
+System 
+Error: If new password and confirm new password do not match, system displays an error message. 
+12a 
+System 
+Error: If the new password does not meet security requirements, system asks the customer to enter a stronger password. 
+13a 
+System 
+Error: If password update fails, system displays a password reset failure message. 
+Postconditions
+The customer's password is reset successfully, the reset token or verification code becomes invalid, and the customer can log in using the new password. If the process fails, the password remains unchanged and the system displays an error message.
+5.3.View Room List 
+UC Code
+UC-004
+UC Name
+View Room List 
+Actor
+Customer
+Description
+Customer views the list of available rooms or room types displayed by the hotel, including basic information such as room name, room type, capacity, amenities, price range, and availability status. 
+Trigger Event
+Customer opens the room list page from the homepage or customer dashboard. 
+Preconditions
+Customer can access the public room list page 
+Room or room type data is available in the system.  
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+Customer opens the room list page. 
+2
+System 
+System retrieves room type or available room information from the database. 
+3
+System 
+System displays the list of rooms or room types. 
+4
+System 
+System shows basic room information such as room name, room type, capacity, amenities, price range, and availability status. 
+5
+Customer 
+Customer browses the room list. 
+6
+Customer 
+Customer may select a room or room type to view more details. 
+7
+System 
+System redirects the customer to the selected room detail page. 
+Alternative Flow
+No.
+Performed by
+Action
+2a
+System 
+Error: If room data cannot be loaded, system displays an error message. 
+3a
+System 
+If no rooms or room types are available, system displays an empty list message. 
+4a
+System 
+If some room information is missing, system displays available information and marks missing data clearly. 
+6a
+Customer 
+Customer leaves the room list page without selecting any room. 
+Postconditions
+The customer successfully views the room list, or the system displays an error message if room information cannot be loaded. 
+5.4.Search Available Rooms
+UC Code
+UC-005
+UC Name
+Search Available Rooms
+Actor
+Customer
+Description
+Customer searches for available rooms by entering booking criteria such as check-in date, check-out date, room type, number of guests, and other filters. 
+Trigger Event
+Customer submits the room search form from the room search page or homepage. 
+Preconditions
+Room information is available in the system. 
+Customer has entered valid search criteria.. 
+The selected check-in date must be earlier than the check-out date.  
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+Customer opens the room search page. 
+2
+Customer 
+Customer enters search criteria such as check-in date, check-out date, room type, number of guests, and price range. 
+3
+Customer 
+Customer submits the search form. 
+4
+System 
+System validates the search criteria. 
+5
+System 
+System checks room availability based on the selected date range. 
+6
+System 
+System filters available rooms by room type, capacity, price, and other selected conditions. 
+7
+System 
+System displays a list of available rooms or room types that match the search criteria. 
+8
+Customer 
+Customer reviews the search results. 
+9
+Customer 
+Customer selects a room or room type to view more details. 
+10
+System 
+System redirects the customer to the selected room detail page. 
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required search fields are missing, system displays a validation error message. 
+4b
+System 
+Error: If the check-in date is later than or equal to the check-out date, system rejects the search and displays an error message. 
+5a
+System 
+If no rooms are available for the selected date range, system displays a no available rooms message. 
+6a
+System 
+If no rooms match the selected filters, system displays an empty result message and suggests changing the search criteria. 
+7a
+System 
+Error: If room data cannot be loaded, system displays an error message. 
+Postconditions
+The customer successfully views a list of available rooms matching the search criteria, or the system displays an appropriate message if no rooms are available or the search criteria are invalid. 
+5.5.View Room Detail 
+UC Code
+UC-006
+UC Name
+View Room Detail 
+Actor
+Customer
+Description
+Customer views detailed information of a selected room or room type, including description, images, amenities, capacity, bed type, price, and availability status. 
+Trigger Event
+Customer selects a room or room type from the room list or search result. 
+Preconditions
+Customer can access the room list or search result page. 
+The selected room or room type exists in the system. 
+Room detail information is available in the system. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+Customer opens the room list page or search available rooms page. 
+2
+Customer 
+Customer selects a room or room type to view details. 
+3
+System 
+System receives the selected room or room type information. 
+4
+System 
+System retrieves detailed room information from the database. 
+5
+System 
+System displays room details such as room name, room type, images, description, capacity, bed type, amenities, price, and availability status. 
+6
+Customer 
+Customer reviews the room detail information. 
+7
+Customer 
+Customer may choose to make an online reservation for the selected room or return to the previous page. 
+Alternative Flow
+No.
+Performed by
+Action
+3a
+System 
+Error: If the selected room or room type does not exist, system displays a not found message. 
+4a
+System 
+Error: If room detail data cannot be loaded, system displays an error message. 
+5a
+System 
+If some room information is missing, system displays available information and marks missing details clearly. 
+7a
+Customer 
+Customer returns to the room list or search result page without making a reservation. 
+Postconditions
+The customer successfully views the selected room detail, or the system displays an appropriate error message if the room information cannot be found or loaded. 
+5.6.Make Online Reservation 
+UC Code
+UC-007
+UC Name
+Make Online Reservation 
+Actor
+Customer
+Description
+Customer makes an online reservation by selecting an available room or room type, entering stay dates, guest information, and confirming booking details. 
+Trigger Event
+Customer clicks the reservation button from the room detail page or available room search result. 
+Preconditions
+Customer is logged in to the system. 
+The selected room or room type exists in the system. . 
+The selected room or room type is available for the chosen stay dates. 
+Customer has entered valid booking information. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+Customer selects an available room or room type from the room detail page or search result. 
+2
+System 
+System displays the reservation form. 
+3
+Customer 
+Customer enters booking information such as check-in date, check-out date, number of guests, contact information, and special requests if any. 
+4
+Customer 
+Customer submits the reservation form. 
+5
+System 
+System validates the booking information. 
+6
+System 
+System checks whether the selected room or room type is still available for the selected date range. 
+7
+System 
+System calculates the estimated booking price based on room price, stay duration, and selected options. 
+8
+System 
+System displays the reservation summary for customer confirmation. 
+9
+Customer 
+Customer reviews the reservation summary and confirms the booking. 
+10
+System 
+System creates a new reservation record with Pending or Awaiting Deposit status. 
+11
+System 
+System displays a successful reservation message and shows the next step for deposit payment. 
+Alternative Flow
+No.
+Performed by
+Action
+5a 
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5b
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+9a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+10a
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+6.2.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer changes their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+6.2.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer changes their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+6.2.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer changes their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+6.2.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer changes their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+6.2.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer changes their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+6.2.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer changes their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
+6.2.Change Password
+UC Code
+UC-054
+UC Name
+Change Password 
+Actor
+Customer
+Description
+Customer changes their current account password after logging in to the system. 
+Trigger Event
+Customer submits the change password form from the profile management screen. 
+Preconditions
+Customer is already logged in to the system. 
+Customer account exists in the system. 
+Customer account is active and not locked. 
+Main Flow
+No.
+Performed by
+Action
+1
+Customer 
+User opens the registration page. 
+2
+Customer 
+User enters required information such as full name, email, phone number, password, and confirm password. 
+3
+Customer 
+User submits the registration form. 
+4
+System 
+System validates the required fields and checks the format of email, phone number, and password. 
+5
+System 
+System checks whether the email already exists in the system. 
+6
+System 
+System checks whether password and confirm password match. 
+7
+System 
+If all information is valid, system encrypts the password. 
+8
+System 
+System creates a new customer account with the default Customer role. 
+9
+System 
+System displays a successful registration message and redirects the user to the login page. 
+10
+11
+12
+Alternative Flow
+No.
+Performed by
+Action
+4a
+System 
+Error: If required fields are missing or invalid, system displays a validation error message. 
+5a
+System 
+Error: If the email already exists, system rejects the registration and informs the user. 
+6a
+System 
+Error: Data validation failed. The system rejects those records and informs the manager.
+7a
+System 
+Error: If the password does not meet security requirements, system asks the user to enter a stronger password. 
+8a
+System 
+Error: If account creation fails, system displays a registration failure message. 
+Postconditions
+The new customer account is created successfully with the default Customer role, or the system displays an error message and the account is not created. 
