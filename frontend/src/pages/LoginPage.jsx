@@ -25,8 +25,8 @@ const LoginPage = () => {
       const roleName = String(data.user?.role?.name || '').toLowerCase();
       if (roleName.includes('admin')) {
         navigate('/admin');
-      } else if (roleName.includes('manager')) {
-        navigate('/manager');
+      } else if (roleName.includes('manager') || roleName.includes('housekeeping')) {
+        navigate('/manager/housekeeping');
       } else if (roleName.includes('receptionist')) {
         navigate('/receptionist');
       } else {

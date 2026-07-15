@@ -10,6 +10,7 @@ const uploadRoutes = require('./upload.route');
 const managerStaffTaskRoutes = require('../modules/manager/staff-task/staff-task.route');
 const managerMinibarRoutes = require('../modules/manager/minibar/minibar.route');
 const managerCustomerFeedbackRoutes = require('../modules/manager/customer-feedback/customer-feedback.route');
+const managerHousekeepingRoutes = require('../modules/manager/housekeeping/housekeeping.route');
 
 // Public room routes (list, search, detail, calendar)
 const publicRoomRoutes = require('./room.route');
@@ -52,6 +53,8 @@ router.use('/upload', uploadRoutes);
 router.use('/manager', managerStaffTaskRoutes);
 router.use('/manager', managerMinibarRoutes);
 router.use('/manager', managerCustomerFeedbackRoutes);
+router.use('/housekeeping', managerHousekeepingRoutes);
+router.use('/manager/housekeeping', managerHousekeepingRoutes);
 
 // Public room routes (no auth required)
 router.use('/rooms', publicRoomRoutes);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown } from 'lucide-react';
+import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning } from 'lucide-react';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
@@ -8,16 +8,34 @@ const sidebarItems = [
   { icon: Calendar, label: 'Lịch' },
   { icon: Megaphone, label: 'Chiến dịch', hasSub: true },
   { icon: BedDouble, label: 'Phòng', hasSub: true, matchPath: '/manager/rooms' },
-  { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-tasks' },
-  { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar-items' },
+  { icon: BrushCleaning, label: 'Housekeeping', to: '/manager/housekeeping' },
+  { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-task' },
+  { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar' },
   { icon: Wallet, label: 'Tài chính', hasSub: true },
   { icon: Star, label: 'Ý kiến khách hàng', to: '/manager/feedback', badge: 5 },
   { icon: LogIn, label: 'Đăng ký & Đăng nhập' },
 ];
 
+const housekeepingSidebarItems = [
+  { icon: BrushCleaning, label: 'Cleaning Tasks', to: '/manager/housekeeping/tasks' },
+  { icon: Sparkles, label: 'Maintenance Report', to: '/manager/housekeeping/schedule' },
+  { icon: Package, label: 'Minibar', to: '/manager/minibar' },
+];
+
 const ManagerSidebar = () => {
   const location = useLocation();
   const [roomsOpen, setRoomsOpen] = useState(() => location.pathname.startsWith('/manager/rooms'));
+
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('hotelify_user') || 'null');
+    } catch {
+      return null;
+    }
+  })();
+  const roleName = String(storedUser?.role?.name || '').toLowerCase();
+  const isHousekeepingStaff = roleName.includes('housekeeping');
+  const visibleSidebarItems = isHousekeepingStaff ? housekeepingSidebarItems : sidebarItems;
 
   const isActive = (item) => {
     if (item.to) return location.pathname === item.to;
@@ -32,7 +50,7 @@ const ManagerSidebar = () => {
         <span>Hotelify</span>
       </div>
       <nav className="rm-nav">
-        {sidebarItems.map((item) => {
+        {visibleSidebarItems.map((item) => {
           const { icon: Icon, label, to, hasSub, badge, matchPath } = item;
           const active = isActive(item);
           const isRooms = label === 'Phòng';
@@ -82,12 +100,14 @@ const ManagerSidebar = () => {
           );
         })}
       </nav>
-      <div className="rm-promo">
-        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
-        <h2>Quản lý thông minh, phục vụ tốt hơn</h2>
-        <p>Tự động hóa thủ tục, giám sát hiệu suất và phòng trống.</p>
-        <button type="button">Nâng cấp bản Pro</button>
-      </div>
+      {!isHousekeepingStaff ? (
+        <div className="rm-promo">
+          <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
+          <h2>Quản lý thông minh, phục vụ tốt hơn</h2>
+          <p>Tự động hóa thủ tục, giám sát hiệu suất và phòng trống.</p>
+          <button type="button">Nâng cấp bản Pro</button>
+        </div>
+      ) : null}
     </aside>
   );
 };

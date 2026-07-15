@@ -20,8 +20,8 @@ const roomSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ['Available', 'Occupied', 'Maintenance', 'OutOfService'],
-        message: 'Status must be Available, Occupied, Maintenance, or OutOfService',
+        values: ['Available', 'Occupied', 'Dirty', 'Cleaning', 'Maintenance'],
+        message: 'Status must be Available, Occupied, Dirty, Cleaning, or Maintenance',
       },
       default: 'Available',
     },
@@ -53,6 +53,16 @@ const roomSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    currentGuest: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    inspectionStatus: {
+      type: String,
+      enum: ['Pending', 'Completed', 'Skipped'],
+      default: 'Pending',
     },
   },
   {

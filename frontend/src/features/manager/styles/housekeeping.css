@@ -1,0 +1,407 @@
+.housekeeping-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.housekeeping-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 2px;
+}
+
+.housekeeping-page-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.housekeeping-page-header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+}
+
+.housekeeping-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.housekeeping-grid-2 {
+  grid-template-columns: 1.1fr 0.9fr;
+}
+
+.housekeeping-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 25px -20px rgba(15, 23, 42, 0.45);
+}
+
+.housekeeping-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.housekeeping-card-header h3,
+.housekeeping-card-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #111827;
+}
+
+.housekeeping-subtle {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.housekeeping-summary-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 12px 25px -20px rgba(15, 23, 42, 0.45);
+}
+
+.housekeeping-summary-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.housekeeping-summary-icon.primary {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.housekeeping-summary-icon.warning {
+  background: #fff7ed;
+  color: #d97706;
+}
+
+.housekeeping-summary-icon.success {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.housekeeping-summary-icon.neutral {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.housekeeping-summary-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.housekeeping-summary-subtitle {
+  display: block;
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.housekeeping-filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.housekeeping-filter-bar input,
+.housekeeping-filter-bar select {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #111827;
+  background: #fff;
+}
+
+.housekeeping-filter-bar input {
+  min-width: 220px;
+}
+
+.housekeeping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.housekeeping-room-card,
+.housekeeping-task-item,
+.housekeeping-shift-card,
+.housekeeping-staff-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fafafa;
+}
+
+.housekeeping-room-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.housekeeping-room-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.housekeeping-room-main strong {
+  color: #111827;
+}
+
+.housekeeping-room-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.housekeeping-task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.housekeeping-task-item strong {
+  display: block;
+  color: #111827;
+}
+
+.housekeeping-task-item small,
+.housekeeping-task-item span {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.housekeeping-task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.housekeeping-btn,
+.housekeeping-outline-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.housekeeping-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+.housekeeping-outline-btn {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.housekeeping-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.housekeeping-badge.dirty,
+.housekeeping-badge.high {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.housekeeping-badge.cleaning,
+.housekeeping-badge.medium {
+  background: #fff7ed;
+  color: #d97706;
+}
+
+.housekeeping-badge.ready,
+.housekeeping-badge.low {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.housekeeping-badge.inspection,
+.housekeeping-badge.urgent {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.housekeeping-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.housekeeping-table th,
+.housekeeping-table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.housekeeping-table th {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.housekeeping-state-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  color: #4b5563;
+}
+
+.housekeeping-state-card h3 {
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.housekeeping-skeleton {
+  display: grid;
+  gap: 14px;
+}
+
+.housekeeping-skeleton-block {
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+  animation: housekeepingPulse 1.2s infinite;
+}
+
+.housekeeping-skeleton-block.short {
+  width: 60%;
+}
+
+.housekeeping-skeleton-block.medium {
+  width: 80%;
+}
+
+.housekeeping-shift-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.housekeeping-staff-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.housekeeping-staff-info strong {
+  display: block;
+  color: #111827;
+}
+
+.housekeeping-staff-info span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.housekeeping-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 200;
+}
+
+.housekeeping-modal-card {
+  width: min(460px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 20px 45px -20px rgba(15, 23, 42, 0.45);
+}
+
+.housekeeping-modal-card h3 {
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.housekeeping-modal-card p {
+  margin: 0 0 14px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.housekeeping-modal-card select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+}
+
+.housekeeping-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@keyframes housekeepingPulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+@media (max-width: 1024px) {
+  .housekeeping-grid,
+  .housekeeping-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .housekeeping-grid,
+  .housekeeping-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .housekeeping-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .housekeeping-room-card,
+  .housekeeping-task-item,
+  .housekeeping-shift-card,
+  .housekeeping-staff-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
