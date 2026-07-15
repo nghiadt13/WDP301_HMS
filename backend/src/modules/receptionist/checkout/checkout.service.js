@@ -149,6 +149,24 @@ const checkoutService = {
         throw createHttpError(400, 'Booking is not in CheckedIn state');
       }
 
+      // SOP Rule 1: Validate inspection task is closed
+      const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
+      const roomNames = rooms.map(r => r.room_id ? r.room_id.roomName : r.room_number).filter(Boolean);
+      
+      const tasks = await StaffTask.find({
+        room_number: { $in: roomNames },
+        title: { $regex: /Check-out/i }
+      }).sort({ createdAt: -1 });
+
+      if (tasks.length < roomNames.length) {
+        throw createHttpError(400, `Không thể checkout: Cần yêu cầu kiểm tra cho tất cả các phòng (${tasks.length}/${roomNames.length}).`);
+      }
+      
+      const hasOpenTask = tasks.some(t => t.status !== 'closed');
+      if (hasOpenTask) {
+        throw createHttpError(400, 'Không thể checkout: Buồng phòng chưa hoàn tất kiểm tra.');
+      }
+
       // Find the invoice
       const invoice = await Invoice.findOne({ booking_id: bookingId });
       if (!invoice) throw createHttpError(400, 'Invoice must be generated before checkout');
@@ -175,12 +193,10 @@ const checkoutService = {
       const bookingRooms = await BookingRoom.find({ booking_id: bookingId });
       const roomIds = bookingRooms.map(br => br.room_id).filter(Boolean);
       
-      // Usually, rooms go to 'dirty' or 'maintenance'. We will set them to 'available' for now or 'dirty' if that exists
-      // Let's check Room schema status later. We'll set 'Available' as standard, or if there's an inspection task, maybe it's handled there.
-      // Assuming 'Available' for simplicity
+      // Update actual Rooms to 'Dirty' so Housekeeping can clean it (SOP UC-023)
       await Room.updateMany(
         { _id: { $in: roomIds } },
-        { status: 'Available' }
+        { status: 'Dirty' }
       );
 
 

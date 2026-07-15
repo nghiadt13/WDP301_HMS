@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { X, ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { useCheckoutSummary } from '../hooks/use-checkout';
+import { useCheckoutSummary, useInspectionResults } from '../hooks/use-checkout';
+import { toast } from 'react-hot-toast';
 import CheckoutStepInspection from './CheckoutStepInspection';
 import CheckoutStepCharges from './CheckoutStepCharges';
 import CheckoutStepBilling from './CheckoutStepBilling';
 
 const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
   const { data, isLoading, error } = useCheckoutSummary(bookingId);
+  const { data: inspectionData } = useInspectionResults(bookingId);
   const [currentStep, setCurrentStep] = useState(1);
 
   const steps = [
@@ -41,6 +43,19 @@ const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
   const summary = data.data;
 
   const handleNext = () => {
+    if (currentStep === 1) {
+      const tasks = inspectionData?.data || [];
+      if (tasks.length < summary.rooms.length) {
+        toast.error(`Vui lòng yêu cầu kiểm tra cho tất cả các phòng (${tasks.length}/${summary.rooms.length}).`);
+        return;
+      }
+      const hasOpenTask = tasks.some(t => t.status !== 'closed');
+      if (hasOpenTask) {
+        toast.error('Chưa thể tiếp tục: Buồng phòng chưa hoàn tất kiểm tra.');
+        return;
+      }
+    }
+
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }

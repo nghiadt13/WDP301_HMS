@@ -5,7 +5,8 @@ import { toast } from 'react-hot-toast';
 
 const CheckoutStepInspection = ({ bookingId, summary, onNext }) => {
   const { data: inspectionData, isLoading: isLoadingResults } = useInspectionResults(bookingId);
-  const { mutate: requestInspection, isPending } = useCreateInspection(bookingId);
+  const { mutateAsync: requestInspectionAsync, mutate: requestInspection, isPending } = useCreateInspection(bookingId);
+  const [isRequestingAll, setIsRequestingAll] = useState(false);
 
   const [selectedRoom, setSelectedRoom] = useState(summary.rooms[0]?.roomName || '');
 
@@ -30,6 +31,33 @@ const CheckoutStepInspection = ({ bookingId, summary, onNext }) => {
   };
 
   const tasks = inspectionData?.data || [];
+
+  const handleRequestAll = async () => {
+    const roomsToRequest = summary.rooms.filter(room => 
+      !tasks.some(t => t.room_number === room.roomName)
+    );
+    
+    if (roomsToRequest.length === 0) {
+      toast.success('Tất cả các phòng đều đã được yêu cầu kiểm tra.');
+      return;
+    }
+
+    setIsRequestingAll(true);
+    try {
+      await Promise.all(roomsToRequest.map(room => 
+        requestInspectionAsync({
+          room_number: room.roomName,
+          priority: 'high',
+          description: `Yêu cầu kiểm tra phòng ${room.roomName} ngay cho khách trả phòng.`
+        })
+      ));
+      toast.success(`Đã gửi yêu cầu kiểm tra cho ${roomsToRequest.length} phòng.`);
+    } catch (err) {
+      toast.error('Có lỗi xảy ra khi gửi yêu cầu kiểm tra.');
+    } finally {
+      setIsRequestingAll(false);
+    }
+  };
 
   return (
     <div className="wizard-step-content">
@@ -66,20 +94,34 @@ const CheckoutStepInspection = ({ bookingId, summary, onNext }) => {
               </div>
             </div>
           </div>
-          <button 
-            type="button"
-            onClick={handleRequestInspection}
-            disabled={isPending}
-            style={{ 
-               height: '46px', padding: '0 24px', background: isPending ? '#94a3b8' : '#2563eb', color: '#fff', 
-               borderRadius: '12px', border: 'none', fontSize: '15px', fontWeight: '600', 
-               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: isPending ? 'not-allowed' : 'pointer',
-               boxShadow: isPending ? 'none' : '0 4px 12px rgba(37, 99, 235, 0.2)', transition: 'all 0.2s',
-               minWidth: '180px'
-            }}
-          >
-            {isPending ? 'Đang gửi...' : <><Plus size={18}/> Yêu cầu ngay</>}
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              type="button"
+              onClick={handleRequestInspection}
+              disabled={isPending || isRequestingAll}
+              style={{ 
+                 height: '46px', padding: '0 24px', background: (isPending || isRequestingAll) ? '#94a3b8' : '#2563eb', color: '#fff', 
+                 borderRadius: '12px', border: 'none', fontSize: '15px', fontWeight: '600', 
+                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: (isPending || isRequestingAll) ? 'not-allowed' : 'pointer',
+                 boxShadow: (isPending || isRequestingAll) ? 'none' : '0 4px 12px rgba(37, 99, 235, 0.2)', transition: 'all 0.2s'
+              }}
+            >
+              {isPending ? 'Đang gửi...' : <><Plus size={18}/> Yêu cầu phòng này</>}
+            </button>
+            <button 
+              type="button"
+              onClick={handleRequestAll}
+              disabled={isPending || isRequestingAll}
+              style={{ 
+                 height: '46px', padding: '0 24px', background: (isPending || isRequestingAll) ? '#94a3b8' : '#10b981', color: '#fff', 
+                 borderRadius: '12px', border: 'none', fontSize: '15px', fontWeight: '600', 
+                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: (isPending || isRequestingAll) ? 'not-allowed' : 'pointer',
+                 boxShadow: (isPending || isRequestingAll) ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.2)', transition: 'all 0.2s'
+              }}
+            >
+              {isRequestingAll ? 'Đang gửi...' : 'Yêu cầu tất cả phòng'}
+            </button>
+          </div>
         </div>
       </div>
 
