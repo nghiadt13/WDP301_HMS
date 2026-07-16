@@ -21,12 +21,16 @@ const authController = {
     return authService.register(req, res, next);
   },
 
-  requestPasswordReset(req, res, next) {
-    return authService.requestPasswordReset(req, res, next);
+  recentSessions(req, res, next) {
+    return authService.recentSessions(req, res, next);
   },
 
-  resetPassword(req, res, next) {
-    return authService.resetPassword(req, res, next);
+  revokeSession(req, res, next) {
+    return authService.revokeSession(req, res, next);
+  },
+
+  logout(req, res, next) {
+    return authService.logout(req, res, next);
   }
 };
 

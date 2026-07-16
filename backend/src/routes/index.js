@@ -24,6 +24,7 @@ const managerRoomTypeRoutes = require('../modules/manager/room-type/room-type.ro
 // Admin modules
 const adminAccountRoutes = require('../modules/admin/account/account.route');
 const adminRoleRoutes = require('../modules/admin/role/role.route');
+const adminDashboardRoutes = require('../modules/admin/dashboard/dashboard.route');
 
 // Customer modules
 const customerReservationRoutes = require('../modules/customer/reservation/reservation.route');
@@ -33,6 +34,7 @@ const customerFeedbackRoutes = require('../modules/customer/feedback/feedback.ro
 
 // Receptionist modules
 const receptionistCheckinRoutes = require('../modules/receptionist/checkin/checkin.route');
+const receptionistCheckoutRoutes = require('../modules/receptionist/checkout/checkout.route');
 
 
 // Shared webhook
@@ -74,6 +76,7 @@ const authorize = require('../middlewares/authorize.middleware');
 
 router.use('/admin/accounts', authMiddleware, authorize('admin'), adminAccountRoutes);
 router.use('/admin/roles', authMiddleware, authorize('admin'), adminRoleRoutes);
+router.use('/admin/dashboard', authMiddleware, authorize('admin'), adminDashboardRoutes);
 
 // Manager dashboard
 router.use('/manager/dashboard', authMiddleware, authorize('manager', 'admin'), managerDashboardRoutes);
@@ -85,7 +88,9 @@ router.use('/customer', customerServiceRoutes);
 router.use('/customer', customerFeedbackRoutes);
 
 // Receptionist routes
+// Receptionist routes
 router.use('/receptionist', receptionistCheckinRoutes);
+router.use('/receptionist/checkout', receptionistCheckoutRoutes);
 
 
 // Shared webhook

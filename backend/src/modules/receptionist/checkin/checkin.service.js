@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const { createHttpError } = require('../../../utils/error.utils');
-const { parseHotelCheckInDate, parseHotelCheckOutDate } = require('../../../utils/date.utils');
 
 const Booking = require('../../../models/booking.model');
 const User = require('../../../models/user.model');
@@ -14,24 +13,12 @@ const generateWalkInCode = () => {
   return `BKG-WALKIN-${suffix}`;
 };
 
-const parseStayRange = (checkInDate, checkOutDate) => {
-  const checkIn = parseHotelCheckInDate(checkInDate);
-  const checkOut = parseHotelCheckOutDate(checkOutDate);
-
-  if (!checkIn || !checkOut || checkOut <= checkIn) {
-    throw createHttpError('Invalid stay dates', 400);
-  }
-
-  return { checkIn, checkOut };
-};
-
 const getBookedRoomsCount = async (roomTypeId, checkInDate, checkOutDate) => {
-  const stayRange = parseStayRange(checkInDate, checkOutDate);
   const bookings = await Booking.find({
     room_type_id: roomTypeId,
     booking_status: { $nin: ['Canceled', 'CheckedOut', 'Completed'] },
-    check_in_date: { $lt: stayRange.checkOut },
-    check_out_date: { $gt: stayRange.checkIn }
+    check_in_date: { $lt: new Date(checkOutDate) },
+    check_out_date: { $gt: new Date(checkInDate) }
   });
   return bookings.reduce((sum, b) => sum + (b.room_quantity || 1), 0);
 };
@@ -266,12 +253,9 @@ const checkinService = {
   async processCheckIn(bookingId, body) {
     const { stayGuests, roomAssignments } = body;
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
       // 1. Fetch booking within transaction
-      const booking = await Booking.findById(bookingId).session(session);
+      const booking = await Booking.findById(bookingId);
       if (!booking) {
         throw createHttpError('Booking not found', 404);
       }
@@ -292,7 +276,7 @@ const checkinService = {
       }
 
       // 2. Fetch all BookingRoom records for this booking
-      let bookingRooms = await BookingRoom.find({ booking_id: bookingId }).session(session);
+      let bookingRooms = await BookingRoom.find({ booking_id: bookingId });
       
       // If none exist, we initialize them now (safe POST action)
       if (bookingRooms.length === 0) {
@@ -308,7 +292,7 @@ const checkinService = {
             check_out_date: booking.check_out_date
           });
         }
-        bookingRooms = await BookingRoom.insertMany(newRooms, { session });
+        bookingRooms = await BookingRoom.insertMany(newRooms);
 
         // Map virtual client-provided bookingRoomIds to the database IDs in order
         const uniqueClientRoomIds = [...new Set([
@@ -346,7 +330,7 @@ const checkinService = {
           throw createHttpError(`BookingRoom ${assignment.bookingRoomId} not found in this booking`, 400);
         }
 
-        const room = await Room.findById(assignment.roomId).session(session);
+        const room = await Room.findById(assignment.roomId);
         if (!room) {
           throw createHttpError(`Room ${assignment.roomId} not found`, 404);
         }
@@ -372,7 +356,7 @@ const checkinService = {
         bRoom.room_id = room._id;
         bRoom.room_number = room.roomName;
         bRoom.status = 'CheckedIn';
-        await bRoom.save({ session });
+        await bRoom.save();
 
         roomsToUpdate.push(room);
       }
@@ -389,7 +373,7 @@ const checkinService = {
 
       // Delete existing stay guests for this booking ONCE before loop (REST-safe batch delete)
       const bookingRoomIds = bookingRooms.map(r => r._id);
-      await StayGuest.deleteMany({ booking_room_id: { $in: bookingRoomIds } }).session(session);
+      await StayGuest.deleteMany({ booking_room_id: { $in: bookingRoomIds } });
 
       // Insert StayGuest records
       for (const guest of stayGuests) {
@@ -407,18 +391,18 @@ const checkinService = {
           passport_number: guest.passportNumber || '',
           document_type: guest.documentType || 'ID_CARD'
         });
-        await newGuest.save({ session });
+        await newGuest.save();
 
         // BR-10: First-time ID entry for booking contact (names must match exactly)
         if (booking.customer_id) {
-          const user = await User.findById(booking.customer_id).session(session);
+          const user = await User.findById(booking.customer_id);
           if (user && !user.id_card_number && guest.idCardNumber) {
             if (user.full_name.toLowerCase() === guest.fullName.toLowerCase()) {
               user.id_card_number = guest.idCardNumber;
               if (guest.phoneNumber && !user.phone_number) {
                 user.phone_number = guest.phoneNumber;
               }
-              await user.save({ session });
+              await user.save();
             }
           }
         }
@@ -429,15 +413,13 @@ const checkinService = {
       if (assignedRoomIds.length === 1) {
         booking.room_id = assignedRoomIds[0];
       }
-      await booking.save({ session });
+      await booking.save();
 
       for (const room of roomsToUpdate) {
         room.status = 'Occupied';
-        await room.save({ session });
+        await room.save();
       }
 
-      await session.commitTransaction();
-      session.endSession();
 
       const updatedBooking = await Booking.findById(bookingId)
         .populate('customer_id', 'full_name email phone_number')
@@ -457,8 +439,6 @@ const checkinService = {
       };
 
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       throw error;
     }
   },
@@ -480,8 +460,7 @@ const checkinService = {
       throw createHttpError(`Only ${availableCount} room(s) available for this type`, 409);
     }
 
-    const stayRange = parseStayRange(checkInDate, checkOutDate);
-    const nights = Math.max(1, Math.round((stayRange.checkOut - stayRange.checkIn) / (24 * 60 * 60 * 1000)));
+    const nights = Math.max(1, Math.round((new Date(checkOutDate) - new Date(checkInDate)) / (24 * 60 * 60 * 1000)));
     const totalAmount = (roomType.base_price || 0) * nights * roomCount;
 
     const now = new Date();
@@ -490,8 +469,8 @@ const checkinService = {
       customer_id: null,
       room_type_id: roomTypeId,
       room_id: null,
-      check_in_date: stayRange.checkIn,
-      check_out_date: stayRange.checkOut,
+      check_in_date: new Date(checkInDate),
+      check_out_date: new Date(checkOutDate),
       guest_count: guestCount || 1,
       adult_count: adultCount || 1,
       child_count: childCount || 0,
@@ -538,14 +517,12 @@ const checkinService = {
       throw createHttpError('roomTypeId, checkInDate, and checkOutDate are required', 400);
     }
 
-    const stayRange = parseStayRange(checkInDate, checkOutDate);
-
     // Exclude rooms assigned to overlapping active booking rooms
     const overlappingBookingRooms = await BookingRoom.find({
       room_id: { $ne: null },
       status: { $in: ['Pending', 'CheckedIn'] },
-      check_in_date: { $lt: stayRange.checkOut },
-      check_out_date: { $gt: stayRange.checkIn }
+      check_in_date: { $lt: new Date(checkOutDate) },
+      check_out_date: { $gt: new Date(checkInDate) }
     });
 
     const assignedRoomIds = overlappingBookingRooms.map(br => br.room_id.toString());

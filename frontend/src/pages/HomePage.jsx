@@ -57,7 +57,6 @@ const HomePage = () => {
   const lobbyImages = homeData.lobby.images || [];
   const roomTypes = homeData.rooms;
   const activeRoom = roomTypes[activeRoomIndex];
-  const shouldHideLobbyTitle = /paddington\s+bayview\s+h[ạa]\s+long/i.test(homeData.lobby.title || '');
 
   useEffect(() => {
     const loadHomePage = async () => {
@@ -277,8 +276,8 @@ const HomePage = () => {
 
       <section className="home-lobby-section" id="hotel-lobby" aria-label="Hotel lobby gallery">
         <div className="home-lobby-copy">
-          {homeData.lobby.eyebrow ? <span>{homeData.lobby.eyebrow}</span> : null}
-          {!shouldHideLobbyTitle && homeData.lobby.title ? <h2>{homeData.lobby.title}</h2> : null}
+          <span>{homeData.lobby.eyebrow}</span>
+          <h2>{homeData.lobby.title}</h2>
           <p>{homeData.lobby.description}</p>
         </div>
 

@@ -6,7 +6,7 @@ const errorHandler = (error, req, res, next) => {
   }
 
   res.status(statusCode).send({
-    message: error.publicMessage || (statusCode >= 500 ? 'Internal server error' : error.message)
+    message: statusCode >= 500 ? 'Internal server error' : error.message
   });
 };
 

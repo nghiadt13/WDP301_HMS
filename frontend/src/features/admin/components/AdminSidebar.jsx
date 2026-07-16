@@ -5,7 +5,7 @@ const sidebarItems = [
   { icon: Home, label: 'Dashboard', to: '/admin' },
   { icon: Users, label: 'Internal Accounts', to: '/admin/accounts' },
   { icon: Shield, label: 'Roles & Permissions', to: '/admin/roles' },
-  { icon: User, label: 'My Profile', to: '/profile' }
+  { icon: User, label: 'My Profile', to: '/admin/profile' }
 ];
 
 const AdminSidebar = () => {

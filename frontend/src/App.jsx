@@ -23,18 +23,17 @@ import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
 import AdminDashboardPage from './features/admin/pages/AdminDashboardPage.jsx';
 import AdminAccountsPage from './features/admin/pages/AdminAccountsPage.jsx';
 import AdminRolesPage from './features/admin/pages/AdminRolesPage.jsx';
+import AdminProfilePage from './features/admin/pages/AdminProfilePage.jsx';
 
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
-import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import MyProfilePage from './pages/MyProfilePage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
-import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import RoomDetailPage from './pages/RoomDetailPage.jsx';
 import RoomListPage from './pages/RoomListPage.jsx';
 import RoomSearchResultsPage from './pages/RoomSearchResultsPage.jsx';
@@ -86,17 +85,20 @@ const ReceptionistProtectedRoute = () => {
   return <Outlet />;
 };
 
+
+import { Toaster } from 'react-hot-toast';
+
 const App = () => {
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
+    <>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route element={<MainLayout />}>
         {/* Public routes */}
         <Route index element={<HomePage />} />
         <Route path="home" element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
-        <Route path="forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="booking" element={<BookingPage />} />
         <Route path="listRoom" element={<RoomListPage />} />
         <Route path="rooms" element={<RoomListPage />} />
@@ -130,6 +132,7 @@ const App = () => {
             <Route index element={<AdminDashboardPage />} />
             <Route path="accounts" element={<AdminAccountsPage />} />
             <Route path="roles" element={<AdminRolesPage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
           </Route>
         </Route>
 
@@ -147,6 +150,7 @@ const App = () => {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    </>
   );
 };
 
