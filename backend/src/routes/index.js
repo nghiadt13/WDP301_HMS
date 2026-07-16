@@ -10,6 +10,7 @@ const uploadRoutes = require('./upload.route');
 const managerStaffTaskRoutes = require('../modules/manager/staff-task/staff-task.route');
 const managerMinibarRoutes = require('../modules/manager/minibar/minibar.route');
 const managerCustomerFeedbackRoutes = require('../modules/manager/customer-feedback/customer-feedback.route');
+const managerDashboardRoutes = require('../modules/manager/dashboard/dashboard.route');
 
 // Public room routes (list, search, detail, calendar)
 const publicRoomRoutes = require('./room.route');
@@ -59,6 +60,7 @@ router.use('/manager', managerStaffTaskRoutes);
 router.use('/manager', managerMinibarRoutes);
 router.use('/manager', managerCustomerFeedbackRoutes);
 
+
 // Public room routes (no auth required)
 router.use('/rooms', publicRoomRoutes);
 
@@ -75,6 +77,9 @@ const authorize = require('../middlewares/authorize.middleware');
 router.use('/admin/accounts', authMiddleware, authorize('admin'), adminAccountRoutes);
 router.use('/admin/roles', authMiddleware, authorize('admin'), adminRoleRoutes);
 router.use('/admin/dashboard', authMiddleware, authorize('admin'), adminDashboardRoutes);
+
+// Manager dashboard
+router.use('/manager/dashboard', authMiddleware, authorize('manager', 'admin'), managerDashboardRoutes);
 
 // Customer routes
 router.use('/reservations', customerReservationRoutes);
