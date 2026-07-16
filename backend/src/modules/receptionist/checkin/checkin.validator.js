@@ -45,11 +45,15 @@ const validateCheckIn = (req, res, next) => {
       if (!guest.fullName || typeof guest.fullName !== 'string' || guest.fullName.trim().length === 0) {
         errors.push(`stayGuests[${index}].fullName is required`);
       }
-      if (
-        (!guest.idCardNumber || typeof guest.idCardNumber !== 'string' || guest.idCardNumber.trim().length === 0) &&
-        (!guest.passportNumber || typeof guest.passportNumber !== 'string' || guest.passportNumber.trim().length === 0)
-      ) {
-        errors.push(`stayGuests[${index}] must have either idCardNumber or passportNumber`);
+      const isCccd = guest.documentType === 'ID_CARD' || !guest.documentType;
+      if (isCccd) {
+        if (!guest.idCardNumber || typeof guest.idCardNumber !== 'string' || !/^\d{12}$/.test(guest.idCardNumber.trim())) {
+          errors.push(`stayGuests[${index}].idCardNumber is required and must be exactly 12 digits`);
+        }
+      } else {
+        if (!guest.passportNumber || typeof guest.passportNumber !== 'string' || guest.passportNumber.trim().length === 0) {
+          errors.push(`stayGuests[${index}].passportNumber is required for PASSPORT`);
+        }
       }
     });
   }

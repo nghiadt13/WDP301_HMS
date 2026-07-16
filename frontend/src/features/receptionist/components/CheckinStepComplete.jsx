@@ -29,22 +29,15 @@ const CheckinStepComplete = ({
             Nhận phòng thành công!
           </h3>
           <p style={{ color: 'var(--muted)', fontSize: '15px', maxWidth: '480px', margin: '0 auto 24px auto', lineHeight: '1.6' }}>
-            Đặt phòng <strong>{booking.bookingCode}</strong> đã được chuyển sang trạng thái <strong>Đã nhận phòng (CheckedIn)</strong>.
+            Đặt phòng <strong>{booking.bookingCode}</strong> đã được chuyển sang trạng thái <strong>Đã nhận phòng</strong>.
           </p>
 
           <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '16px', padding: '20px', maxWidth: '400px', margin: '0 auto 24px auto', textAlign: 'left' }}>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
               <Home size={20} className="receptionist-icon" style={{ color: 'var(--blue-dark)' }} />
               <div>
                 <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Phòng vật lý đã gán:</div>
                 <strong style={{ fontSize: '16px', color: 'var(--ink)' }}>Phòng {roomNamesList}</strong>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <Key size={20} className="receptionist-icon" style={{ color: 'var(--orange)' }} />
-              <div>
-                <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Hướng dẫn lễ tân:</div>
-                <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>Bàn giao chìa khóa phòng cho khách hàng.</strong>
               </div>
             </div>
           </div>
@@ -55,7 +48,7 @@ const CheckinStepComplete = ({
             onClick={onCloseComplete}
             style={{ width: 'auto', display: 'inline-flex', padding: '12px 24px' }}
           >
-            Đã bàn giao chìa khóa & Đóng
+            Đã bàn giao phòng
           </button>
         </div>
       ) : (

@@ -14,15 +14,12 @@ const CheckinStepConfirm = ({ booking, rooms, canCheckin, blockingReasons }) => 
   return (
     <div className="checkin-step-confirm">
       <h3>Xác nhận điều kiện nhận phòng (Step 1 of 4)</h3>
-      <p style={{ color: 'var(--muted)', marginBottom: '20px' }}>
-        Hệ thống tự động kiểm tra trạng thái thanh toán và điều kiện gán phòng lưu trú của đặt phòng này.
-      </p>
 
       {canCheckin ? (
         <div className="alert-box alert-success">
           <CheckCircle size={20} style={{ flexShrink: 0 }} />
           <div>
-            <strong>Đủ điều kiện nhận phòng!</strong> Đặt phòng đã thanh toán đầy đủ và các phòng ở trạng thái sẵn sàng.
+            <strong>Đủ điều kiện nhận phòng!</strong>
           </div>
         </div>
       ) : (

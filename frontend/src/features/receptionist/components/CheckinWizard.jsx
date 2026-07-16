@@ -127,7 +127,7 @@ const CheckinWizard = ({ bookingId, onClose, onComplete }) => {
       <div className="wizard-modal">
         {/* Header */}
         <div className="wizard-header">
-          <h2>Quy trình nhận phòng (Check-in Wizard)</h2>
+          <h2>Tiến hành thủ tục nhận phòng</h2>
           <button type="button" className="wizard-close-btn" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
