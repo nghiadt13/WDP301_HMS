@@ -25,31 +25,6 @@ const roomSchema = new mongoose.Schema(
       },
       default: 'Available',
     },
-    price: {
-      type: Number,
-      required: [true, 'Price is required'],
-      min: [0, 'Price cannot be negative'],
-    },
-    bed_type: {
-      type: String,
-      default: '',
-    },
-    images: {
-      type: [String],
-      default: [],
-    },
-    amenity_ids: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Amenity',
-      },
-    ],
-    feature_ids: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Feature',
-      },
-    ],
     isActive: {
       type: Boolean,
       default: true,

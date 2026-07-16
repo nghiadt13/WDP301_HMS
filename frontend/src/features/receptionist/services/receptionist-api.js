@@ -60,3 +60,19 @@ export const receptionistApi = {
     return unwrap(response);
   },
 };
+
+export const bookingApi = {
+  getAll: (params) => axiosClient.get('/receptionist/bookings', { params }).then((response) => response.data),
+  getById: (id) => axiosClient.get(`/receptionist/bookings/${id}`).then((response) => response.data),
+  checkIn: (id, data) => axiosClient.post(`/receptionist/bookings/${id}/checkin`, data).then((response) => response.data),
+  createWalkIn: (data) => axiosClient.post('/receptionist/bookings/walkin', data).then((response) => response.data),
+  getDashboardStats: () => axiosClient.get('/receptionist/dashboard-stats').then((response) => response.data),
+};
+
+export const roomApi = {
+  getAvailable: (params) => axiosClient.get('/receptionist/rooms/available', { params }).then((response) => response.data),
+};
+
+export const roomTypeApi = {
+  getAll: () => axiosClient.get('/receptionist/room-types').then((response) => response.data),
+};

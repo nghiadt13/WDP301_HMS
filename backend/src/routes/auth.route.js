@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { changePassword, googleLogin, login, me, register } = require('../controllers/auth.controller');
+const { changePassword, googleLogin, login, me, recentSessions, register, logout, revokeSession } = require('../controllers/auth.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
 const router = express.Router();
@@ -10,5 +10,8 @@ router.post('/register', register);
 router.post('/google', googleLogin);
 router.get('/me', authMiddleware, me);
 router.patch('/change-password', authMiddleware, changePassword);
+router.get('/sessions', authMiddleware, recentSessions);
+router.post('/logout', authMiddleware, logout);
+router.post('/sessions/:id/revoke', authMiddleware, revokeSession);
 
 module.exports = router;

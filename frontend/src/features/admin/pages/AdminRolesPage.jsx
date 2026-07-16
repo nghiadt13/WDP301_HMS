@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Search, Plus, Edit, X, Shield, Settings, Check } from 'lucide-react';
-import { useRoles, useCreateRole, useUpdateRole } from '../hooks/use-admin';
+import { Search, Plus, Edit, X, Shield, Settings, Check, Trash2 } from 'lucide-react';
+import { useRoles, useCreateRole, useUpdateRole, useDeleteRole } from '../hooks/use-admin';
 import '../styles/AdminStyles.css';
 
 const AdminRolesPage = () => {
   const { data: rolesData, isLoading } = useRoles();
   const createMutation = useCreateRole();
   const updateMutation = useUpdateRole();
+  const deleteMutation = useDeleteRole();
 
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -23,11 +24,21 @@ const AdminRolesPage = () => {
   const filteredRoles = roles.filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
 
   const availablePermissions = [
+    // Admin & Manager
     { id: 'admin:all', label: 'Full Admin Access' },
     { id: 'manager:rooms', label: 'Manage Rooms' },
     { id: 'manager:staff', label: 'Manage Staff' },
+    { id: 'manager:reports', label: 'View Financial Reports' },
+    { id: 'manager:pricing', label: 'Manage Room Pricing' },
+    
+    // Receptionist
     { id: 'receptionist:booking', label: 'Manage Bookings' },
-    { id: 'receptionist:checkin', label: 'Check-in/Check-out' }
+    { id: 'receptionist:checkin', label: 'Check-in/Check-out' },
+    { id: 'receptionist:payment', label: 'Process Payments' },
+    
+    // Other
+    { id: 'housekeeping:all', label: 'Housekeeping Operations' },
+    { id: 'customer:self', label: 'Self Service (Customer)' }
   ];
 
   const handleOpenModal = (role = null) => {
@@ -78,6 +89,12 @@ const AdminRolesPage = () => {
     }
   };
 
+  const handleDeleteRole = (id) => {
+    if (window.confirm('Are you sure you want to deactivate this role? Users with this role may lose access.')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
   return (
     <div className="admin-content">
       <div className="admin-main-column" style={{ minWidth: '100%' }}>
@@ -109,43 +126,57 @@ const AdminRolesPage = () => {
               <div style={{ padding: '20px', textAlign: 'center' }}>Loading roles...</div>
             ) : (
               <table>
-                <thead>
+                <thead style={{ borderBottom: '2px solid #e2e8f0' }}>
                   <tr>
-                    <th>Role Name</th>
-                    <th>Description</th>
-                    <th>Permissions</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Role Name</th>
+                    <th style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Description</th>
+                    <th style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Permissions</th>
+                    <th style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Status</th>
+                    <th style={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRoles.map((role) => (
-                    <tr key={role._id}>
-                      <td>
-                        <strong style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Shield size={14} style={{ color: '#2563eb' }} />
+                    <tr key={role._id} style={{ transition: 'background 0.2s', cursor: 'default' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <td style={{ width: '20%' }}>
+                        <strong style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#0f172a' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', color: '#2563eb', boxShadow: '0 2px 4px rgba(37,99,235,0.1)' }}>
+                            <Shield size={16} />
+                          </div>
                           {role.name}
                         </strong>
                       </td>
-                      <td>{role.description || '-'}</td>
-                      <td>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {role.permission_sets.map(perm => (
-                            <span key={perm} style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', border: '1px solid #e2e8f0' }}>
-                              {perm}
-                            </span>
-                          ))}
+                      <td style={{ width: '40%', whiteSpace: 'normal', lineHeight: '1.6', color: '#64748b', fontSize: '13px', paddingRight: '20px' }}>
+                        {role.description || '-'}
+                      </td>
+                      <td style={{ width: '25%' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 6px', alignItems: 'center' }}>
+                          {role.permission_sets.length > 0 ? role.permission_sets.map(perm => {
+                            const permDef = availablePermissions.find(p => p.id === perm);
+                            const displayName = permDef ? permDef.label : perm;
+                            const isAll = perm.includes(':all');
+                            const bgColor = isAll ? '#dcfce7' : '#eff6ff';
+                            const textColor = isAll ? '#166534' : '#1e40af';
+                            const borderColor = isAll ? '#86efac' : '#93c5fd';
+                            return (
+                              <span key={perm} style={{ background: bgColor, color: textColor, padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '500', border: `1px solid ${borderColor}`, lineHeight: '1', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                {displayName}
+                              </span>
+                            );
+                          }) : (
+                            <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '12px' }}>No specific permissions</span>
+                          )}
                         </div>
                       </td>
-                      <td>
+                      <td style={{ width: '10%' }}>
                         <span className={`admin-status ${role.is_active ? 'checked-in' : 'pending'}`}>
                           {role.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td>
+                      <td style={{ width: '10%' }}>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button onClick={() => handleOpenModal(role)} className="admin-icon-button" title="Edit Role"><Edit size={16}/></button>
-                          <button className="admin-icon-button" title="Settings"><Settings size={16}/></button>
+                          <button onClick={() => handleDeleteRole(role._id)} className="admin-icon-button" title="Delete Role" disabled={deleteMutation.isPending} style={{ color: '#ef4444' }}><Trash2 size={16}/></button>
                         </div>
                       </td>
                     </tr>

@@ -44,6 +44,20 @@ const seedActors = async () => {
         login_account: 'customer',
         full_name: 'Valued Customer',
         email: 'customer@hotelify.com'
+      },
+      {
+        roleName: 'Staff',
+        permissions: ['staff:all'],
+        login_account: 'staff',
+        full_name: 'General Staff',
+        email: 'staff@hotelify.com'
+      },
+      {
+        roleName: 'Housekeeping',
+        permissions: ['housekeeping:all'],
+        login_account: 'housekeeper',
+        full_name: 'Housekeeping Staff',
+        email: 'housekeeping@hotelify.com'
       }
     ];
 
