@@ -4,8 +4,6 @@ const User = require('../../../models/user.model');
 const mockStaffMembers = [
   { _id: 'mock-housekeeping-1', full_name: 'Nguyen Thi Hoa', role: 'housekeeping' },
   { _id: 'mock-housekeeping-2', full_name: 'Le Van Minh', role: 'housekeeping' },
-  { _id: 'mock-technical-1', full_name: 'Tran Quoc Bao', role: 'technical' },
-  { _id: 'mock-technical-2', full_name: 'Pham Duc Anh', role: 'technical' },
 ];
 
 const createHttpError = (message, status = 400) => {
@@ -51,6 +49,10 @@ const buildStaffTaskPayload = (data) => {
     throw createHttpError('Số phòng phải là số 3-4 chữ số hoặc mã phòng hợp lệ trong danh sách.');
   }
 
+  if (!String(data.room_type || data.roomType || '').trim()) {
+    throw createHttpError('Vui lòng chọn phòng có loại phòng hợp lệ.');
+  }
+
   if (!data.deadline) {
     throw createHttpError('Vui long chon han hoan thanh.');
   }
@@ -60,10 +62,11 @@ const buildStaffTaskPayload = (data) => {
   return {
     title: String(data.title).trim(),
     description: String(data.description || '').trim(),
-    staff_type: data.staff_type || 'housekeeping',
+    staff_type: 'housekeeping',
     assigned_staff_id: data.assigned_staff_id,
     assigned_to: String(data.assigned_to || '').trim(),
     room_number: String(data.room_number).trim(),
+    room_type: String(data.room_type || data.roomType || '').trim(),
     priority: data.priority || 'medium',
     status: data.status === 'open' ? 'assigned' : (data.status || 'assigned'),
     deadline: new Date(data.deadline),
@@ -78,7 +81,6 @@ const staffTaskService = {
         const roleName = String(user.role_id?.name || '').toLowerCase();
         let role = '';
         if (roleName.includes('housekeeping')) role = 'housekeeping';
-        if (roleName.includes('technical')) role = 'technical';
         if (!role) return null;
         return { _id: String(user._id), full_name: user.full_name, role };
       })
@@ -88,9 +90,11 @@ const staffTaskService = {
   },
 
   async getStaffTasks(query = {}) {
-    const filter = {};
+    const filter = {
+      staff_type: 'housekeeping',
+      room_type: { $nin: [null, ''] },
+    };
     if (query.status) filter.status = query.status;
-    if (query.staff_type) filter.staff_type = query.staff_type;
     return StaffTask.find(filter).sort({ createdAt: -1 });
   },
 

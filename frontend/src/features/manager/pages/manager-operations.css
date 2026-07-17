@@ -143,6 +143,11 @@
   color: #2563eb;
 }
 
+.manager-ops-status.is-success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .manager-ops-status.is-muted {
   background: #f3f4f6;
   color: #4b5563;
@@ -885,6 +890,74 @@
 
 .staff-task-table-card .inventory-toolbar {
   justify-content: flex-start;
+}
+
+.policy-hero-card {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.policy-hero-card h2 {
+  color: #101828;
+  font-size: 28px;
+  margin: 0;
+}
+
+.policy-hero-card p {
+  color: #667085;
+  margin: 8px 0 0;
+}
+
+.policy-list {
+  display: grid;
+  gap: 14px;
+}
+
+.policy-card {
+  align-items: flex-start;
+  background: #f8fbff;
+  border: 1px solid #eef2f7;
+  border-radius: 18px;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 18px;
+}
+
+.policy-card h3 {
+  color: #101828;
+  margin: 12px 0 8px;
+}
+
+.policy-card p {
+  color: #475569;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.policy-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.policy-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.policy-checkbox {
+  align-content: center;
+  display: flex !important;
+  flex-direction: row;
+  gap: 10px !important;
+}
+
+.policy-checkbox input {
+  width: auto;
 }
 
 @media (max-width: 1180px) {
