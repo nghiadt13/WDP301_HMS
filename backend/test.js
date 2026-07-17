@@ -1,18 +1,18 @@
+require("dotenv").config();
 
-const mongoose = require('mongoose');
-require('dotenv').config();
-const { getDashboardStats } = require('./src/modules/manager/dashboard/dashboard.service');
+const mongoose = require("mongoose");
 
-async function test() {
-  await mongoose.connect(process.env.MONGO_URI);
+(async () => {
   try {
-    const stats = await getDashboardStats();
-    console.log('SUCCESS');
-  } catch (err) {
-    console.error('ERROR:', err);
-  } finally {
-    await mongoose.disconnect();
-  }
-}
-test();
+    console.log(process.version);
+    console.log(process.env.MONGO_URI);
 
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log("Connected!");
+    process.exit(0);
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
+})();

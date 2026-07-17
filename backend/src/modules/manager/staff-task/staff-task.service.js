@@ -1,11 +1,6 @@
 ﻿const StaffTask = require('../../../models/staffTask.model');
 const User = require('../../../models/user.model');
 
-const mockStaffMembers = [
-  { _id: 'mock-housekeeping-1', full_name: 'Nguyen Thi Hoa', role: 'housekeeping' },
-  { _id: 'mock-housekeeping-2', full_name: 'Le Van Minh', role: 'housekeeping' },
-];
-
 const createHttpError = (message, status = 400) => {
   const error = new Error(message);
   error.status = status;
@@ -59,6 +54,11 @@ const buildStaffTaskPayload = (data) => {
 
   assertFutureOrToday(data.deadline);
 
+  const normalizedStatus = String(data.status || '').trim();
+  const nextStatus = normalizedStatus === 'Completed' || normalizedStatus === 'Cancelled'
+    ? normalizedStatus
+    : 'NotStarted';
+
   return {
     title: String(data.title).trim(),
     description: String(data.description || '').trim(),
@@ -68,7 +68,7 @@ const buildStaffTaskPayload = (data) => {
     room_number: String(data.room_number).trim(),
     room_type: String(data.room_type || data.roomType || '').trim(),
     priority: data.priority || 'medium',
-    status: data.status === 'open' ? 'assigned' : (data.status || 'assigned'),
+    status: nextStatus,
     deadline: new Date(data.deadline),
   };
 };
@@ -86,7 +86,7 @@ const staffTaskService = {
       })
       .filter(Boolean);
 
-    return staffMembers.length ? staffMembers : mockStaffMembers;
+    return staffMembers;
   },
 
   async getStaffTasks(query = {}) {
@@ -109,13 +109,13 @@ const staffTaskService = {
   },
 
   async closeStaffTask(id) {
-    const task = await StaffTask.findByIdAndUpdate(id, { status: 'closed' }, { new: true, runValidators: true });
+    const task = await StaffTask.findByIdAndUpdate(id, { status: 'Completed' }, { new: true, runValidators: true });
     if (!task) throw createHttpError('Khong tim thay nhiem vu.', 404);
     return task;
   },
 
   async cancelStaffTask(id) {
-    const task = await StaffTask.findByIdAndUpdate(id, { status: 'canceled' }, { new: true, runValidators: true });
+    const task = await StaffTask.findByIdAndUpdate(id, { status: 'Cancelled' }, { new: true, runValidators: true });
     if (!task) throw createHttpError('Khong tim thay nhiem vu.', 404);
     return task;
   },

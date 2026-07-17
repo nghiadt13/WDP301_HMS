@@ -13,6 +13,7 @@ const managerMinibarRoutes = require('../modules/manager/minibar/minibar.route')
 const managerCustomerFeedbackRoutes = require('../modules/manager/customer-feedback/customer-feedback.route');
 const managerDashboardRoutes = require('../modules/manager/dashboard/dashboard.route');
 const managerPolicyRoutes = require('../modules/manager/policy/policy.route');
+const managerHousekeepingRoutes = require('../modules/manager/housekeeping/housekeeping.route');
 
 // Public room routes (list, search, detail, calendar)
 const publicRoomRoutes = require('./room.route');
@@ -36,7 +37,6 @@ const customerFeedbackRoutes = require('../modules/customer/feedback/feedback.ro
 // Receptionist modules
 const receptionistCheckinRoutes = require('../modules/receptionist/checkin/checkin.route');
 const receptionistCheckoutRoutes = require('../modules/receptionist/checkout/checkout.route');
-
 
 // Shared webhook
 const cassoWebhookRoutes = require('../modules/shared/webhook/casso-webhook.route');
@@ -62,7 +62,8 @@ router.use('/manager', managerStaffTaskRoutes);
 router.use('/manager', managerMinibarRoutes);
 router.use('/manager', managerCustomerFeedbackRoutes);
 router.use('/manager', managerPolicyRoutes);
-
+router.use('/housekeeping', managerHousekeepingRoutes);
+router.use('/manager/housekeeping', managerHousekeepingRoutes);
 
 // Public room routes (no auth required)
 router.use('/rooms', publicRoomRoutes);
@@ -90,13 +91,10 @@ router.use('/payments', customerPaymentRoutes);
 router.use('/customer', customerFeedbackRoutes);
 
 // Receptionist routes
-// Receptionist routes
 router.use('/receptionist', receptionistCheckinRoutes);
 router.use('/receptionist/checkout', receptionistCheckoutRoutes);
-
 
 // Shared webhook
 router.use('/webhooks', cassoWebhookRoutes);
 
 module.exports = router;
-

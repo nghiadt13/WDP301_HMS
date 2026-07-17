@@ -1,4 +1,5 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
 import CustomerPoliciesPage from './features/customer/pages/CustomerPoliciesPage.jsx';
@@ -16,6 +17,9 @@ import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPag
 import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
 import ManagerPoliciesPage from './features/manager/pages/ManagerPoliciesPage.jsx';
+import HousekeepingDashboardPage from './features/manager/pages/HousekeepingDashboardPage.jsx';
+import HousekeepingTasksPage from './features/manager/pages/HousekeepingTasksPage.jsx';
+import HousekeepingSchedulePage from './features/manager/pages/HousekeepingSchedulePage.jsx';
 import ManagerLayout from './features/manager/layouts/ManagerLayout.jsx';
 
 
@@ -62,9 +66,18 @@ const ManagerProtectedRoute = () => {
   const token = localStorage.getItem('hotelify_token');
   const user = getStoredUser();
   const roleName = String(user?.role?.name || '').toLowerCase();
+  const allowedHousekeepingPaths = ['/manager', '/manager/housekeeping', '/manager/housekeeping/tasks', '/manager/housekeeping/schedule', '/manager/minibar'];
 
-  if (!token || !roleName.includes('manager')) {
+  if (!token || !(roleName.includes('manager') || roleName.includes('housekeeping'))) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (roleName.includes('housekeeping') && !allowedHousekeepingPaths.includes(location.pathname)) {
+    return <Navigate to="/manager/housekeeping" replace state={{ from: location }} />;
+  }
+
+  if (roleName.includes('housekeeping') && location.pathname === '/manager') {
+    return <Navigate to="/manager/housekeeping" replace state={{ from: location }} />;
   }
 
   return <Outlet />;
@@ -95,9 +108,6 @@ const ReceptionistProtectedRoute = () => {
 
   return <Outlet />;
 };
-
-
-import { Toaster } from 'react-hot-toast';
 
 const App = () => {
   return (
@@ -132,7 +142,12 @@ const App = () => {
             <Route path="rooms" element={<RoomManagePage />} />
             <Route path="rooms/add" element={<AddRoomPage />} />
             <Route path="rooms/:id/edit" element={<EditRoomPage />} />
+            <Route path="housekeeping" element={<HousekeepingDashboardPage />} />
+            <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
+            <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />
+            <Route path="staff-task" element={<ManagerStaffTasksPage />} />
             <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
+            <Route path="minibar" element={<ManagerMinibarItemsPage />} />
             <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
             <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
             <Route path="policies" element={<ManagerPoliciesPage />} />
@@ -168,4 +183,3 @@ const App = () => {
 };
 
 export default App;
-

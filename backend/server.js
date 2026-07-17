@@ -4,6 +4,9 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
+console.log("Current directory:", __dirname);
+console.log("MONGO_URI:", process.env.MONGO_URI);
+
 const connectDB = require('./src/config/db');
 const apiRoutes = require('./src/routes');
 

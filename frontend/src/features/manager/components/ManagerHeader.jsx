@@ -7,8 +7,12 @@ const getPageTitle = (pathname) => {
   if (pathname === '/manager/rooms') return 'Quản lý phòng';
   if (pathname === '/manager/rooms/add') return 'Thêm phòng mới';
   if (pathname.includes('/manager/rooms/') && pathname.includes('/edit')) return 'Chỉnh sửa phòng';
-  if (pathname === '/manager/staff-tasks') return 'Nhiệm vụ nhân viên';
-  if (pathname === '/manager/minibar-items') return 'Quản lý Minibar';
+  if (pathname === '/manager/housekeeping') return 'Housekeeping Dashboard';
+  if (pathname === '/manager/housekeeping/tasks') return 'Housekeeping Tasks';
+  if (pathname === '/manager/housekeeping/schedule') return 'Maintenance Report';
+  if (pathname === '/manager/housekeeping/staff') return 'Housekeeping Staff';
+  if (pathname === '/manager/staff-task' || pathname === '/manager/staff-tasks') return 'Nhiệm vụ nhân viên';
+  if (pathname === '/manager/minibar' || pathname === '/manager/minibar-items') return 'Quản lý Minibar';
   if (pathname === '/manager/feedback') return 'Ý kiến khách hàng';
   if (pathname === '/manager/policies') return 'Quản lý chính sách';
   return 'Bảng điều khiển';
