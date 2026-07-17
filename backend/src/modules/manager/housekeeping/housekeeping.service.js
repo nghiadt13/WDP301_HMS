@@ -28,6 +28,7 @@ const isActiveTaskStatus = (status) => {
 };
 
 const isHousekeepingTask = (task) => String(task?.staff_type || '').toLowerCase() === 'housekeeping';
+const isManagerAssignedTask = (task) => /manager/i.test(String(task?.assignedBy || ''));
 
 const normalizeTaskStatus = (status) => {
   const normalized = String(status || '').trim().toLowerCase();
@@ -166,16 +167,100 @@ const mapInspection = (inspection) => ({
 
 const mapServiceRequest = (request) => ({
   id: request._id,
+  customer_id: request.customer_id || null,
   room_number: request.room_number,
   service_name: request.service_name,
   service_category: request.service_category,
+  assigned_department: request.assigned_department || 'Housekeeping',
+  assigned_staff_id: request.assigned_staff_id || null,
+  assigned_to: request.assigned_to || 'Housekeeping Team',
   note: request.note,
+  internal_note: request.internal_note || '',
   status: request.status,
   requested_at: request.requested_at,
+  accepted_at: request.accepted_at,
+  started_at: request.started_at,
   handled_at: request.handled_at,
+  canceled_at: request.canceled_at,
   createdAt: request.createdAt,
   updatedAt: request.updatedAt,
 });
+
+const SERVICE_REQUEST_STATUSES = ['requested', 'accepted', 'in_progress', 'handled', 'canceled'];
+
+const isHousekeepingAssignedRequest = (request) => {
+  const department = String(request?.assigned_department || '').toLowerCase();
+  const category = String(request?.service_category || '').toLowerCase();
+  const assignee = String(request?.assigned_to || '').toLowerCase();
+  return department.includes('housekeeping') || category.includes('housekeeping') || assignee.includes('housekeeping');
+};
+
+const canAccessServiceRequest = (user, request) => {
+  const role = normalizeRole(user);
+  if (role.includes('manager') || role.includes('receptionist')) return true;
+  if (!role.includes('housekeeping')) return false;
+  if (!isHousekeepingAssignedRequest(request)) return false;
+
+  const assignedId = String(request?.assigned_staff_id || '');
+  const currentId = String(user?._id || '');
+  if (!assignedId) return true;
+  return assignedId === currentId;
+};
+
+const validateServiceRequestStatus = (status) => {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (!SERVICE_REQUEST_STATUSES.includes(normalized)) {
+    throw createHttpError('Invalid service request status', 400);
+  }
+  return normalized;
+};
+
+const updateServiceRequestLifecycle = (request, status, user) => {
+  const nextStatus = validateServiceRequestStatus(status);
+  const currentStatus = String(request.status || '').toLowerCase();
+
+  const allowedTransitions = {
+    requested: ['requested', 'accepted', 'in_progress', 'handled', 'canceled'],
+    accepted: ['accepted', 'in_progress', 'handled', 'canceled'],
+    in_progress: ['in_progress', 'handled', 'canceled'],
+    handled: ['handled'],
+    canceled: ['canceled'],
+  };
+
+  if (!(allowedTransitions[currentStatus] || []).includes(nextStatus)) {
+    throw createHttpError('Service request cannot transition from its current status', 409);
+  }
+
+  request.status = nextStatus;
+  const now = new Date();
+
+  if (nextStatus === 'accepted') {
+    request.accepted_at = request.accepted_at || now;
+  }
+
+  if (nextStatus === 'in_progress') {
+    request.accepted_at = request.accepted_at || now;
+    request.started_at = request.started_at || now;
+  }
+
+  if (nextStatus === 'handled') {
+    request.accepted_at = request.accepted_at || now;
+    request.started_at = request.started_at || now;
+    request.handled_at = now;
+    request.canceled_at = null;
+  }
+
+  if (nextStatus === 'canceled') {
+    request.canceled_at = now;
+  }
+
+  if (user?._id && String(user?._id).trim()) {
+    request.assigned_staff_id = request.assigned_staff_id || user._id;
+    request.assigned_to = request.assigned_to || user.full_name || 'Housekeeping Team';
+  }
+
+  request.assigned_department = request.assigned_department || 'Housekeeping';
+};
 
 const mapMaintenanceRequest = (request) => ({
   id: request._id,
@@ -225,7 +310,7 @@ const housekeepingService = {
     const [tasks, rooms, serviceRequests, maintenanceRequests] = await Promise.all([
       StaffTask.find({ staff_type: 'housekeeping' }).lean(),
       Room.find({}).lean(),
-      CustomerServiceRequest.find({}).lean(),
+      CustomerServiceRequest.find({ assigned_department: { $regex: 'housekeeping', $options: 'i' } }).lean(),
       MaintenanceRequest.find({}).lean(),
     ]);
 
@@ -279,9 +364,17 @@ const housekeepingService = {
     if (query.room_number) filter.room_number = query.room_number;
     if (query.assignedBy) filter.assignedBy = query.assignedBy;
 
+    const managerOnly = String(query.manager_assigned_only || '').toLowerCase() === 'true';
+    if (managerOnly) {
+      filter.assignedBy = { $regex: 'manager', $options: 'i' };
+    }
+
     const tasks = await StaffTask.find(filter).sort({ createdAt: -1 }).lean();
     if (role.includes('housekeeping')) {
-      return tasks.filter((task) => canAccessTask(user, task)).map(mapTask);
+      return tasks
+        .filter((task) => canAccessTask(user, task))
+        .filter((task) => !managerOnly || isManagerAssignedTask(task))
+        .map(mapTask);
     }
 
     return tasks.map(mapTask);
@@ -314,7 +407,7 @@ const housekeepingService = {
     if (!isHousekeepingTask(task)) throw createHttpError('Only housekeeping cleaning task can be started', 400);
     if (!canAccessTask(user, task)) throw createHttpError('Forbidden', 403);
     const currentStatus = normalizeTaskStatus(task.status);
-    if (!['Accepted', 'Assigned'].includes(currentStatus)) {
+    if (currentStatus !== 'Accepted') {
       throw createHttpError('Task cannot be started from its current status', 409);
     }
 
@@ -589,11 +682,21 @@ const housekeepingService = {
       throw createHttpError('Forbidden', 403);
     }
 
-    const filter = {};
-    if (query.status) filter.status = query.status;
+    const filter = {
+      $or: [
+        { assigned_department: { $regex: 'housekeeping', $options: 'i' } },
+        { service_category: { $regex: 'housekeeping', $options: 'i' } },
+        { assigned_to: { $regex: 'housekeeping', $options: 'i' } },
+      ],
+    };
+    if (query.status) filter.status = validateServiceRequestStatus(query.status);
     if (query.room_number) filter.room_number = query.room_number;
 
     const requests = await CustomerServiceRequest.find(filter).sort({ createdAt: -1 }).lean();
+    if (role.includes('housekeeping')) {
+      return requests.filter((request) => canAccessServiceRequest(user, request)).map(mapServiceRequest);
+    }
+
     return requests.map(mapServiceRequest);
   },
 
@@ -629,6 +732,35 @@ const housekeepingService = {
     if (!role.includes('manager') && !role.includes('housekeeping')) {
       throw createHttpError('Forbidden', 403);
     }
+    if (!isHousekeepingAssignedRequest(request)) {
+      throw createHttpError('Service request is not assigned to housekeeping', 403);
+    }
+    if (!canAccessServiceRequest(user, request)) {
+      throw createHttpError('Forbidden', 403);
+    }
+    return mapServiceRequest(request);
+  },
+
+  async acceptServiceRequest(id, body = {}, user) {
+    const request = await CustomerServiceRequest.findById(id);
+    if (!request) throw createHttpError('Service request not found', 404);
+    const role = normalizeRole(user);
+    if (!role.includes('manager') && !role.includes('housekeeping')) {
+      throw createHttpError('Forbidden', 403);
+    }
+    if (!isHousekeepingAssignedRequest(request)) {
+      throw createHttpError('Service request is not assigned to housekeeping', 403);
+    }
+    if (!canAccessServiceRequest(user, request)) {
+      throw createHttpError('Forbidden', 403);
+    }
+
+    if (body.internal_note !== undefined) {
+      request.internal_note = String(body.internal_note || '').trim();
+    }
+
+    updateServiceRequestLifecycle(request, 'accepted', user);
+    await request.save();
     return mapServiceRequest(request);
   },
 
@@ -639,11 +771,14 @@ const housekeepingService = {
     if (!role.includes('manager') && !role.includes('housekeeping')) {
       throw createHttpError('Forbidden', 403);
     }
-    if (request.status === 'handled') {
-      throw createHttpError('Service request is already completed', 409);
+    if (!isHousekeepingAssignedRequest(request)) {
+      throw createHttpError('Service request is not assigned to housekeeping', 403);
     }
-    request.status = 'handled';
-    request.handled_at = new Date();
+    if (!canAccessServiceRequest(user, request)) {
+      throw createHttpError('Forbidden', 403);
+    }
+
+    updateServiceRequestLifecycle(request, 'in_progress', user);
     await request.save();
     return mapServiceRequest(request);
   },
@@ -655,23 +790,76 @@ const housekeepingService = {
     if (!role.includes('manager') && !role.includes('housekeeping')) {
       throw createHttpError('Forbidden', 403);
     }
-    request.status = 'handled';
-    request.handled_at = new Date();
+    if (!isHousekeepingAssignedRequest(request)) {
+      throw createHttpError('Service request is not assigned to housekeeping', 403);
+    }
+    if (!canAccessServiceRequest(user, request)) {
+      throw createHttpError('Forbidden', 403);
+    }
+
+    updateServiceRequestLifecycle(request, 'handled', user);
     await request.save();
     return mapServiceRequest(request);
   },
 
-  async unableToCompleteServiceRequest(id, body = {}, user) {
+  async cancelServiceRequest(id, body = {}, user) {
     const request = await CustomerServiceRequest.findById(id);
     if (!request) throw createHttpError('Service request not found', 404);
     const role = normalizeRole(user);
     if (!role.includes('manager') && !role.includes('housekeeping')) {
       throw createHttpError('Forbidden', 403);
     }
-    request.status = 'requested';
-    request.note = String(body.note || request.note || 'Unable to complete');
+    if (!isHousekeepingAssignedRequest(request)) {
+      throw createHttpError('Service request is not assigned to housekeeping', 403);
+    }
+    if (!canAccessServiceRequest(user, request)) {
+      throw createHttpError('Forbidden', 403);
+    }
+
+    if (body.internal_note !== undefined) {
+      request.internal_note = String(body.internal_note || '').trim();
+    }
+    if (body.note !== undefined) {
+      request.note = String(body.note || '').trim();
+    }
+
+    updateServiceRequestLifecycle(request, 'canceled', user);
     await request.save();
     return mapServiceRequest(request);
+  },
+
+  async updateServiceRequest(id, body = {}, user) {
+    const request = await CustomerServiceRequest.findById(id);
+    if (!request) throw createHttpError('Service request not found', 404);
+    const role = normalizeRole(user);
+    if (!role.includes('manager') && !role.includes('housekeeping')) {
+      throw createHttpError('Forbidden', 403);
+    }
+    if (!isHousekeepingAssignedRequest(request)) {
+      throw createHttpError('Service request is not assigned to housekeeping', 403);
+    }
+    if (!canAccessServiceRequest(user, request)) {
+      throw createHttpError('Forbidden', 403);
+    }
+
+    if (body.internal_note !== undefined) {
+      request.internal_note = String(body.internal_note || '').trim();
+    }
+
+    if (body.note !== undefined) {
+      request.note = String(body.note || '').trim();
+    }
+
+    if (body.status !== undefined) {
+      updateServiceRequestLifecycle(request, body.status, user);
+    }
+
+    await request.save();
+    return mapServiceRequest(request);
+  },
+
+  async unableToCompleteServiceRequest(id, body = {}, user) {
+    return this.cancelServiceRequest(id, body, user);
   },
 
   async createInspection(body = {}, user) {
@@ -846,8 +1034,8 @@ const housekeepingService = {
 
     const room = await Room.findOne({ roomName: task.room_number });
     if (room) {
-      room.status = 'Cleaning';
-      room.inspectionStatus = 'Completed';
+      room.status = 'Dirty';
+      room.inspectionStatus = 'Pending';
       await room.save();
     }
     task.status = 'Accepted';

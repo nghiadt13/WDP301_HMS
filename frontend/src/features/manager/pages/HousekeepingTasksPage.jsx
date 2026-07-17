@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
-import { useHousekeepingDashboard, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
+import { useHousekeepingDashboard, useHousekeepingServiceRequests, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
 import { housekeepingApi } from '../services/housekeeping-api.js';
 import '../styles/housekeeping.css';
 
@@ -56,14 +56,28 @@ const toChecklistLabel = (key) => {
   return labels[key] || key;
 };
 
+const normalizeServiceRequestStatus = (value) => String(value || '').toLowerCase().trim();
+
+const isServiceRequestActionAllowed = (action, status) => {
+  const normalized = normalizeServiceRequestStatus(status);
+  if (action === 'accept') return normalized === 'requested';
+  if (action === 'start') return ['requested', 'accepted'].includes(normalized);
+  if (action === 'complete') return ['requested', 'accepted', 'in_progress'].includes(normalized);
+  if (action === 'cancel') return !['handled', 'canceled'].includes(normalized);
+  return true;
+};
+
 const HousekeepingTasksPage = () => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useHousekeepingTasks();
   const dashboardQuery = useHousekeepingDashboard();
+  const serviceRequestQuery = useHousekeepingServiceRequests();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedTaskId, setSelectedTaskId] = useState('');
+  const [selectedRequestId, setSelectedRequestId] = useState('');
+  const [requestInternalNote, setRequestInternalNote] = useState('');
 
   const taskActionMutation = useMutation({
     mutationFn: async ({ action, task }) => {
@@ -100,7 +114,32 @@ const HousekeepingTasksPage = () => {
         queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
         queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] }),
         queryClient.invalidateQueries({ queryKey: ['housekeeping-maintenance'] }),
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-service-requests'] }),
         queryClient.invalidateQueries({ queryKey: ['receptionist-operational-board'] }),
+      ]);
+    },
+    onError: (error) => {
+      window.alert(getMutationErrorMessage(error));
+    },
+  });
+
+  const serviceRequestMutation = useMutation({
+    mutationFn: async ({ action, request, payload }) => {
+      if (!request?.id) return null;
+      if (action !== 'note' && !isServiceRequestActionAllowed(action, request.status)) {
+        throw new Error(`Cannot ${action} when request is in ${request.status} status.`);
+      }
+      if (action === 'accept') return housekeepingApi.acceptServiceRequest(request.id);
+      if (action === 'start') return housekeepingApi.startServiceRequest(request.id);
+      if (action === 'complete') return housekeepingApi.completeServiceRequest(request.id);
+      if (action === 'cancel') return housekeepingApi.cancelServiceRequest(request.id, payload || {});
+      if (action === 'note') return housekeepingApi.updateServiceRequest(request.id, payload || {});
+      return null;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-service-requests'] }),
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
       ]);
     },
     onError: (error) => {
@@ -141,6 +180,29 @@ const HousekeepingTasksPage = () => {
 
   const selectedRoom = selectedTask ? roomsByNumber[selectedTask.roomNumber] || null : null;
 
+  const serviceRequests = useMemo(() => serviceRequestQuery.data || [], [serviceRequestQuery.data]);
+
+  useEffect(() => {
+    if (!serviceRequests.length) {
+      setSelectedRequestId('');
+      setRequestInternalNote('');
+      return;
+    }
+    const hasSelected = serviceRequests.some((request) => request.id === selectedRequestId);
+    if (!hasSelected) {
+      setSelectedRequestId(serviceRequests[0].id);
+    }
+  }, [serviceRequests, selectedRequestId]);
+
+  const selectedServiceRequest = useMemo(
+    () => serviceRequests.find((request) => request.id === selectedRequestId) || null,
+    [serviceRequests, selectedRequestId]
+  );
+
+  useEffect(() => {
+    setRequestInternalNote(selectedServiceRequest?.internalNote || '');
+  }, [selectedServiceRequest?.id, selectedServiceRequest?.internalNote]);
+
   const inspectionQuery = useQuery({
     queryKey: ['housekeeping-room-inspection', selectedTask?.roomNumber],
     queryFn: () => housekeepingApi.getInspectionByRoom(selectedTask.roomNumber),
@@ -177,6 +239,21 @@ const HousekeepingTasksPage = () => {
     await refetch();
   };
 
+  const onServiceRequestAction = async (action, request) => {
+    await serviceRequestMutation.mutateAsync({ action, request });
+    await serviceRequestQuery.refetch();
+  };
+
+  const onSaveServiceRequestNote = async () => {
+    if (!selectedServiceRequest) return;
+    await serviceRequestMutation.mutateAsync({
+      action: 'note',
+      request: selectedServiceRequest,
+      payload: { internal_note: requestInternalNote },
+    });
+    await serviceRequestQuery.refetch();
+  };
+
   if (isLoading) {
     return (
       <div className="housekeeping-page">
@@ -209,6 +286,7 @@ const HousekeepingTasksPage = () => {
         </div>
         <div className="housekeeping-task-actions">
           <button className="housekeeping-outline-btn" type="button" onClick={() => refetch()}><RefreshCw size={14} /> Refresh</button>
+          <button className="housekeeping-outline-btn" type="button" onClick={() => serviceRequestQuery.refetch()}><RefreshCw size={14} /> Refresh Requests</button>
         </div>
       </div>
 
@@ -307,7 +385,7 @@ const HousekeepingTasksPage = () => {
                 <div className="housekeeping-task-kv-grid">
                   <span>Task type</span><b>{selectedTask.cleaningType || 'Checkout Cleaning'}</b>
                   <span>Priority</span><b>{selectedTask.priority || '—'}</b>
-                  <span>Assigned by</span><b>{selectedTask.assignedBy || 'Receptionist'}</b>
+                  <span>Assigned by</span><b>{selectedTask.assignedBy || '—'}</b>
                   <span>Checkout time</span><b>{formatDateTime(selectedTask.checkoutTime)}</b>
                   <span>Due time</span><b>{formatDateTime(selectedTask.dueTime)}</b>
                 </div>
@@ -403,6 +481,143 @@ const HousekeepingTasksPage = () => {
                   onClick={() => onTaskAction('issue', selectedTask)}
                 >
                   Report Maintenance
+                </button>
+              </section>
+            </div>
+          )}
+        </aside>
+      </section>
+
+      <section className="housekeeping-task-workspace">
+        <div className="housekeeping-task-list-pane housekeeping-card">
+          <div className="housekeeping-card-header">
+            <h3>Customer Service Requests</h3>
+            <span className="housekeeping-subtle">Only requests assigned to Housekeeping from MongoDB</span>
+          </div>
+
+          {serviceRequestQuery.isLoading ? (
+            <div className="housekeeping-state-card">
+              <h3>Loading service requests</h3>
+              <p>Fetching requests assigned to housekeeping.</p>
+            </div>
+          ) : serviceRequestQuery.isError ? (
+            <div className="housekeeping-state-card">
+              <h3>Cannot load service requests</h3>
+              <button className="housekeeping-btn" type="button" onClick={() => serviceRequestQuery.refetch()}>Retry</button>
+            </div>
+          ) : (
+            <div className="housekeeping-task-list">
+              {serviceRequests.map((request) => (
+                <button
+                  key={request.id}
+                  type="button"
+                  className={`housekeeping-task-list-item${selectedRequestId === request.id ? ' is-selected' : ''}`}
+                  onClick={() => setSelectedRequestId(request.id)}
+                >
+                  <div className="housekeeping-task-list-item-head">
+                    <strong>Room {request.roomNumber || 'N/A'}</strong>
+                    <HousekeepingStatusBadge value={request.status} />
+                  </div>
+                  <div className="housekeeping-task-list-item-meta">
+                    <span>{request.serviceName || 'Service request'}</span>
+                    <HousekeepingStatusBadge value={request.serviceCategory || 'Housekeeping'} variant="priority" />
+                  </div>
+                  <p>{request.note || 'No customer note provided.'}</p>
+                  <small>Assigned: {request.assignedTo || 'Housekeeping Team'}</small>
+                </button>
+              ))}
+              {!serviceRequests.length ? (
+                <div className="housekeeping-state-card">
+                  <h3>No requests found</h3>
+                  <p>There are no active customer service requests assigned to housekeeping.</p>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        <aside className="housekeeping-task-detail-pane housekeeping-card">
+          {!selectedServiceRequest ? (
+            <div className="housekeeping-state-card">
+              <h3>No request selected</h3>
+              <p>Select a service request to view details.</p>
+            </div>
+          ) : (
+            <div className="housekeeping-task-detail-content">
+              <header className="housekeeping-card-header">
+                <h3>{selectedServiceRequest.serviceName || 'Service request'}</h3>
+                <HousekeepingStatusBadge value={selectedServiceRequest.status} />
+              </header>
+
+              <section className="housekeeping-task-detail-section">
+                <h4>Request details</h4>
+                <div className="housekeeping-task-kv-grid">
+                  <span>Room</span><b>{selectedServiceRequest.roomNumber || '—'}</b>
+                  <span>Category</span><b>{selectedServiceRequest.serviceCategory || 'Housekeeping'}</b>
+                  <span>Assigned to</span><b>{selectedServiceRequest.assignedTo || 'Housekeeping Team'}</b>
+                  <span>Requested at</span><b>{formatDateTime(selectedServiceRequest.requestedAt)}</b>
+                  <span>Started at</span><b>{formatDateTime(selectedServiceRequest.startedAt)}</b>
+                  <span>Completed at</span><b>{formatDateTime(selectedServiceRequest.handledAt)}</b>
+                </div>
+              </section>
+
+              <section className="housekeeping-task-detail-section">
+                <h4>Customer note</h4>
+                <p>{selectedServiceRequest.note || 'No customer note.'}</p>
+              </section>
+
+              <section className="housekeeping-task-detail-section">
+                <h4>Internal note</h4>
+                <textarea
+                  className="housekeeping-maintenance-textarea"
+                  value={requestInternalNote}
+                  onChange={(event) => setRequestInternalNote(event.target.value)}
+                  placeholder="Add internal processing note for housekeeping"
+                />
+                <div className="housekeeping-task-actions">
+                  <button
+                    className="housekeeping-outline-btn"
+                    type="button"
+                    onClick={onSaveServiceRequestNote}
+                    disabled={serviceRequestMutation.isPending}
+                  >
+                    Save Note
+                  </button>
+                </div>
+              </section>
+
+              <section className="housekeeping-task-detail-actions">
+                <button
+                  className="housekeeping-outline-btn"
+                  type="button"
+                  disabled={!isServiceRequestActionAllowed('accept', selectedServiceRequest.status) || serviceRequestMutation.isPending}
+                  onClick={() => onServiceRequestAction('accept', selectedServiceRequest)}
+                >
+                  Accept Request
+                </button>
+                <button
+                  className="housekeeping-outline-btn"
+                  type="button"
+                  disabled={!isServiceRequestActionAllowed('start', selectedServiceRequest.status) || serviceRequestMutation.isPending}
+                  onClick={() => onServiceRequestAction('start', selectedServiceRequest)}
+                >
+                  Start Processing
+                </button>
+                <button
+                  className="housekeeping-btn"
+                  type="button"
+                  disabled={!isServiceRequestActionAllowed('complete', selectedServiceRequest.status) || serviceRequestMutation.isPending}
+                  onClick={() => onServiceRequestAction('complete', selectedServiceRequest)}
+                >
+                  Mark Completed
+                </button>
+                <button
+                  className="housekeeping-outline-btn"
+                  type="button"
+                  disabled={!isServiceRequestActionAllowed('cancel', selectedServiceRequest.status) || serviceRequestMutation.isPending}
+                  onClick={() => onServiceRequestAction('cancel', selectedServiceRequest)}
+                >
+                  Cancel Request
                 </button>
               </section>
             </div>

@@ -125,6 +125,15 @@ const housekeepingController = {
     }
   },
 
+  async acceptServiceRequest(req, res) {
+    try {
+      const data = await housekeepingService.acceptServiceRequest(req.params.id, req.body, req.user);
+      res.status(200).json({ success: true, data, message: 'Service request accepted successfully' });
+    } catch (err) {
+      sendError(res, err);
+    }
+  },
+
   async startServiceRequest(req, res) {
     try {
       const data = await housekeepingService.startServiceRequest(req.params.id, req.user);
@@ -138,6 +147,24 @@ const housekeepingController = {
     try {
       const data = await housekeepingService.completeServiceRequest(req.params.id, req.user);
       res.status(200).json({ success: true, data, message: 'Service request completed successfully' });
+    } catch (err) {
+      sendError(res, err);
+    }
+  },
+
+  async cancelServiceRequest(req, res) {
+    try {
+      const data = await housekeepingService.cancelServiceRequest(req.params.id, req.body, req.user);
+      res.status(200).json({ success: true, data, message: 'Service request cancelled successfully' });
+    } catch (err) {
+      sendError(res, err);
+    }
+  },
+
+  async updateServiceRequest(req, res) {
+    try {
+      const data = await housekeepingService.updateServiceRequest(req.params.id, req.body, req.user);
+      res.status(200).json({ success: true, data, message: 'Service request updated successfully' });
     } catch (err) {
       sendError(res, err);
     }

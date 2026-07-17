@@ -21,15 +21,58 @@ function Get-RoomByIdForReceptionist($roomId) {
 
 $roomsRes = Invoke-RestMethod -Method Get -Uri 'http://localhost:9999/api/housekeeping/rooms?limit=300' -Headers $authRec
 $rooms = $roomsRes.data
-if (-not $rooms -or $rooms.Count -lt 2) {
-  throw 'Need at least 2 rooms in DB for integration verification'
+if (-not $rooms -or $rooms.Count -lt 3) {
+  throw 'Need at least 3 rooms in DB for integration verification'
 }
 
 $roomA = $rooms | Select-Object -First 1
 $roomB = $rooms | Select-Object -Skip 1 -First 1
+$roomC = $rooms | Select-Object -Skip 2 -First 1
+$roomCType = $roomC.room_type_id.name
+if (-not $roomCType) {
+  $roomCType = $roomC.roomTypeName
+}
+if (-not $roomCType) {
+  throw 'Room type is required for manager manual task verification'
+}
+
+$staffRes = Invoke-RestMethod -Method Get -Uri 'http://localhost:9999/api/manager/staff-members' -Headers $authMgr
+$housekeepingStaff = $staffRes.data | Where-Object { $_.role -eq 'housekeeping' } | Select-Object -First 1
+if (-not $housekeepingStaff) {
+  throw 'No housekeeping staff found for manager assignment flow'
+}
 
 Invoke-RestMethod -Method Put -Uri ("http://localhost:9999/api/manager/rooms/{0}" -f $roomA._id) -Headers $authMgr -ContentType 'application/json' -Body (@{ status = 'Occupied' } | ConvertTo-Json) | Out-Null
 Invoke-RestMethod -Method Put -Uri ("http://localhost:9999/api/manager/rooms/{0}" -f $roomB._id) -Headers $authMgr -ContentType 'application/json' -Body (@{ status = 'Occupied' } | ConvertTo-Json) | Out-Null
+Invoke-RestMethod -Method Put -Uri ("http://localhost:9999/api/manager/rooms/{0}" -f $roomC._id) -Headers $authMgr -ContentType 'application/json' -Body (@{ status = 'Occupied' } | ConvertTo-Json) | Out-Null
+
+# Source 2: manager manually creates cleaning task
+$managerTaskBody = @{
+  title = "Deep cleaning room $($roomC.roomName)"
+  description = 'Manual manager assignment for deep cleaning'
+  assigned_staff_id = $housekeepingStaff._id
+  assigned_to = $housekeepingStaff.full_name
+  room_number = $roomC.roomName
+  room_type = $roomCType
+  priority = 'high'
+  status = 'assigned'
+  cleaningType = 'Deep Cleaning'
+  deadline = (Get-Date).AddDays(1).ToString('yyyy-MM-dd')
+} | ConvertTo-Json
+
+$managerTaskRes = Invoke-RestMethod -Method Post -Uri 'http://localhost:9999/api/manager/staff-tasks' -Headers $authMgr -ContentType 'application/json' -Body $managerTaskBody
+$managerTask = $managerTaskRes.data
+
+$hkTasksRoomC = (Invoke-RestMethod -Method Get -Uri ("http://localhost:9999/api/housekeeping/tasks?room_number={0}" -f $roomC.roomName) -Headers $authHk).data
+$hkManagerTask = $hkTasksRoomC | Where-Object { $_.id -eq $managerTask._id } | Select-Object -First 1
+$roomAfterManagerCreate = Get-RoomByIdForReceptionist $roomC._id
+
+Invoke-RestMethod -Method Patch -Uri ("http://localhost:9999/api/housekeeping/tasks/{0}/accept" -f $hkManagerTask.id) -Headers $authHk | Out-Null
+$roomAfterManagerAccept = Get-RoomByIdForReceptionist $roomC._id
+
+Invoke-RestMethod -Method Patch -Uri ("http://localhost:9999/api/housekeeping/tasks/{0}/start" -f $hkManagerTask.id) -Headers $authHk | Out-Null
+Invoke-RestMethod -Method Patch -Uri ("http://localhost:9999/api/housekeeping/tasks/{0}/complete" -f $hkManagerTask.id) -Headers $authHk | Out-Null
+$roomAfterManagerComplete = Get-RoomByIdForReceptionist $roomC._id
 
 # Flow 1: normal cleaning cycle
 $checkout1 = @{ room_number = $roomA.roomName; receptionistNote = 'Checkout confirmed'; priority = 'high'; cleaningType = 'Checkout Cleaning'; checkoutTime = [DateTime]::UtcNow.ToString('o') } | ConvertTo-Json
@@ -79,6 +122,14 @@ Invoke-RestMethod -Method Patch -Uri ("http://localhost:9999/api/housekeeping/ta
 $roomAfterSecondClean = Get-RoomByIdForReceptionist $roomB._id
 
 $result = [ordered]@{
+  managerSource = [ordered]@{
+    room = $roomC.roomName
+    createdTaskId = $managerTask._id
+    housekeepingReceivedTask = [bool]$hkManagerTask
+    roomAfterCreate = $roomAfterManagerCreate.status
+    roomAfterAccept = $roomAfterManagerAccept.status
+    roomAfterComplete = $roomAfterManagerComplete.status
+  }
   flow1 = [ordered]@{
     room = $roomA.roomName
     afterAccept = $roomAfterAccept.status

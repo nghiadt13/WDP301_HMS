@@ -80,7 +80,7 @@ const HousekeepingDashboardPage = () => {
         <div className="housekeeping-card">
           <div className="housekeeping-card-header">
             <h3>Incoming Cleaning Requests</h3>
-            <span className="housekeeping-subtle">Assigned status from receptionist checkout</span>
+            <span className="housekeeping-subtle">Assigned from receptionist checkout and manager operations</span>
           </div>
           <div className="housekeeping-list">
             {tasks.filter((task) => task.status === 'Assigned').slice(0, 6).map((task) => (

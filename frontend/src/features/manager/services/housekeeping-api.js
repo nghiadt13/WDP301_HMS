@@ -13,7 +13,7 @@ const normalizeTask = (task) => ({
   status: task?.status || 'Assigned',
   guestRequest: task?.guestRequest || '',
   assignedTo: task?.assigned_to || 'Housekeeping Team',
-  assignedBy: task?.assignedBy || 'Receptionist',
+  assignedBy: task?.assignedBy || '',
   dueTime: task?.deadline || null,
 });
 
@@ -54,6 +54,27 @@ const normalizeInspection = (inspection) => ({
   status: inspection?.status || '',
   createdAt: inspection?.createdAt || null,
   updatedAt: inspection?.updatedAt || null,
+});
+
+const normalizeServiceRequest = (request) => ({
+  id: request?._id || request?.id || null,
+  customerId: request?.customer_id || null,
+  roomNumber: request?.room_number || '',
+  serviceName: request?.service_name || '',
+  serviceCategory: request?.service_category || '',
+  assignedDepartment: request?.assigned_department || 'Housekeeping',
+  assignedStaffId: request?.assigned_staff_id || null,
+  assignedTo: request?.assigned_to || 'Housekeeping Team',
+  note: request?.note || '',
+  internalNote: request?.internal_note || '',
+  status: request?.status || 'requested',
+  requestedAt: request?.requested_at || request?.createdAt || null,
+  acceptedAt: request?.accepted_at || null,
+  startedAt: request?.started_at || null,
+  handledAt: request?.handled_at || null,
+  canceledAt: request?.canceled_at || null,
+  createdAt: request?.createdAt || null,
+  updatedAt: request?.updatedAt || null,
 });
 
 export const housekeepingApi = {
@@ -156,5 +177,42 @@ export const housekeepingApi = {
   async reportIssue(payload) {
     const response = await axiosClient.post('/housekeeping/report-issue', payload);
     return unwrap(response);
+  },
+
+  async getServiceRequests(params = {}) {
+    const response = await axiosClient.get('/housekeeping/service-requests', { params });
+    const payload = unwrap(response);
+    const rows = Array.isArray(payload) ? payload : [];
+    return rows.map(normalizeServiceRequest);
+  },
+
+  async getServiceRequestById(id) {
+    const response = await axiosClient.get(`/housekeeping/service-requests/${id}`);
+    return normalizeServiceRequest(unwrap(response));
+  },
+
+  async acceptServiceRequest(id, payload = {}) {
+    const response = await axiosClient.patch(`/housekeeping/service-requests/${id}/accept`, payload);
+    return normalizeServiceRequest(unwrap(response));
+  },
+
+  async startServiceRequest(id) {
+    const response = await axiosClient.put(`/housekeeping/service-requests/${id}/start`);
+    return normalizeServiceRequest(unwrap(response));
+  },
+
+  async completeServiceRequest(id) {
+    const response = await axiosClient.put(`/housekeeping/service-requests/${id}/complete`);
+    return normalizeServiceRequest(unwrap(response));
+  },
+
+  async cancelServiceRequest(id, payload = {}) {
+    const response = await axiosClient.put(`/housekeeping/service-requests/${id}/cancel`, payload);
+    return normalizeServiceRequest(unwrap(response));
+  },
+
+  async updateServiceRequest(id, payload = {}) {
+    const response = await axiosClient.patch(`/housekeeping/service-requests/${id}`, payload);
+    return normalizeServiceRequest(unwrap(response));
   },
 };

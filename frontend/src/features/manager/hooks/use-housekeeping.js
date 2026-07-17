@@ -27,3 +27,12 @@ export const useHousekeepingMaintenance = () =>
     staleTime: 5_000,
     refetchInterval: 5_000,
   });
+
+export const useHousekeepingServiceRequests = () =>
+  useQuery({
+    queryKey: ['housekeeping-service-requests'],
+    queryFn: housekeepingApi.getServiceRequests,
+    retry: 1,
+    staleTime: 5_000,
+    refetchInterval: 5_000,
+  });

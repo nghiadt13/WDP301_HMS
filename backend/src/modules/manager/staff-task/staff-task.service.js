@@ -1,5 +1,6 @@
 ﻿const StaffTask = require('../../../models/staffTask.model');
 const User = require('../../../models/user.model');
+const Room = require('../../../models/room.model');
 
 const createHttpError = (message, status = 400) => {
   const error = new Error(message);
@@ -27,7 +28,49 @@ const assertFutureOrToday = (deadline) => {
   }
 };
 
-const buildStaffTaskPayload = (data) => {
+const normalizeWorkflowStatus = (status, fallback = 'Assigned') => {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'assigned') return 'Assigned';
+  if (normalized === 'accepted') return 'Accepted';
+  if (normalized === 'cleaning') return 'Cleaning';
+  if (normalized === 'waitingmaintenance') return 'WaitingMaintenance';
+  if (normalized === 'completed') return 'Completed';
+  if (normalized === 'cancelled' || normalized === 'canceled') return 'Cancelled';
+  return fallback;
+};
+
+const syncRoomStatusByTask = async (task) => {
+  const roomNumber = String(task?.room_number || '').trim();
+  if (!roomNumber) return;
+
+  const room = await Room.findOne({ roomName: roomNumber });
+  if (!room) return;
+
+  const status = String(task?.status || '').trim().toLowerCase();
+  if (status === 'assigned' || status === 'cancelled' || status === 'canceled') {
+    room.status = 'Dirty';
+    room.inspectionStatus = 'Pending';
+  }
+
+  if (status === 'accepted' || status === 'cleaning') {
+    room.status = 'Cleaning';
+    room.inspectionStatus = 'Completed';
+  }
+
+  if (status === 'waitingmaintenance') {
+    room.status = 'Maintenance';
+    room.inspectionStatus = 'Completed';
+  }
+
+  if (status === 'completed') {
+    room.status = 'Available';
+    room.inspectionStatus = 'Completed';
+  }
+
+  await room.save();
+};
+
+const buildStaffTaskPayload = (data, options = {}) => {
   if (!String(data.title || '').trim()) {
     throw createHttpError('Vui long nhap tieu de nhiem vu.');
   }
@@ -54,10 +97,7 @@ const buildStaffTaskPayload = (data) => {
 
   assertFutureOrToday(data.deadline);
 
-  const normalizedStatus = String(data.status || '').trim();
-  const nextStatus = normalizedStatus === 'Completed' || normalizedStatus === 'Cancelled'
-    ? normalizedStatus
-    : 'NotStarted';
+  const nextStatus = normalizeWorkflowStatus(data.status, options.defaultStatus || 'Assigned');
 
   return {
     title: String(data.title).trim(),
@@ -69,6 +109,11 @@ const buildStaffTaskPayload = (data) => {
     room_type: String(data.room_type || data.roomType || '').trim(),
     priority: data.priority || 'medium',
     status: nextStatus,
+    assignedBy: String(options.assignedBy || data.assignedBy || 'Manager').trim() || 'Manager',
+    cleaningType: String(data.cleaningType || data.cleaning_type || 'Scheduled Cleaning').trim(),
+    receptionistNote: String(data.receptionistNote || data.note || '').trim(),
+    guestRequest: String(data.guestRequest || '').trim(),
+    checkoutTime: data.checkoutTime ? new Date(data.checkoutTime) : undefined,
     deadline: new Date(data.deadline),
   };
 };
@@ -98,25 +143,36 @@ const staffTaskService = {
     return StaffTask.find(filter).sort({ createdAt: -1 });
   },
 
-  async createStaffTask(data) {
-    return StaffTask.create(buildStaffTaskPayload(data));
+  async createStaffTask(data, user = {}) {
+    const assignedBy = String(user?.full_name || '').trim() || 'Manager';
+    const task = await StaffTask.create(buildStaffTaskPayload(data, { defaultStatus: 'Assigned', assignedBy }));
+    await syncRoomStatusByTask(task);
+    return task;
   },
 
-  async updateStaffTask(id, data) {
-    const task = await StaffTask.findByIdAndUpdate(id, buildStaffTaskPayload(data), { new: true, runValidators: true });
+  async updateStaffTask(id, data, user = {}) {
+    const assignedBy = String(user?.full_name || '').trim() || 'Manager';
+    const task = await StaffTask.findByIdAndUpdate(
+      id,
+      buildStaffTaskPayload(data, { defaultStatus: 'Assigned', assignedBy }),
+      { new: true, runValidators: true }
+    );
     if (!task) throw createHttpError('Khong tim thay nhiem vu.', 404);
+    await syncRoomStatusByTask(task);
     return task;
   },
 
   async closeStaffTask(id) {
     const task = await StaffTask.findByIdAndUpdate(id, { status: 'Completed' }, { new: true, runValidators: true });
     if (!task) throw createHttpError('Khong tim thay nhiem vu.', 404);
+    await syncRoomStatusByTask(task);
     return task;
   },
 
   async cancelStaffTask(id) {
     const task = await StaffTask.findByIdAndUpdate(id, { status: 'Cancelled' }, { new: true, runValidators: true });
     if (!task) throw createHttpError('Khong tim thay nhiem vu.', 404);
+    await syncRoomStatusByTask(task);
     return task;
   },
 };

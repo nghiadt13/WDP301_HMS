@@ -3,10 +3,39 @@ import { AlertTriangle, CheckCircle2, ClipboardList, Plus, Search, Wrench, X } f
 import { managerApi } from '../services/manager-api.js';
 import './manager-operations.css';
 
-const emptyForm = { title: '', description: '', staff_type: 'housekeeping', assigned_staff_id: '', assigned_to: '', room_number: '', room_type: '', priority: 'medium', status: 'assigned', deadline: '' };
+const emptyForm = {
+  title: '',
+  description: '',
+  staff_type: 'housekeeping',
+  assigned_staff_id: '',
+  assigned_to: '',
+  room_number: '',
+  room_type: '',
+  priority: 'medium',
+  status: 'assigned',
+  cleaningType: 'Scheduled Cleaning',
+  deadline: ''
+};
 const staffTypes = { housekeeping: 'Nhân viên dọn phòng' };
 const priorities = { low: 'Thấp', medium: 'Trung bình', high: 'Cao' };
-const statuses = { assigned: 'Đã giao', in_progress: 'Đang xử lý', closed: 'Hoàn thành', canceled: 'Đã hủy', cancelled: 'Đã hủy' };
+const statuses = {
+  assigned: 'Đã giao',
+  accepted: 'Đã nhận',
+  cleaning: 'Đang dọn phòng',
+  waitingmaintenance: 'Chờ bảo trì',
+  completed: 'Hoàn thành',
+  canceled: 'Đã hủy',
+  cancelled: 'Đã hủy',
+};
+const cleaningTypes = [
+  'Deep Cleaning',
+  'VIP Cleaning',
+  'Scheduled Cleaning',
+  'Inspection Cleaning',
+  'Emergency Cleaning',
+  'Checkout Cleaning',
+  'Post Maintenance Cleaning',
+];
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
 const formatDate = (value) => (value ? new Intl.DateTimeFormat('vi-VN').format(new Date(value)) : 'Chưa có hạn');
@@ -21,10 +50,11 @@ const toForm = (task) => ({
   room_number: task.room_number || '',
   room_type: task.room_type || '',
   priority: task.priority || 'medium',
-  status: task.status || 'assigned',
+  status: normalizeStatus(task.status || 'assigned'),
+  cleaningType: task.cleaningType || 'Scheduled Cleaning',
   deadline: task.deadline ? task.deadline.slice(0, 10) : '',
 });
-const statusTone = (status) => ['closed'].includes(status) ? 'is-good' : ['canceled', 'cancelled'].includes(status) ? 'is-muted' : status === 'in_progress' ? 'is-warning' : 'is-info';
+const statusTone = (status) => ['completed'].includes(status) ? 'is-good' : ['canceled', 'cancelled'].includes(status) ? 'is-muted' : ['cleaning', 'accepted', 'waitingmaintenance'].includes(status) ? 'is-warning' : 'is-info';
 const priorityTone = (priority) => priority === 'high' ? 'is-danger' : priority === 'medium' ? 'is-warning' : 'is-good';
 
 const ManagerStaffTasksPage = () => {
@@ -63,8 +93,8 @@ const ManagerStaffTasksPage = () => {
 
   const stats = useMemo(() => {
     const total = tasks.length;
-    const active = tasks.filter((task) => !['closed', 'canceled', 'cancelled'].includes(normalizeStatus(task.status))).length;
-    const inProgress = tasks.filter((task) => normalizeStatus(task.status) === 'in_progress').length;
+    const active = tasks.filter((task) => !['completed', 'canceled', 'cancelled'].includes(normalizeStatus(task.status))).length;
+    const inProgress = tasks.filter((task) => normalizeStatus(task.status) === 'cleaning').length;
     const highPriority = tasks.filter((task) => task.priority === 'high').length;
     return { total, active, inProgress, highPriority };
   }, [tasks]);
@@ -118,7 +148,13 @@ const ManagerStaffTasksPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const payload = { ...form, staff_type: 'housekeeping', status: isCreating ? 'assigned' : form.status, room_number: form.room_number.trim(), room_type: form.room_type.trim() };
+      const payload = {
+        ...form,
+        staff_type: 'housekeeping',
+        status: isCreating ? 'Assigned' : form.status,
+        room_number: form.room_number.trim(),
+        room_type: form.room_type.trim(),
+      };
       const saved = isEditing ? await managerApi.updateStaffTask(selectedTask._id, payload) : await managerApi.createStaffTask(payload);
       setMessage(isEditing ? 'Lưu thay đổi nhiệm vụ thành công.' : 'Tạo nhiệm vụ thành công.');
       await loadTasks(saved._id);
@@ -184,9 +220,11 @@ const ManagerStaffTasksPage = () => {
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
             <option value="">Tất cả trạng thái</option>
             <option value="assigned">Đã giao</option>
-            <option value="in_progress">Đang xử lý</option>
-            <option value="closed">Hoàn thành</option>
-            <option value="canceled">Đã hủy</option>
+            <option value="accepted">Đã nhận</option>
+            <option value="cleaning">Đang dọn phòng</option>
+            <option value="waitingmaintenance">Chờ bảo trì</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="cancelled">Đã hủy</option>
           </select>
           <button className="manager-ops-button" onClick={openCreateModal} type="button"><Plus size={16} /> Thêm nhiệm vụ</button>
         </div>
@@ -213,7 +251,7 @@ const ManagerStaffTasksPage = () => {
                   <td><strong>{task.room_number || '-'}</strong><small>{task.room_type || 'Chưa có loại phòng'}</small></td>
                   <td><span className={`manager-ops-status ${priorityTone(task.priority)}`}>{priorities[task.priority] || task.priority}</span></td>
                   <td>{formatDate(task.deadline)}</td>
-                  <td><span className={`manager-ops-status ${statusTone(normalizeStatus(task.status))}`}>{statuses[task.status] || task.status}</span></td>
+                  <td><span className={`manager-ops-status ${statusTone(normalizeStatus(task.status))}`}>{statuses[normalizeStatus(task.status)] || task.status}</span></td>
                 </tr>
               )) : <tr><td className="manager-ops-empty" colSpan="7">Không tìm thấy nhiệm vụ phù hợp.</td></tr>}
             </tbody>
@@ -238,8 +276,9 @@ const ManagerStaffTasksPage = () => {
               <label>Giao cho<select name="assigned_staff_id" onChange={handleChange} required value={form.assigned_staff_id}><option value="">Chọn nhân viên</option>{assignableStaff.map((staff) => <option key={staff._id} value={staff._id}>{staff.full_name}</option>)}</select></label>
               <label>Số phòng<select name="room_number" onChange={handleChange} required value={form.room_number}><option value="">Chọn số phòng</option>{rooms.map((room) => <option key={room._id || room.id} value={room.roomName}>{room.roomName}</option>)}</select></label>
               <label>Loại phòng<input readOnly value={form.room_type || 'Chọn số phòng để hiển thị loại phòng'} /></label>
+              <label>Loại vệ sinh<select name="cleaningType" onChange={handleChange} value={form.cleaningType}>{cleaningTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
               <label>Mức ưu tiên<select name="priority" onChange={handleChange} value={form.priority}><option value="low">{priorities.low}</option><option value="medium">{priorities.medium}</option><option value="high">{priorities.high}</option></select></label>
-              {isEditing && <label>Trạng thái<select name="status" onChange={handleChange} value={form.status}>{Object.entries(statuses).filter(([value]) => value !== 'cancelled').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
+              {isEditing && <label>Trạng thái<select name="status" onChange={handleChange} value={form.status}>{Object.entries(statuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
               <label>Hạn hoàn thành<input min={todayInput()} name="deadline" onChange={handleChange} required type="date" value={form.deadline} /></label>
               <label>Mô tả<input name="description" onChange={handleChange} value={form.description} /></label>
               <div className="manager-ops-actions">
