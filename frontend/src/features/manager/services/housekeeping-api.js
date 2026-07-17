@@ -42,6 +42,20 @@ const normalizeMaintenance = (item) => ({
   createdAt: item?.createdAt || null,
 });
 
+const normalizeInspection = (inspection) => ({
+  id: inspection?._id || inspection?.id || null,
+  roomNumber: inspection?.room_number || '',
+  room: inspection?.room || inspection?.room_number || '',
+  guest: inspection?.guest || '',
+  checklist: inspection?.checklist || {},
+  photos: Array.isArray(inspection?.photos) ? inspection.photos : [],
+  note: inspection?.note || '',
+  remarks: inspection?.remarks || '',
+  status: inspection?.status || '',
+  createdAt: inspection?.createdAt || null,
+  updatedAt: inspection?.updatedAt || null,
+});
+
 export const housekeepingApi = {
   async getDashboardSummary() {
     const [dashboardResponse, roomsResponse, tasksResponse, maintenanceResponse] = await Promise.all([
@@ -90,6 +104,28 @@ export const housekeepingApi = {
     const payload = unwrap(response);
     const rows = Array.isArray(payload) ? payload : [];
     return rows.map(normalizeMaintenance);
+  },
+
+  async getMaintenanceRequestById(id) {
+    const response = await axiosClient.get(`/housekeeping/maintenance-requests/${id}`);
+    return normalizeMaintenance(unwrap(response));
+  },
+
+  async updateMaintenanceRequestStatus(id, payload) {
+    const response = await axiosClient.patch(`/housekeeping/maintenance-requests/${id}/status`, payload);
+    return normalizeMaintenance(unwrap(response));
+  },
+
+  async getInspectionByRoom(roomNumber) {
+    try {
+      const response = await axiosClient.get(`/housekeeping/inspection/${encodeURIComponent(roomNumber)}`);
+      return normalizeInspection(unwrap(response));
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   },
 
   async createTask(payload) {

@@ -1,4 +1,5 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
 import CustomerServiceRequestsPage from './features/customer/pages/CustomerServiceRequestsPage.jsx';
@@ -97,9 +98,6 @@ const ReceptionistProtectedRoute = () => {
   return <Outlet />;
 };
 
-
-import { Toaster } from 'react-hot-toast';
-
 const App = () => {
   return (
     <>
@@ -172,4 +170,3 @@ const App = () => {
 };
 
 export default App;
-

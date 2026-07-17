@@ -6,10 +6,11 @@ const getClasses = (value, variant = 'status') => {
     return 'housekeeping-badge low';
   }
 
-  if (['dirty'].includes(normalized)) return 'housekeeping-badge dirty';
-  if (['cleaning', 'in progress'].includes(normalized)) return 'housekeeping-badge cleaning';
+  if (['dirty', 'cancelled', 'closed'].includes(normalized)) return 'housekeeping-badge dirty';
+  if (['cleaning', 'in progress', 'inprogress'].includes(normalized)) return 'housekeeping-badge cleaning';
   if (['waitingmaintenance', 'maintenance'].includes(normalized)) return 'housekeeping-badge dirty';
-  if (['assigned', 'accepted'].includes(normalized)) return 'housekeeping-badge inspection';
+  if (['assigned', 'accepted', 'open'].includes(normalized)) return 'housekeeping-badge inspection';
+  if (['resolved', 'completed'].includes(normalized)) return 'housekeeping-badge ready';
   if (['inspection', 'pending'].includes(normalized)) return 'housekeeping-badge inspection';
   return 'housekeeping-badge ready';
 };
@@ -29,6 +30,10 @@ const labelMap = {
   waitingmaintenance: 'Chờ bảo trì',
   maintenance: 'Bảo trì',
   completed: 'Hoàn thành',
+  open: 'Mới',
+  inprogress: 'Đang xử lý',
+  resolved: 'Đã xử lý',
+  cancelled: 'Đã hủy',
   'in progress': 'Đang xử lý',
   pending: 'Chờ xử lý',
 };
