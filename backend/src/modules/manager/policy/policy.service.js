@@ -34,7 +34,7 @@ const defaultPolicies = [
   {
     title: 'Góp ý và phản hồi',
     category: 'Chăm sóc khách hàng',
-    content: 'Khách có booking đã thanh toán có thể gửi góp ý về kỳ lưu trú. Quản lý khách sạn sẽ tiếp nhận, phản hồi và lưu lịch sử cập nhật góp ý để theo dõi chất lượng dịch vụ.',
+    content: 'Khách có booking đã thanh toán có thể gửi góp ý về kỳ lưu trú. Quản lý khách sạn sẽ tiếp nhận và phản hồi góp ý để theo dõi chất lượng dịch vụ.',
     display_order: 6,
   },
 ];

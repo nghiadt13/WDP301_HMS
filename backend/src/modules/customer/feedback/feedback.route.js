@@ -7,9 +7,9 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
+router.get('/feedback-status', customerFeedbackController.getFeedbackStatus);
 router.get('/feedback-rooms', customerFeedbackController.listFeedbackRooms);
 router.get('/feedbacks', customerFeedbackController.listCustomerFeedbacks);
 router.post('/feedbacks', customerFeedbackController.sendCustomerFeedback);
-router.patch('/feedbacks/:feedbackId', customerFeedbackController.updateCustomerFeedback);
 
 module.exports = router;

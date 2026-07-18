@@ -43,12 +43,6 @@ const customerFeedbackService = {
     if (!feedback) throw createHttpError('Khong tim thay gop y.', 404);
     return feedback;
   },
-
-  async archiveCustomerFeedback(id) {
-    const feedback = await CustomerFeedback.findByIdAndUpdate(id, { status: 'archived' }, { new: true, runValidators: true });
-    if (!feedback) throw createHttpError('Khong tim thay gop y.', 404);
-    return feedback;
-  },
 };
 
 module.exports = customerFeedbackService;

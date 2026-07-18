@@ -1,13 +1,12 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Search, Star, MessageSquare, Archive } from 'lucide-react';
+import { Search, Star, MessageSquare } from 'lucide-react';
 import { managerApi } from '../services/manager-api.js';
 import './manager-operations.css';
 
-const statusLabels = { submitted: 'Chưa phản hồi', Submitted: 'Chưa phản hồi', responded: 'Đã phản hồi', Responded: 'Đã phản hồi', archived: 'Đã lưu trữ', Archived: 'Đã lưu trữ' };
+const statusLabels = { submitted: 'Chưa phản hồi', Submitted: 'Chưa phản hồi', responded: 'Đã phản hồi', Responded: 'Đã phản hồi' };
 const statusTone = (status) => {
   const normalized = String(status || '').toLowerCase();
   if (normalized === 'responded') return 'is-good';
-  if (normalized === 'archived') return 'is-muted';
   return 'is-info';
 };
 const getErrorMessage = (error) => error?.response?.data?.message || error.message || 'Đã có lỗi xảy ra';
@@ -97,17 +96,6 @@ const ManagerCustomerFeedbackPage = () => {
     }
   };
 
-  const handleArchive = async () => {
-    if (!selectedFeedback) return;
-    try {
-      const feedback = await managerApi.archiveCustomerFeedback(selectedFeedback._id);
-      setMessage('Lưu trữ góp ý thành công.');
-      await loadFeedbacks(feedback._id);
-    } catch (error) {
-      setMessage(getErrorMessage(error));
-    }
-  };
-
   return (
     <div className="manager-ops-page manager-figma-page reviews-page">
       {message && <div className="manager-ops-message">{message}</div>}
@@ -150,7 +138,6 @@ const ManagerCustomerFeedbackPage = () => {
             <option value="">Tất cả trạng thái</option>
             <option value="submitted">Chưa phản hồi</option>
             <option value="responded">Đã phản hồi</option>
-            <option value="archived">Đã lưu trữ</option>
           </select>
         </div>
 
@@ -192,7 +179,6 @@ const ManagerCustomerFeedbackPage = () => {
                 <label className="manager-ops-wide">Thêm phản hồi mới<textarea onChange={(event) => setResponseText(event.target.value)} placeholder="Nhập phản hồi cho khách hàng..." required rows="6" value={responseText} /></label>
                 <div className="manager-ops-actions">
                   <button className="manager-ops-button" type="submit"><Star size={15} /> {responses.length ? 'Thêm phản hồi' : 'Gửi phản hồi'}</button>
-                  <button className="manager-ops-danger" onClick={handleArchive} type="button"><Archive size={15} /> Lưu trữ</button>
                 </div>
               </form>
             ) : <div className="manager-ops-detail-empty">Chọn một góp ý để xem chi tiết và phản hồi.</div>}

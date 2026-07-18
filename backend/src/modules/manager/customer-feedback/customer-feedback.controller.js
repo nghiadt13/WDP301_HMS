@@ -25,15 +25,6 @@ const customerFeedbackController = {
       sendError(res, err);
     }
   },
-
-  async archiveCustomerFeedback(req, res) {
-    try {
-      const data = await customerFeedbackService.archiveCustomerFeedback(req.params.feedbackId);
-      res.status(200).json({ success: true, data, message: 'Feedback archived successfully' });
-    } catch (err) {
-      sendError(res, err);
-    }
-  },
 };
 
 module.exports = customerFeedbackController;
