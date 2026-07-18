@@ -101,14 +101,6 @@ const ManagerSidebar = () => {
           );
         })}
       </nav>
-      {!isHousekeepingStaff ? (
-        <div className="rm-promo">
-          <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
-          <h2>Quản lý thông minh, phục vụ tốt hơn</h2>
-          <p>Tự động hóa thủ tục, giám sát hiệu suất và phòng trống.</p>
-          <button type="button">Nâng cấp bản Pro</button>
-        </div>
-      ) : null}
     </aside>
   );
 };

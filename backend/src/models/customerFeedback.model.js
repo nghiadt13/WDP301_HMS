@@ -24,48 +24,6 @@ const managerResponseSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const feedbackHistorySchema = new mongoose.Schema(
-  {
-    room_number: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5,
-    },
-    feedback_text: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    response_text: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    status: {
-      type: String,
-      default: 'submitted',
-    },
-    submitted_at: {
-      type: Date,
-      default: null,
-    },
-    responded_at: {
-      type: Date,
-      default: null,
-    },
-    saved_at: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { _id: false }
-);
-
 const customerFeedbackSchema = new mongoose.Schema(
   {
     customer_id: {
@@ -106,10 +64,6 @@ const customerFeedbackSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
-    },
-    feedback_history: {
-      type: [feedbackHistorySchema],
-      default: [],
     },
     manager_responses: {
       type: [managerResponseSchema],

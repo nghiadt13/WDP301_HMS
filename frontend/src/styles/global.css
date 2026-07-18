@@ -81,6 +81,36 @@ button:disabled {
   outline: none;
 }
 
+.header-feedback-link {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 7px;
+  padding: 8px 10px;
+  position: relative;
+}
+
+.header-feedback-link.has-review-alert {
+  background: #ecfccb;
+  box-shadow: 0 10px 22px rgba(132, 204, 22, 0.24);
+  color: #3f6212;
+}
+
+.header-feedback-link.has-review-alert span {
+  align-items: center;
+  background: #ef4444;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 900;
+  height: 20px;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 6px;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
