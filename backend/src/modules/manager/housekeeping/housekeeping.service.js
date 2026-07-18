@@ -903,6 +903,35 @@ const housekeepingService = {
         total: entry.total || (entry.qty || 1) * (entry.price || 0),
         note: 'Minibar usage recorded during inspection',
       }));
+
+      // Deduct quantity from the physical room's minibar stock
+      if (roomRecord) {
+        if (!roomRecord.minibar) roomRecord.minibar = [];
+        const currentMinibar = [...roomRecord.minibar];
+
+        for (const entry of selectedItems) {
+          const itemName = entry.item || entry.name;
+          const qtyUsed = entry.qty || 1;
+          if (itemName) {
+            const dbItem = await MinibarItem.findOne({ name: itemName });
+            if (dbItem) {
+              const dbItemIdStr = dbItem._id.toString();
+              const itemIndex = currentMinibar.findIndex(m => m.item_id?.toString() === dbItemIdStr);
+              
+              if (itemIndex > -1) {
+                currentMinibar[itemIndex].quantity = Math.max(0, (currentMinibar[itemIndex].quantity || 0) - qtyUsed);
+              } else {
+                // Default room stocking quantity to 5, minus consumed qty
+                currentMinibar.push({
+                  item_id: dbItem._id,
+                  quantity: Math.max(0, 5 - qtyUsed)
+                });
+              }
+            }
+          }
+        }
+        roomRecord.minibar = currentMinibar;
+      }
     }
 
     if (roomRecord) {

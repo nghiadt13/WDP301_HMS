@@ -11,6 +11,7 @@ import ReceptionistBookingListPage from './features/receptionist/pages/Reception
 import ReceptionistBookingDetailPage from './features/receptionist/pages/ReceptionistBookingDetailPage.jsx';
 import WalkinBookingForm from './features/receptionist/components/WalkinBookingForm.jsx';
 import RoomManagePage from './features/manager/pages/RoomManagePage.jsx';
+import PhysicalRoomManagePage from './features/manager/pages/PhysicalRoomManagePage.jsx';
 import AddRoomPage from './features/manager/pages/AddRoomPage.jsx';
 import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
 import AddRoomTypePage from './features/manager/pages/AddRoomTypePage.jsx';
@@ -146,6 +147,7 @@ const App = () => {
           <Route path="manager" element={<ManagerLayout />}>
             <Route index element={<ManagerDashboardPage />} />
             <Route path="rooms" element={<RoomManagePage />} />
+            <Route path="physical-rooms" element={<PhysicalRoomManagePage />} />
             <Route path="rooms/add" element={<AddRoomPage />} />
             <Route path="rooms/:id/edit" element={<EditRoomPage />} />
             <Route path="room-types/add" element={<AddRoomTypePage />} />
