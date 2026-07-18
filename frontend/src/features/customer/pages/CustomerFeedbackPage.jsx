@@ -206,7 +206,7 @@ const CustomerFeedbackPage = () => {
         <div>
           <span className="customer-chip">Góp ý khách hàng</span>
           <h1>Đánh giá kỳ lưu trú</h1>
-          <p>Chọn booking đã hoàn tất/check-out, gửi đánh giá và theo dõi phản hồi chính thức từ quản lý khách sạn.</p>
+          <p>Chọn booking đã thanh toán, gửi đánh giá và theo dõi phản hồi chính thức từ quản lý khách sạn.</p>
         </div>
         <div className="customer-feedback-hero-score">
           <span>{renderStars(existingFeedback?.rating || 0)}</span>
@@ -240,20 +240,20 @@ const CustomerFeedbackPage = () => {
               <p>
                 {isFeedbackLocked
                   ? 'Bạn đã gửi góp ý rồi. Hãy dùng nút Cập nhật góp ý trong phần lịch sử nếu muốn bổ sung.'
-                  : 'Chọn đúng booking đã hoàn tất để quản lý khách sạn xử lý góp ý chính xác hơn.'}
+                  : 'Chọn đúng booking đã thanh toán để quản lý khách sạn xử lý góp ý chính xác hơn.'}
               </p>
             </div>
           </div>
 
           {!canSubmitFeedback ? (
             <div className="customer-empty-state">
-              Tài khoản của bạn chưa có booking đã hoàn tất/check-out để gửi góp ý.
+              Tài khoản của bạn chưa có booking đã thanh toán để gửi góp ý.
             </div>
           ) : null}
 
           <form className="customer-form feedback-form" onSubmit={handleSubmit}>
             <label className="full">
-              Phòng / booking đã đặt
+              Phòng / booking đã thanh toán
               <select
                 disabled={isFeedbackLocked || !canSubmitFeedback}
                 name="reservationId"

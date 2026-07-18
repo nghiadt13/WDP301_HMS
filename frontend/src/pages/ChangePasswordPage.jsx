@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import axiosClient from '../api/axiosClient';
-import PasswordInput from '../components/PasswordInput';
-import { getApiValidationErrors, getPasswordValidationErrors } from '../utils/passwordValidation';
 
 const ChangePasswordPage = () => {
   const navigate = useNavigate();
@@ -14,7 +12,6 @@ const ChangePasswordPage = () => {
   });
   const [message, setMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [validationErrors, setValidationErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -35,11 +32,9 @@ const ChangePasswordPage = () => {
     event.preventDefault();
     setMessage('');
     setErrorMessage('');
-    setValidationErrors([]);
 
-    const passwordErrors = getPasswordValidationErrors(formData.new_password, 'New password');
-    if (passwordErrors.length > 0) {
-      setValidationErrors(passwordErrors);
+    if (formData.new_password.length < 8) {
+      setErrorMessage('New password must be at least 8 characters long.');
       return;
     }
 
@@ -59,12 +54,6 @@ const ChangePasswordPage = () => {
         confirm_password: ''
       });
     } catch (error) {
-      const apiValidationErrors = getApiValidationErrors(error);
-      if (apiValidationErrors.length > 0) {
-        setValidationErrors(apiValidationErrors);
-        return;
-      }
-
       setErrorMessage(error.response?.data?.message || 'Cannot change password right now.');
     } finally {
       setIsSubmitting(false);
@@ -83,7 +72,8 @@ const ChangePasswordPage = () => {
         <form onSubmit={handleSubmit}>
           <label>
             <span>Current Password</span>
-            <PasswordInput
+            <input
+              type="password"
               name="current_password"
               value={formData.current_password}
               onChange={handleChange}
@@ -94,21 +84,20 @@ const ChangePasswordPage = () => {
 
           <label>
             <span>New Password</span>
-            <PasswordInput
+            <input
+              type="password"
               name="new_password"
               value={formData.new_password}
               onChange={handleChange}
               autoComplete="new-password"
               placeholder="Enter new password"
             />
-            <small className="password-requirement">
-              At least 8 characters with uppercase, lowercase, number, and special character.
-            </small>
           </label>
 
           <label>
             <span>Confirm New Password</span>
-            <PasswordInput
+            <input
+              type="password"
               name="confirm_password"
               value={formData.confirm_password}
               onChange={handleChange}
@@ -119,13 +108,6 @@ const ChangePasswordPage = () => {
 
           {message ? <p className="change-password-message">{message}</p> : null}
           {errorMessage ? <p className="change-password-error">{errorMessage}</p> : null}
-          {validationErrors.length > 0 ? (
-            <ul className="password-error-list">
-              {validationErrors.map((error) => (
-                <li key={error}>{error}</li>
-              ))}
-            </ul>
-          ) : null}
 
           <div className="change-password-actions">
             <button type="submit" disabled={isSubmitting}>

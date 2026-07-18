@@ -27,6 +27,18 @@ const authController = {
 
   resetPassword(req, res, next) {
     return authService.resetPassword(req, res, next);
+  },
+
+  recentSessions(req, res, next) {
+    return authService.recentSessions(req, res, next);
+  },
+
+  revokeSession(req, res, next) {
+    return authService.revokeSession(req, res, next);
+  },
+
+  logout(req, res, next) {
+    return authService.logout(req, res, next);
   }
 };
 

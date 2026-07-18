@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   BedDouble,
   CalendarDays,
   CheckCircle2,
   CreditCard,
-  Loader2,
+  RefreshCw,
   ShieldCheck,
-  Users,
-  X,
-  XCircle
+  Users
 } from 'lucide-react';
 
 import axiosClient from '../api/axiosClient';
@@ -48,24 +46,17 @@ const getNightCount = (checkInDate, checkOutDate) => {
 
 const PaymentPage = () => {
   const { reservationId } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const [pageData, setPageData] = useState({
-    hotelPolicies: [],
-    paymentSummary: null,
     reservation: null,
     room: null
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
-  const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
-  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [isMockPaying, setIsMockPaying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [paymentError, setPaymentError] = useState('');
-
-  const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const vnpayStatus = queryParams.get('vnpayStatus') || '';
-  const vnpayMessage = queryParams.get('message') || '';
+  const [paymentStatus, setPaymentStatus] = useState(null);
 
   useEffect(() => {
     const loadReservation = async () => {
@@ -78,20 +69,13 @@ const PaymentPage = () => {
       setErrorMessage('');
 
       try {
-        const [reservationResponse, paymentResponse, policyResponse] = await Promise.all([
-          axiosClient.get(`/reservations/${reservationId}`),
-          axiosClient.get(`/payments/reservations/${reservationId}/status`),
-          axiosClient.get('/payments/hotel-policies')
-        ]);
-
+        const response = await axiosClient.get(`/reservations/${reservationId}`);
         setPageData({
-          hotelPolicies: policyResponse.data?.policies || [],
-          paymentSummary: paymentResponse.data || null,
-          reservation: reservationResponse.data.reservation || null,
-          room: reservationResponse.data.room || null
+          reservation: response.data.reservation || null,
+          room: response.data.room || null
         });
       } catch (error) {
-        setErrorMessage(error.response?.data?.message || 'Không thể tải thông tin đặt phòng.');
+        setErrorMessage(error.response?.data?.message || 'Không thể tải thông tin thanh toán.');
       } finally {
         setIsLoading(false);
       }
@@ -102,52 +86,97 @@ const PaymentPage = () => {
 
   const reservation = pageData.reservation;
   const room = pageData.room;
-  const paymentSummary = pageData.paymentSummary;
-  const hotelPolicies = pageData.hotelPolicies || [];
   const nights = useMemo(
     () => getNightCount(reservation?.checkInDate, reservation?.checkOutDate),
     [reservation?.checkInDate, reservation?.checkOutDate]
   );
-  const paidAmount = Number(paymentSummary?.paidAmount ?? reservation?.depositAmount ?? 0);
-  const remainingAmount = Number(
-    paymentSummary?.remainingAmount ?? Math.max(Number(reservation?.totalAmount || 0) - paidAmount, 0)
-  );
-  const paymentStatus = paymentSummary?.paymentStatus || reservation?.paymentStatus || 'Unpaid';
-  const isPaid = remainingAmount <= 0 || /^paid$/i.test(paymentStatus);
+  const currentPaymentStatus = paymentStatus?.paymentStatus || reservation?.paymentStatus || 'Unpaid';
+  const paidAmount = paymentStatus?.paidAmount ?? reservation?.depositAmount ?? 0;
+  const remainingAmount = paymentStatus?.remainingAmount ?? Math.max(Number(reservation?.totalAmount || 0) - Number(paidAmount || 0), 0);
+  const isPaid = Number(remainingAmount || 0) <= 0 || /^paid$/i.test(String(currentPaymentStatus));
 
-  const handleVnpayPayment = async () => {
-    if (!reservation || isPaid) {
+  const applyPaymentStatus = (statusPayload) => {
+    setPaymentStatus(statusPayload);
+
+    setPageData((currentData) => ({
+      ...currentData,
+      reservation: {
+        ...currentData.reservation,
+        bookingStatus:
+          currentData.reservation?.bookingStatus === 'Pending'
+            ? 'Confirmed'
+            : currentData.reservation?.bookingStatus,
+        depositAmount: statusPayload.paidAmount,
+        paymentStatus: statusPayload.paymentStatus
+      }
+    }));
+  };
+
+  const checkPaymentStatus = async ({ silent = false } = {}) => {
+    if (!reservation?.id) {
       return;
     }
 
-    if (!isPolicyAccepted) {
-      setPaymentError('Vui lòng đồng ý điều khoản của khách sạn trước khi thanh toán.');
+    if (!silent) {
+      setIsCheckingPayment(true);
+      setPaymentError('');
+    }
+
+    try {
+      const response = await axiosClient.get(`/payments/reservations/${reservation.id}/status`);
+
+      if (/paid/i.test(String(response.data.paymentStatus || ''))) {
+        applyPaymentStatus(response.data);
+      } else {
+        setPaymentStatus(response.data);
+      }
+    } catch (error) {
+      if (!silent) {
+        setPaymentError(error.response?.data?.message || 'Không thể kiểm tra trạng thái thanh toán.');
+      }
+    } finally {
+      if (!silent) {
+        setIsCheckingPayment(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!reservation?.id || isPaid) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      checkPaymentStatus({ silent: true });
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [reservation?.id, isPaid]);
+
+  const handleMockPayment = async () => {
+    if (!reservation?.id || isPaid) {
       return;
     }
 
-    setIsCreatingPayment(true);
+    setIsMockPaying(true);
     setPaymentError('');
 
     try {
-      const response = await axiosClient.post(`/payments/reservations/${reservation.id}/vnpay`, {
-        acceptedHotelPolicies: true
+      const response = await axiosClient.post(`/payments/reservations/${reservation.id}/mock`, {
+        provider: 'MockAPI',
+        cardLast4: '4242'
       });
 
-      if (response.data.paymentUrl) {
-        window.location.assign(response.data.paymentUrl);
-        return;
-      }
-
-      setPaymentError(response.data.message || 'Không thể tạo phiên thanh toán VNPAY.');
+      applyPaymentStatus(response.data);
     } catch (error) {
-      setPaymentError(error.response?.data?.message || 'Không thể tạo thanh toán VNPAY sandbox.');
+      setPaymentError(error.response?.data?.message || 'Không thể thanh toán bằng MockAPI.');
     } finally {
-      setIsCreatingPayment(false);
+      setIsMockPaying(false);
     }
   };
 
   if (isLoading) {
-    return <section className="payment-state">Đang tải thông tin đặt phòng...</section>;
+    return <section className="payment-state">Đang tải thông tin thanh toán...</section>;
   }
 
   if (errorMessage || !reservation) {
@@ -171,10 +200,7 @@ const PaymentPage = () => {
           <header>
             <span>Hotelify payment</span>
             <h1>Thanh toán đặt phòng</h1>
-            <p>
-              Booking của bạn đã được tạo. Hoàn tất thanh toán qua VNPAY sandbox để hệ thống xác nhận
-              trạng thái thanh toán tự động.
-            </p>
+            <p>Booking của bạn đã được tạo. Dùng MockAPI để giả lập thanh toán thành công và cập nhật trạng thái đặt phòng.</p>
           </header>
 
           <div className="payment-room-preview">
@@ -211,60 +237,39 @@ const PaymentPage = () => {
             </span>
           </div>
 
-          <section className="vnpay-payment-card">
-            <div className="vnpay-payment-heading">
+          <section className="payment-method-card">
+            <h2>Phương thức thanh toán</h2>
+            <label>
+              <input type="radio" name="payment-method" checked readOnly />
               <span>
-                <CreditCard size={18} />
-                VNPAY sandbox
-              </span>
-              <strong>{isPaid ? 'Paid' : paymentStatus}</strong>
-            </div>
-
-            {vnpayStatus === 'success' ? (
-              <p className="vnpay-payment-message is-success">
-                <CheckCircle2 size={18} />
-                Thanh toán VNPAY thành công. Booking đã được cập nhật.
-              </p>
-            ) : null}
-
-            {vnpayStatus === 'failed' ? (
-              <p className="vnpay-payment-message is-error">
-                <XCircle size={18} />
-                Thanh toán VNPAY chưa thành công{vnpayMessage ? `: ${vnpayMessage}` : '.'}
-              </p>
-            ) : null}
-
-            <p>
-              Hệ thống sẽ chuyển bạn sang cổng thanh toán VNPAY sandbox. Sau khi thanh toán xong,
-              VNPAY sẽ trả kết quả về Hotelify và cập nhật booking.
-            </p>
-
-            <label className="hotel-policy-consent">
-              <input
-                type="checkbox"
-                checked={isPolicyAccepted}
-                disabled={isPaid}
-                onChange={(event) => {
-                  setIsPolicyAccepted(event.target.checked);
-                  if (event.target.checked) {
-                    setPaymentError('');
-                  }
-                }}
-              />
-              <span>
-                Tôi đã đọc và đồng ý với{' '}
-                <button type="button" onClick={() => setIsPolicyModalOpen(true)}>
-                  điều khoản của khách sạn
-                </button>
+                <strong>MockAPI thanh toán demo</strong>
+                <small>Giả lập giao dịch thành công để kiểm thử luồng booking trước khi nối cổng thanh toán thật.</small>
               </span>
             </label>
+          </section>
 
-            {paymentError ? <p className="vnpay-payment-error">{paymentError}</p> : null}
+          <section className="vietqr-payment-card mockapi-payment-card">
+            <div className="vietqr-payment-heading">
+              <span><CreditCard size={18} /> MockAPI</span>
+              <strong>{currentPaymentStatus}</strong>
+            </div>
 
-            <button type="button" onClick={handleVnpayPayment} disabled={isCreatingPayment || isPaid || !isPolicyAccepted}>
-              {isCreatingPayment ? <Loader2 size={18} className="spin-icon" /> : <CreditCard size={18} />}
-              {isPaid ? 'Đã thanh toán' : `Thanh toán ${formatCurrency(remainingAmount)}`}
-            </button>
+            {isPaid ? (
+              <div className="vietqr-paid-state">
+                <CheckCircle2 size={32} />
+                <strong>Thanh toán đã được xác nhận bằng MockAPI.</strong>
+              </div>
+            ) : (
+              <div className="mockapi-payment-box">
+                <p>MockAPI sẽ tạo một giao dịch thành công và cập nhật booking sang trạng thái đã thanh toán.</p>
+                <button type="button" disabled={isMockPaying} onClick={handleMockPayment}>
+                  <CreditCard size={17} />
+                  {isMockPaying ? 'Đang thanh toán...' : `Thanh toán ${formatCurrency(remainingAmount)}`}
+                </button>
+              </div>
+            )}
+
+            {paymentError ? <p className="vietqr-payment-error">{paymentError}</p> : null}
           </section>
         </article>
 
@@ -297,62 +302,17 @@ const PaymentPage = () => {
           </div>
           <p>
             <ShieldCheck size={17} />
-            Trạng thái thanh toán: {paymentStatus}
+            Trạng thái thanh toán: {currentPaymentStatus}
           </p>
+          <button type="button" disabled={isCheckingPayment} onClick={() => checkPaymentStatus()}>
+            <RefreshCw size={17} />
+            {isCheckingPayment ? 'Đang kiểm tra...' : 'Kiểm tra thanh toán'}
+          </button>
           <button type="button" onClick={() => navigate('/profile')}>
             Xem booking của tôi
           </button>
         </aside>
       </div>
-
-      {isPolicyModalOpen ? (
-        <div className="hotel-policy-modal-backdrop" role="presentation" onMouseDown={() => setIsPolicyModalOpen(false)}>
-          <section
-            className="hotel-policy-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="hotel-policy-modal-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <header>
-              <div>
-                <span>Hotelify policies</span>
-                <h2 id="hotel-policy-modal-title">Điều khoản của khách sạn</h2>
-              </div>
-              <button type="button" aria-label="Đóng điều khoản" onClick={() => setIsPolicyModalOpen(false)}>
-                <X size={20} />
-              </button>
-            </header>
-
-            <div className="hotel-policy-modal-content">
-              {hotelPolicies.length > 0 ? (
-                hotelPolicies.map((policy) => (
-                  <article key={policy.id} className="hotel-policy-item">
-                    <span>{policy.category || 'Chính sách'}</span>
-                    <h3>{policy.title}</h3>
-                    <p>{policy.content}</p>
-                  </article>
-                ))
-              ) : (
-                <p className="hotel-policy-empty">Chưa có điều khoản khách sạn đang hoạt động.</p>
-              )}
-            </div>
-
-            <footer>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPolicyAccepted(true);
-                  setPaymentError('');
-                  setIsPolicyModalOpen(false);
-                }}
-              >
-                Đồng ý điều khoản
-              </button>
-            </footer>
-          </section>
-        </div>
-      ) : null}
     </section>
   );
 };

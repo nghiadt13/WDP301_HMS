@@ -5,12 +5,12 @@ const authorize = require('../../../middlewares/authorize.middleware');
 
 const router = express.Router();
 
-router.use(authMiddleware, authorize('manager'));
+router.use(authMiddleware);
 
-router.get('/minibar-items', minibarController.getMinibarItems);
-router.post('/minibar-items', minibarController.createMinibarItem);
-router.put('/minibar-items/:itemId', minibarController.updateMinibarItem);
-router.patch('/minibar-items/:itemId/deactivate', minibarController.deactivateMinibarItem);
-router.patch('/minibar-items/:itemId/activate', minibarController.activateMinibarItem);
+router.get('/minibar-items', authorize('manager', 'housekeeping'), minibarController.getMinibarItems);
+router.post('/minibar-items', authorize('manager'), minibarController.createMinibarItem);
+router.put('/minibar-items/:itemId', authorize('manager'), minibarController.updateMinibarItem);
+router.patch('/minibar-items/:itemId/deactivate', authorize('manager'), minibarController.deactivateMinibarItem);
+router.patch('/minibar-items/:itemId/activate', authorize('manager'), minibarController.activateMinibarItem);
 
 module.exports = router;

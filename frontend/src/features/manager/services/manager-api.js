@@ -21,4 +21,9 @@ export const managerApi = {
   getCustomerFeedbacks: (params) => axiosClient.get('/manager/customer-feedbacks', { params }).then(unwrap),
   respondCustomerFeedback: (id, responseText) => axiosClient.patch(`/manager/customer-feedbacks/${id}/respond`, { responseText }).then(unwrap),
   archiveCustomerFeedback: (id) => axiosClient.patch(`/manager/customer-feedbacks/${id}/archive`).then(unwrap),
+
+  getPolicies: () => axiosClient.get('/manager/policies').then(unwrap),
+  createPolicy: (data) => axiosClient.post('/manager/policies', data).then(unwrap),
+  updatePolicy: (id, data) => axiosClient.put(`/manager/policies/${id}`, data).then(unwrap),
+  deletePolicy: (id) => axiosClient.delete(`/manager/policies/${id}`).then(unwrap),
 };

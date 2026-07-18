@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBooking } from '../hooks/use-checkin';
 import CheckinWizard from '../components/CheckinWizard.jsx';
+import CheckoutWizard from '../components/CheckoutWizard.jsx';
 import { Calendar, User, CreditCard, BedDouble, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 const ReceptionistBookingDetailPage = () => {
@@ -9,6 +10,7 @@ const ReceptionistBookingDetailPage = () => {
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useBooking(id);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isCheckoutWizardOpen, setIsCheckoutWizardOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -66,7 +68,7 @@ const ReceptionistBookingDetailPage = () => {
   };
 
   const isCheckinBtnVisible = !['CheckedIn', 'CheckedOut', 'Completed', 'Canceled'].includes(booking.bookingStatus);
-
+  const isCheckoutBtnVisible = booking.bookingStatus === 'CheckedIn';
   return (
     <div className="booking-detail-container">
       <button
@@ -272,6 +274,21 @@ const ReceptionistBookingDetailPage = () => {
                 )}
               </div>
             )}
+
+            {/* Nút hành động Check-out */}
+            {isCheckoutBtnVisible && (
+              <div className="checkin-action-area" style={{ marginTop: '16px' }}>
+                <button
+                  type="button"
+                  className="btn-checkin-primary"
+                  style={{ background: 'var(--orange)', borderColor: 'var(--orange)' }}
+                  onClick={() => setIsCheckoutWizardOpen(true)}
+                >
+                  <CheckCircle2 size={18} />
+                  Tiến hành trả phòng (Check-out)
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -282,6 +299,17 @@ const ReceptionistBookingDetailPage = () => {
           onClose={() => setIsWizardOpen(false)}
           onComplete={() => {
             setIsWizardOpen(false);
+            refetch(); // reload booking details
+          }}
+        />
+      )}
+
+      {isCheckoutWizardOpen && (
+        <CheckoutWizard
+          bookingId={id}
+          onClose={() => setIsCheckoutWizardOpen(false)}
+          onComplete={() => {
+            setIsCheckoutWizardOpen(false);
             refetch(); // reload booking details
           }}
         />

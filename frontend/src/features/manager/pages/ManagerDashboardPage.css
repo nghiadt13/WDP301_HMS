@@ -47,13 +47,13 @@
 .manager-main-column { flex: 1; min-width: 720px; display: grid; gap: 24px; }
 .manager-side-column { width: 320px; flex: 0 0 320px; display: grid; align-content: start; gap: 24px; }
 .manager-grid { display: grid; gap: 16px; }
-.manager-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.manager-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .manager-charts, .manager-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .manager-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); padding: 24px; }
 .manager-card h2 { margin: 0; font-size: 16px; letter-spacing: -0.01em; }
 .manager-card-heading { justify-content: space-between; gap: 12px; margin-bottom: 22px; }
 .manager-card-heading button, .manager-booking-heading button { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 10px; background: #f8fafc; color: #4b5563; cursor: pointer; font-size: 12px; padding: 8px 12px; }
-.manager-greeting { display: flex; flex-direction: column; justify-content: space-between; }
+.manager-greeting { display: flex; flex-direction: column; justify-content: space-between; grid-column: span 2; }
 .manager-greeting h2 { font-size: 21px; }
 .manager-greeting p, .manager-muted { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
 .manager-earnings { margin-top: 22px; overflow: hidden; position: relative; border-radius: 14px; background: linear-gradient(135deg, var(--blue), var(--blue-dark)); color: #fff; padding: 16px; }

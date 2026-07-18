@@ -1,8 +1,8 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 import CustomerFeedbackPage from './features/customer/pages/CustomerFeedbackPage.jsx';
-import CustomerServiceRequestsPage from './features/customer/pages/CustomerServiceRequestsPage.jsx';
-import CustomerServicesPage from './features/customer/pages/CustomerServicesPage.jsx';
+import CustomerPoliciesPage from './features/customer/pages/CustomerPoliciesPage.jsx';
 
 import ManagerDashboardPage from './features/manager/pages/ManagerDashboardPage.jsx';
 import ReceptionistDashboardPage from './features/receptionist/pages/ReceptionistDashboardPage.jsx';
@@ -16,12 +16,18 @@ import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
 import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPage.jsx';
 import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
+import ManagerPoliciesPage from './features/manager/pages/ManagerPoliciesPage.jsx';
+import HousekeepingDashboardPage from './features/manager/pages/HousekeepingDashboardPage.jsx';
+import HousekeepingTasksPage from './features/manager/pages/HousekeepingTasksPage.jsx';
+import HousekeepingSchedulePage from './features/manager/pages/HousekeepingSchedulePage.jsx';
 import ManagerLayout from './features/manager/layouts/ManagerLayout.jsx';
+
 
 import AdminLayout from './features/admin/layouts/AdminLayout.jsx';
 import AdminDashboardPage from './features/admin/pages/AdminDashboardPage.jsx';
 import AdminAccountsPage from './features/admin/pages/AdminAccountsPage.jsx';
 import AdminRolesPage from './features/admin/pages/AdminRolesPage.jsx';
+import AdminProfilePage from './features/admin/pages/AdminProfilePage.jsx';
 
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
@@ -46,14 +52,34 @@ const getStoredUser = () => {
   }
 };
 
+const AuthenticatedRoute = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('hotelify_token');
+
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
+};
+
 const ManagerProtectedRoute = () => {
   const location = useLocation();
   const token = localStorage.getItem('hotelify_token');
   const user = getStoredUser();
   const roleName = String(user?.role?.name || '').toLowerCase();
+  const allowedHousekeepingPaths = ['/manager', '/manager/housekeeping', '/manager/housekeeping/tasks', '/manager/housekeeping/schedule', '/manager/minibar'];
 
-  if (!token || !roleName.includes('manager')) {
+  if (!token || !(roleName.includes('manager') || roleName.includes('housekeeping'))) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (roleName.includes('housekeeping') && !allowedHousekeepingPaths.includes(location.pathname)) {
+    return <Navigate to="/manager/housekeeping" replace state={{ from: location }} />;
+  }
+
+  if (roleName.includes('housekeeping') && location.pathname === '/manager') {
+    return <Navigate to="/manager/housekeeping" replace state={{ from: location }} />;
   }
 
   return <Outlet />;
@@ -87,8 +113,10 @@ const ReceptionistProtectedRoute = () => {
 
 const App = () => {
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
+    <>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route element={<MainLayout />}>
         {/* Public routes */}
         <Route index element={<HomePage />} />
         <Route path="home" element={<HomePage />} />
@@ -103,12 +131,13 @@ const App = () => {
         <Route path="rooms/:roomId" element={<RoomDetailPage />} />
 
         {/* Authenticated routes */}
-        <Route path="profile" element={<MyProfilePage />} />
-        <Route path="change-password" element={<ChangePasswordPage />} />
-        <Route path="payment/:reservationId" element={<PaymentPage />} />
-        <Route path="customer/services" element={<CustomerServicesPage />} />
-        <Route path="customer/service-requests" element={<CustomerServiceRequestsPage />} />
-        <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
+        <Route element={<AuthenticatedRoute />}>
+          <Route path="profile" element={<MyProfilePage />} />
+          <Route path="change-password" element={<ChangePasswordPage />} />
+          <Route path="payment/:reservationId" element={<PaymentPage />} />
+          <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
+          <Route path="customer/policies" element={<CustomerPoliciesPage />} />
+        </Route>
 
         {/* Manager routes */}
         <Route element={<ManagerProtectedRoute />}>
@@ -117,9 +146,15 @@ const App = () => {
             <Route path="rooms" element={<RoomManagePage />} />
             <Route path="rooms/add" element={<AddRoomPage />} />
             <Route path="rooms/:id/edit" element={<EditRoomPage />} />
+            <Route path="housekeeping" element={<HousekeepingDashboardPage />} />
+            <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
+            <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />
+            <Route path="staff-task" element={<ManagerStaffTasksPage />} />
             <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
+            <Route path="minibar" element={<ManagerMinibarItemsPage />} />
             <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
             <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
+            <Route path="policies" element={<ManagerPoliciesPage />} />
           </Route>
         </Route>
 
@@ -129,6 +164,7 @@ const App = () => {
             <Route index element={<AdminDashboardPage />} />
             <Route path="accounts" element={<AdminAccountsPage />} />
             <Route path="roles" element={<AdminRolesPage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
           </Route>
         </Route>
 
@@ -142,11 +178,12 @@ const App = () => {
           </Route>
         </Route>
 
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    </>
   );
 };
 
 export default App;
-

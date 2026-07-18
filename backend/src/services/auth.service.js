@@ -3,6 +3,7 @@ const crypto = require('crypto');
 
 const Role = require('../models/role.model');
 const User = require('../models/user.model');
+const SecurityLog = require('../models/security-log.model');
 const asyncHandler = require('../utils/async-handler');
 const { verifyGoogleIdToken } = require('../utils/google-auth');
 const { sendPasswordResetEmail } = require('../utils/mail.utils');
@@ -11,6 +12,10 @@ const { signAuthToken } = require('../utils/token');
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 const normalizeText = (value) => String(value || '').trim();
 const normalizeLoginAccount = (value) => String(value || '').trim().toLowerCase();
+
+const isValidEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
 const getAuthProviders = (user) => {
   const providers = Array.isArray(user?.auth_providers) && user.auth_providers.length > 0
@@ -26,10 +31,6 @@ const hasLocalPassword = (user) => {
   return getAuthProviders(user).includes('local') && !passwordHash.startsWith('google:');
 };
 
-const isValidEmail = (email) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-};
-
 const getPasswordValidationErrors = (password) => {
   const value = typeof password === 'string' ? password : '';
   const errors = [];
@@ -37,29 +38,25 @@ const getPasswordValidationErrors = (password) => {
   if (value.length < 8) {
     errors.push('Password must be at least 8 characters long');
   }
-
   if (!/[A-Z]/.test(value)) {
-    errors.push('Password must include at least 1 uppercase letter');
+    errors.push('Password must contain at least 1 uppercase letter');
   }
-
   if (!/[a-z]/.test(value)) {
-    errors.push('Password must include at least 1 lowercase letter');
+    errors.push('Password must contain at least 1 lowercase letter');
   }
-
   if (!/\d/.test(value)) {
-    errors.push('Password must include at least 1 number');
+    errors.push('Password must contain at least 1 number');
   }
-
   if (!/[^A-Za-z0-9]/.test(value)) {
-    errors.push('Password must include at least 1 special character');
+    errors.push('Password must contain at least 1 special character');
   }
 
   return errors;
 };
 
-const sendPasswordValidationError = (res, errors) => {
+const sendPasswordValidationError = (res, errors, message = 'Password does not meet security requirements') => {
   return res.status(400).send({
-    message: errors[0],
+    message,
     errors
   });
 };
@@ -79,9 +76,15 @@ const PASSWORD_RESET_SUCCESS_MESSAGE =
 const hashResetToken = (token) => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
+const getClientIp = (req) => {
+  let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || 'Unknown IP';
+  if (ip === '::1') return '127.0.0.1';
+  if (ip.includes('::ffff:')) return ip.split(':').pop();
+  return ip.split(',')[0].trim();
+};
 
-const sendAuthResponse = (res, statusCode, user, role, message) => {
-  const token = signAuthToken(user, role);
+const sendAuthResponse = (res, statusCode, user, role, message, sessionId) => {
+  const token = signAuthToken(user, role, sessionId);
 
   res.status(statusCode).send({
     message,
@@ -208,7 +211,17 @@ const register = asyncHandler(async (req, res) => {
     accepted_terms_at: new Date()
   });
 
-  sendAuthResponse(res, 201, user, customerRole, 'Account created successfully');
+  const sessionId = crypto.randomUUID();
+
+  await SecurityLog.create({
+    event_type: 'SUCCESSFUL_LOGIN',
+    ip_address: getClientIp(req),
+    target_account: user.login_account,
+    session_id: sessionId,
+    details: req.headers['user-agent'] || 'Unknown Device'
+  }).catch(err => console.error('Failed to write security log:', err));
+
+  sendAuthResponse(res, 201, user, customerRole, 'Account created successfully', sessionId);
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -228,8 +241,8 @@ const login = asyncHandler(async (req, res) => {
     return res.status(401).send({ message: 'Invalid email or password' });
   }
 
-  if (!hasLocalPassword(user)) {
-    return res.status(400).send({ message: 'Please sign in with Google for this account' });
+  if (user.auth_provider !== 'local') {
+    return res.status(400).send({ message: `Please sign in with ${user.auth_provider}` });
   }
 
   if (user.status !== 'active') {
@@ -238,6 +251,12 @@ const login = asyncHandler(async (req, res) => {
 
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
+    await SecurityLog.create({
+      event_type: 'FAILED_LOGIN',
+      ip_address: getClientIp(req),
+      target_account: identifier,
+      details: 'Invalid password provided'
+    }).catch(err => console.error('Failed to write security log:', err));
     return res.status(401).send({ message: 'Invalid email or password' });
   }
 
@@ -246,7 +265,18 @@ const login = asyncHandler(async (req, res) => {
     return res.status(403).send({ message: 'This account role is not active' });
   }
 
-  sendAuthResponse(res, 200, user, role, 'Login successfully');
+  const sessionId = crypto.randomUUID();
+
+  // Log successful login
+  await SecurityLog.create({
+    event_type: 'SUCCESSFUL_LOGIN',
+    ip_address: getClientIp(req),
+    target_account: user.login_account,
+    session_id: sessionId,
+    details: req.headers['user-agent'] || 'Unknown Device'
+  }).catch(err => console.error('Failed to write security log:', err));
+
+  sendAuthResponse(res, 200, user, role, 'Login successfully', sessionId);
 });
 
 const googleLogin = asyncHandler(async (req, res) => {
@@ -314,9 +344,18 @@ const googleLogin = asyncHandler(async (req, res) => {
     return res.status(403).send({ message: 'This account role is not active' });
   }
 
-  sendAuthResponse(res, 200, user, role, 'Login with Google successfully');
-});
+  const sessionId = crypto.randomUUID();
 
+  await SecurityLog.create({
+    event_type: 'SUCCESSFUL_LOGIN',
+    ip_address: getClientIp(req),
+    target_account: user.login_account,
+    session_id: sessionId,
+    details: req.headers['user-agent'] || 'Unknown Device'
+  }).catch(err => console.error('Failed to write security log:', err));
+
+  sendAuthResponse(res, 200, user, role, 'Login with Google successfully', sessionId);
+});
 const changePassword = asyncHandler(async (req, res) => {
   const currentPassword = req.body.current_password || req.body.currentPassword;
   const newPassword = req.body.new_password || req.body.newPassword;
@@ -328,10 +367,7 @@ const changePassword = asyncHandler(async (req, res) => {
 
   const passwordErrors = getPasswordValidationErrors(newPassword);
   if (passwordErrors.length > 0) {
-    return sendPasswordValidationError(
-      res,
-      passwordErrors.map((error) => error.replace(/^Password/, 'New password'))
-    );
+    return sendPasswordValidationError(res, passwordErrors, 'New password does not meet security requirements');
   }
 
   if (newPassword !== confirmPassword) {
@@ -448,13 +484,54 @@ const me = asyncHandler(async (req, res) => {
   });
 });
 
+const recentSessions = asyncHandler(async (req, res) => {
+  const sessions = await SecurityLog.find({
+    target_account: req.user.login_account,
+    event_type: 'SUCCESSFUL_LOGIN',
+    is_revoked: false
+  })
+    .sort({ createdAt: -1 })
+    .limit(10);
+
+  res.send({
+    message: 'Recent sessions retrieved successfully',
+    data: sessions,
+    current_session_id: req.user_session_id
+  });
+});
+
+const logout = asyncHandler(async (req, res) => {
+  const sessionId = req.user_session_id;
+  if (sessionId) {
+    await SecurityLog.updateMany({ session_id: sessionId }, { is_revoked: true });
+  }
+  res.send({ message: 'Logged out successfully' });
+});
+
+const revokeSession = asyncHandler(async (req, res) => {
+  const logId = req.params.id;
+  const log = await SecurityLog.findOne({ _id: logId, target_account: req.user.login_account });
+  
+  if (!log) {
+    return res.status(404).send({ message: 'Session not found' });
+  }
+  
+  log.is_revoked = true;
+  await log.save();
+  
+  res.send({ message: 'Session revoked successfully' });
+});
+
 module.exports = {
   changePassword,
   googleLogin,
   login,
+  logout,
   me,
-  register,
+  recentSessions,
   requestPasswordReset,
-  resetPassword
+  resetPassword,
+  revokeSession,
+  register
 };
 

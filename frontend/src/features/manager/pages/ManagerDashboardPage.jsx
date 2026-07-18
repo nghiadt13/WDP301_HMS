@@ -1,3 +1,5 @@
+import { useState, useMemo } from 'react';
+import { useManagerDashboardStats } from '../hooks/use-dashboard';
 import './ManagerDashboardPage.css';
 
 const iconPaths = {
@@ -34,49 +36,23 @@ const StatCard = ({ title, value, icon, iconTone, trendType, trendValue, subtitl
   <article className="manager-card manager-stat-card">
     <div className={`manager-stat-icon ${iconTone}`}><Icon name={icon} /></div>
     <div><p className="manager-muted">{title}</p><strong>{value}</strong></div>
-    <p className="manager-trend-row">
-      <span className={`manager-trend ${trendType}`}><Icon name={trendType === 'up' ? 'up' : 'down'} size={12} />{trendValue}</span>
-      <span>{subtitle}</span>
-    </p>
+    {trendValue && (
+      <p className="manager-trend-row">
+        <span className={`manager-trend ${trendType}`}><Icon name={trendType === 'up' ? 'up' : 'down'} size={12} />{trendValue}</span>
+        <span>{subtitle}</span>
+      </p>
+    )}
   </article>
 );
 
 
-// Mock data
-const bookings = [
-  ['#BKG-1024', 'Emily Carter', 'Deluxe Suite', '210', '3 Đêm', '10 Th03 - 13 Th03, 2035', 'Đã nhận phòng', 'checked-in'],
-  ['#BKG-1025', 'Daniel Wong', 'Superior Room', '315', '2 Đêm', '11 Th03 - 13 Th03, 2035', 'Chờ xử lý', 'pending'],
-  ['#BKG-1026', 'Sophia Rivera', 'Executive Suite', '108', '4 Đêm', '09 Th03 - 13 Th03, 2035', 'Đã đặt trước', 'reserved'],
-  ['#BKG-1027', 'Liam Johnson', 'Deluxe Suite', '412', '1 Đêm', '12 Th03 - 13 Th03, 2035', 'Đã trả phòng', 'checked-out'],
-  ['#BKG-1028', 'Hannah Lee', 'Standard Room', '205', '5 Đêm', '10 Th03 - 15 Th03, 2035', 'Đã nhận phòng', 'checked-in'],
-];
-
-const tasks = [
-  ['Xác nhận đặt phòng đoàn khách VIP', '12 Tháng 3, 2035'],
-  ['Cập nhật lịch bảo trì phòng định kỳ', '13 Tháng 3, 2035'],
-  ['Đánh giá báo cáo doanh thu tháng', '14 Tháng 3, 2035'],
-  ['Điều phối phân ca làm việc cho nhân viên', '15 Tháng 3, 2035'],
-];
-
-const activities = [
-  ['Lễ tân', 'user', 'Đã check-in cho Emily Carter tại phòng 210 (Deluxe Suite).', '09:45 SA', 'lime'],
-  ['Đội Buồng phòng', 'sparkle', 'Đã đánh dấu phòng 305 là Sạch & Sẵn sàng.', '09:20 SA', 'blue'],
-  ['Quản lý duyệt', 'checkSquare', 'Đã phê duyệt các yêu cầu đặc biệt của khách VIP cho ca tối.', '08:50 SA', 'lime'],
-  ['Nhân viên đặt phòng', 'calendar', 'Xác nhận đặt phòng doanh nghiệp cho TechVision Ltd., đã giữ 5 phòng.', '08:30 SA', 'blue'],
-  ['Hệ thống tự động', 'file', 'Đã tạo và lưu báo cáo doanh thu tháng 3/2035.', '08:00 SA', 'lime'],
-  ['Đội Buồng phòng', 'sparkle', 'Đã đánh dấu phòng 216 là Sạch & Sẵn sàng.', '07:20 SA', 'blue'],
-];
-
-const ratingItems = [
-  ['Độ sạch sẽ', 4.8],
-  ['Độ thoải mái', 4.6],
-  ['Dịch vụ / Nhân viên', 4.9],
-  ['Cơ sở vật chất', 4.5],
-  ['Giá trị', 4.6],
-  ['Vị trí', 4.7],
-];
+// Removed mock data
 
 const ManagerDashboardPage = () => {
+  const [filter, setFilter] = useState('week');
+  const { data: stats, isLoading, isError } = useManagerDashboardStats(filter);
+  const [search, setSearch] = useState('');
+
   const user = (() => {
     try {
       return JSON.parse(localStorage.getItem('hotelify_user') || 'null');
@@ -87,79 +63,346 @@ const ManagerDashboardPage = () => {
   const userName = user?.full_name || 'Quản lý';
   const today = new Intl.DateTimeFormat('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date());
 
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'CheckedIn': return 'checked-in';
+      case 'CheckedOut': return 'checked-out';
+      case 'Pending': return 'pending';
+      default: return 'reserved';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'CheckedIn': return 'Đang lưu trú';
+      case 'CheckedOut': return 'Đã trả phòng';
+      case 'Pending': return 'Chờ xử lý';
+      case 'Confirmed': return 'Đã xác nhận';
+      default: return status;
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(dateStr));
+  };
+
+  if (isLoading) return <div style={{ padding: '24px' }}>Đang tải dữ liệu bảng điều khiển...</div>;
+  if (isError) return <div style={{ padding: '24px', color: 'red' }}>Lỗi khi tải dữ liệu!</div>;
+
+  const totalRooms = stats?.totalRooms || 120;
+  const roomStatusCounts = stats?.roomStatusCounts || [];
+  
+  const getRoomCount = (statusName) => {
+    return roomStatusCounts.find(s => s._id === statusName)?.count || 0;
+  };
+
+  const occupiedRooms = getRoomCount('Occupied');
+  const availableRooms = getRoomCount('Available');
+  const maintenanceRooms = getRoomCount('Maintenance') + getRoomCount('OutOfService');
+  const reservedRooms = stats?.reservedRoomsCount || 0;
+
+  const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+  
+  // Calculate total revenue correctly in case mock data has 0 for final_total
+  const calcTotalRev = (stats?.kpis?.roomRevenue || 0) + (stats?.kpis?.extraRevenue || 0);
+  const totalRevenueFmt = formatCurrency(calcTotalRev);
+  
+  const roomRevenueFmt = formatCurrency(stats?.kpis?.roomRevenue);
+  const serviceRevenueFmt = formatCurrency(stats?.kpis?.serviceRevenue);
+  const minibarRevenueFmt = formatCurrency(stats?.kpis?.minibarRevenue);
+  const otherRevenueFmt = formatCurrency(stats?.kpis?.otherRevenue);
+
+  // Default activities array if empty
+  const activities = stats?.activities?.length > 0 ? stats.activities : [
+    { user: 'Hệ thống', icon: 'file', text: 'Chưa có hoạt động nào.', time: '', tone: 'gray' }
+  ];
+
   return (
     <div className="manager-dashboard">
       <div className="manager-main-column">
         <section className="manager-grid manager-kpis">
           <article className="manager-card manager-greeting">
             <div><h2>Xin chào, {userName}</h2><p>{today}</p></div>
-            <div className="manager-earnings"><span>Tổng doanh thu</span><strong>$58.240</strong><p><span>so với tuần trước</span><b><Icon name="up" size={11} />+15.6%</b></p></div>
+            <div className="manager-earnings">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', color: '#64748b' }}>Bộ lọc báo cáo:</span>
+                <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}>
+                  <option value="day">Hôm nay</option>
+                  <option value="week">Tuần này</option>
+                  <option value="month">Tháng này</option>
+                </select>
+              </div>
+              <span>Tổng doanh thu</span>
+              <strong style={{ fontSize: '28px', margin: '4px 0 12px 0', display: 'block' }}>{totalRevenueFmt}</strong>
+              <p><span>Cập nhật lúc {new Date().toLocaleTimeString('vi-VN')}</span></p>
+            </div>
           </article>
-          <StatCard title="Đặt phòng mới" value="128" trendType="up" trendValue="+12.4%" subtitle="so với tuần trước" icon="checkSquare" iconTone="soft" />
-          <StatCard title="Khách đã nhận phòng" value="94" trendType="up" trendValue="+8.7%" subtitle="so với tuần trước" icon="login" iconTone="primary" />
-          <StatCard title="Khách đã trả phòng" value="76" trendType="down" trendValue="-3.2%" subtitle="so với tuần trước" icon="login" iconTone="pale" />
+          <StatCard title={`Đặt phòng mới (${filter === 'day' ? 'Hôm nay' : '7 ngày'})`} value={stats?.kpis?.newBookings || 0} icon="checkSquare" iconTone="soft" trendType="up" />
+          <StatCard title="Đang lưu trú" value={stats?.kpis?.checkedInGuests || 0} icon="login" iconTone="primary" />
+          <StatCard title={`Sắp đến (${filter === 'day' ? 'Hôm nay' : '7 ngày'})`} value={stats?.kpis?.upcomingArrivals || 0} icon="login" iconTone="soft" />
+          <StatCard title={`Sắp đi (${filter === 'day' ? 'Hôm nay' : '7 ngày'})`} value={stats?.kpis?.upcomingCheckouts || 0} icon="login" iconTone="pale" />
+        </section>
+
+        <section className="manager-grid" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <StatCard title="Tiền phòng" value={roomRevenueFmt} icon="bed" iconTone="primary" />
+          <StatCard title="Dịch vụ" value={serviceRevenueFmt} icon="sparkle" iconTone="soft" />
+          <StatCard title="Minibar" value={minibarRevenueFmt} icon="box" iconTone="pale" />
+          <StatCard title="Thu nhập khác" value={otherRevenueFmt} icon="wallet" iconTone="gray" />
+        </section>
+
+        <section className="manager-grid manager-insights" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+          <article className="manager-card manager-table-wrap">
+            <div className="manager-booking-heading">
+              <h2>Đặt phòng mới ({filter === 'day' ? 'Hôm nay' : '7 ngày'})</h2>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Khách hàng</th>
+                  <th>Phòng</th>
+                  <th>Ngày đặt</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats?.newBookingsList?.map(booking => (
+                  <tr key={booking._id}>
+                    <td><strong>{booking.customer_id?.full_name || 'Khách vãng lai'}</strong><small>{booking.booking_code}</small></td>
+                    <td>{booking.room_type_id?.typeName || '---'}</td>
+                    <td>{new Date(booking.created_at).toLocaleDateString('vi-VN')}</td>
+                    <td><span className={`manager-status ${getStatusClass(booking.booking_status)}`}>{getStatusText(booking.booking_status)}</span></td>
+                  </tr>
+                ))}
+                {(!stats?.newBookingsList || stats.newBookingsList.length === 0) && (
+                  <tr><td colSpan="4" style={{ textAlign: 'center' }}>Không có dữ liệu.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </article>
+
+          <article className="manager-card manager-table-wrap">
+            <div className="manager-booking-heading">
+              <h2>Đang lưu trú</h2>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Khách hàng</th>
+                  <th>Phòng</th>
+                  <th>Nhận phòng</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats?.currentStaysList?.map(booking => (
+                  <tr key={booking._id}>
+                    <td><strong>{booking.customer_id?.full_name || 'Khách vãng lai'}</strong><small>{booking.booking_code}</small></td>
+                    <td>{booking.room_id?.room_number || '---'}</td>
+                    <td>{new Date(booking.check_in_date).toLocaleDateString('vi-VN')}</td>
+                    <td><span className={`manager-status checked-in`}>Đang lưu trú</span></td>
+                  </tr>
+                ))}
+                {(!stats?.currentStaysList || stats.currentStaysList.length === 0) && (
+                  <tr><td colSpan="4" style={{ textAlign: 'center' }}>Không có dữ liệu.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </article>
+        </section>
+
+        <section className="manager-grid manager-insights" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+          <article className="manager-card manager-table-wrap">
+            <div className="manager-booking-heading">
+              <h2>Khách sắp đến ({filter === 'day' ? 'Hôm nay' : '7 ngày'})</h2>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Khách hàng</th>
+                  <th>Phòng</th>
+                  <th>Nhận phòng</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats?.upcomingArrivalsList?.map(booking => (
+                  <tr key={booking._id}>
+                    <td><strong>{booking.customer_id?.full_name || 'Khách vãng lai'}</strong><small>{booking.booking_code}</small></td>
+                    <td>{booking.room_type_id?.typeName || '---'}</td>
+                    <td>{new Date(booking.check_in_date).toLocaleDateString('vi-VN')}</td>
+                    <td><span className={`manager-status ${getStatusClass(booking.booking_status)}`}>{getStatusText(booking.booking_status)}</span></td>
+                  </tr>
+                ))}
+                {(!stats?.upcomingArrivalsList || stats.upcomingArrivalsList.length === 0) && (
+                  <tr><td colSpan="4" style={{ textAlign: 'center' }}>Không có dữ liệu.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </article>
+
+          <article className="manager-card manager-table-wrap">
+            <div className="manager-booking-heading">
+              <h2>Khách sắp đi ({filter === 'day' ? 'Hôm nay' : '7 ngày'})</h2>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Khách hàng</th>
+                  <th>Phòng</th>
+                  <th>Trả phòng</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats?.upcomingCheckoutsList?.map(booking => (
+                  <tr key={booking._id}>
+                    <td><strong>{booking.customer_id?.full_name || 'Khách vãng lai'}</strong><small>{booking.booking_code}</small></td>
+                    <td>{booking.room_id?.room_number || '---'}</td>
+                    <td>{new Date(booking.check_out_date).toLocaleDateString('vi-VN')}</td>
+                    <td><span className={`manager-status checked-in`}>{getStatusText(booking.booking_status)}</span></td>
+                  </tr>
+                ))}
+                {(!stats?.upcomingCheckoutsList || stats.upcomingCheckoutsList.length === 0) && (
+                  <tr><td colSpan="4" style={{ textAlign: 'center' }}>Không có dữ liệu.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </article>
         </section>
 
         <section className="manager-grid manager-charts">
           <article className="manager-card manager-chart-card">
-            <div className="manager-card-heading"><h2>Doanh thu</h2><button type="button">6 tháng qua <Icon name="chevron" size={14} /></button></div>
-            <div className="manager-line-chart">
-              <div className="manager-y-axis"><span>$400K</span><span>$300K</span><span>$200K</span><span>$100K</span><span>$0</span></div>
-              <div className="manager-chart-canvas">
-                <svg viewBox="0 0 350 150" preserveAspectRatio="none">
-                  <defs><linearGradient id="managerRevenueGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" /><stop offset="100%" stopColor="#3b82f6" stopOpacity="0" /></linearGradient></defs>
-                  <g className="manager-grid-lines"><line x1="0" y1="0" x2="350" y2="0" /><line x1="0" y1="37.5" x2="350" y2="37.5" /><line x1="0" y1="75" x2="350" y2="75" /><line x1="0" y1="112.5" x2="350" y2="112.5" /><line x1="0" y1="150" x2="350" y2="150" /></g>
-                  <path d="M0,75 C30,75 50,110 80,110 C120,110 140,20 180,20 C220,20 240,100 280,100 C320,100 330,50 350,50 L350,150 L0,150 Z" fill="url(#managerRevenueGradient)" />
-                  <path d="M0,75 C30,75 50,110 80,110 C120,110 140,20 180,20 C220,20 240,100 280,100 C320,100 330,50 350,50" fill="none" stroke="#3b82f6" strokeWidth="3" />
-                  <circle cx="140" cy="40" r="5" fill="#fff" stroke="#3b82f6" strokeWidth="3" /><line x1="140" y1="40" x2="140" y2="150" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 4" />
-                </svg>
-                <div className="manager-chart-tooltip"><span>Tổng doanh thu</span><strong>$315,060</strong></div>
-                <div className="manager-x-axis"><span>Th1</span><span>Th2</span><span>Th3</span><span>Th4</span><span>Th5</span><span>Th6</span></div>
-              </div>
+            <div className="manager-card-heading"><h2>Doanh thu 6 tháng qua</h2></div>
+            <div className="manager-line-chart" style={{ padding: '20px 0', display: 'flex', alignItems: 'flex-end', height: '200px', gap: '20px', overflowX: 'auto' }}>
+              {stats?.revenueByMonth?.length > 0 ? (
+                stats.revenueByMonth.map((month, idx) => {
+                  const maxTotal = Math.max(...stats.revenueByMonth.map(m => m.total), 1);
+                  const height = `${(month.total / maxTotal) * 100}%`;
+                  return (
+                    <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 'bold', marginBottom: '8px', color: '#3b82f6' }}>${month.total}</div>
+                      <div style={{ width: '40%', minWidth: '20px', background: 'linear-gradient(to top, #3b82f6, #93c5fd)', height: height, borderRadius: '4px 4px 0 0' }}></div>
+                      <div style={{ fontSize: '12px', marginTop: '8px', color: '#64748b' }}>{month.label}</div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ width: '100%', textAlign: 'center', color: '#94a3b8' }}>Chưa có dữ liệu doanh thu</div>
+              )}
             </div>
           </article>
 
           <article className="manager-card manager-chart-card">
-            <div className="manager-card-heading"><h2>Xu hướng phòng trống</h2><button type="button">7 ngày qua <Icon name="chevron" size={14} /></button></div>
-            <div className="manager-legend"><span><i className="blue" /> Đang sử dụng</span><span><i className="gray" /> Trống</span></div>
-            <div className="manager-bar-chart">
-              {[70, 45, 60, 80, 70, 90, 55].map((value, index) => (
-                <div className="manager-bar" key={value + index}>{index === 4 ? <div className="manager-bar-tooltip">15 Tháng 7<br /><strong>72 Phòng</strong></div> : null}<span style={{ height: `${value}%` }} /><small>{12 + index} Th6</small></div>
-              ))}
+            <div className="manager-card-heading"><h2>Nguồn đặt phòng</h2></div>
+            <div style={{ padding: '20px', display: 'grid', gap: '16px' }}>
+              {stats?.sourceCounts?.length > 0 ? (
+                stats.sourceCounts.map(source => {
+                  const percent = stats.kpis?.newBookings > 0 ? (source.count / stats.kpis.newBookings) * 100 : 50;
+                  return (
+                  <div key={source._id} className="manager-progress">
+                    <p><span>{source._id || 'Khác'}</span><strong>{source.count}</strong></p>
+                    <i><b className="blue" style={{ width: `${percent}%` }} /></i>
+                  </div>
+                )})
+              ) : (
+                <div style={{ width: '100%', textAlign: 'center', color: '#94a3b8' }}>Chưa có dữ liệu nguồn</div>
+              )}
             </div>
           </article>
         </section>
 
         <section className="manager-grid manager-insights">
           <article className="manager-card">
-            <div className="manager-card-heading"><h2>Nguồn đặt phòng</h2><button className="manager-icon-button" type="button" aria-label="Tùy chọn nguồn đặt phòng"><Icon name="dots" /></button></div>
-            <div className="manager-source-layout">
-              <div className="manager-donut"><svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="55" /><circle className="donut-blue" cx="70" cy="70" r="55" /><circle className="donut-lime" cx="70" cy="70" r="55" /><circle className="donut-gray" cx="70" cy="70" r="55" /></svg><span><Icon name="bed" size={24} /></span></div>
-              <div className="manager-source-list">{[['Trang web trực tiếp', 42, 'blue'], ['Đại lý du lịch trực tuyến (OTA)', 33, 'lime'], ['Khách vãng lai', 15, 'gray'], ['Đối tác doanh nghiệp', 10, 'dark']].map(([label, value, tone]) => <div className="manager-progress" key={label}><p><span>{label}</span><strong>{value}%</strong></p><i><b className={tone} style={{ width: `${value}%` }} /></i></div>)}</div>
+            <div className="manager-card-heading"><h2>Cơ cấu doanh thu</h2><button className="manager-icon-button" type="button"><Icon name="dots" /></button></div>
+            <div style={{ padding: '20px 0' }}>
+               <div className="manager-progress">
+                  <p><span>Tiền phòng</span><strong>${stats?.kpis?.roomRevenue || 0}</strong></p>
+                  <i><b className="blue" style={{ width: `${(stats?.kpis?.roomRevenue / stats?.kpis?.totalRevenue) * 100 || 0}%` }} /></i>
+               </div>
+               <div className="manager-progress" style={{ marginTop: '16px' }}>
+                  <p><span>Phụ phí / Minibar</span><strong>${stats?.kpis?.extraRevenue || 0}</strong></p>
+                  <i><b className="lime" style={{ width: `${(stats?.kpis?.extraRevenue / stats?.kpis?.totalRevenue) * 100 || 0}%` }} /></i>
+               </div>
             </div>
           </article>
 
           <article className="manager-card">
-            <div className="manager-card-heading"><h2>Đánh giá chung</h2><button className="manager-icon-button" type="button" aria-label="Tùy chọn đánh giá"><Icon name="dots" /></button></div>
+            <div className="manager-card-heading"><h2>Đánh giá chung</h2><button className="manager-icon-button" type="button"><Icon name="dots" /></button></div>
             <div className="manager-rating-layout">
-              <div className="manager-gauge"><svg viewBox="0 0 180 100"><path d="M 20 90 A 70 70 0 0 1 160 90" /><path className="gauge-value" d="M 20 90 A 70 70 0 0 1 160 90" /><circle cx="90" cy="85" r="8" /><path className="gauge-needle" d="M 90 85 L 145 80" /></svg><span>Tổng số đánh giá</span><strong>4.7 / 5.0</strong><small>1.248 Khách hàng</small></div>
-              <div className="manager-rating-list">{ratingItems.map(([label, score]) => <div className="manager-rating-item" key={label}><span>{label}</span><i><b style={{ width: `${(score / 5) * 100}%` }} /></i><strong>{score}<Icon name="star" size={11} /></strong></div>)}</div>
+              <div className="manager-gauge" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ position: 'relative', width: '150px', height: '150px' }}>
+                  <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="12" />
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="var(--blue)" strokeWidth="12" strokeDasharray={`${(stats?.avgRating || 0) / 5 * 251} 251`} />
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                    <strong style={{ fontSize: '24px', color: 'var(--blue)' }}>{stats?.avgRating || '0.0'}</strong>
+                    <span style={{ fontSize: '10px', color: '#9ca3af' }}>/ 5.0</span>
+                  </div>
+                </div>
+                <div style={{ marginTop: '12px' }}>
+                  <span style={{ fontSize: '12px', color: '#9ca3af' }}>Tổng cộng</span>
+                  <strong style={{ fontSize: '16px', color: 'var(--ink)' }}>{stats?.totalReviews || 0} đánh giá</strong>
+                </div>
+              </div>
+              <div className="manager-rating-list">
+                <div style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6' }}>
+                  Đây là điểm trung bình tổng hợp từ toàn bộ các phản hồi và đánh giá của khách hàng trong hệ thống (thực tế lấy từ dữ liệu CustomerFeedback).
+                </div>
+              </div>
             </div>
           </article>
-        </section>
-
-        <section className="manager-card manager-booking-card">
-          <div className="manager-booking-heading"><h2>Danh sách đặt phòng</h2><div><label className="manager-table-search"><Icon name="search" size={16} /><input placeholder="Tìm kiếm khách, trạng thái..." type="search" /></label><button type="button">Tất cả trạng thái <Icon name="chevron" size={14} /></button></div></div>
-          <div className="manager-table-wrap"><table><thead><tr><th>Mã đặt phòng & Tên khách</th><th>Loại phòng</th><th>Số phòng</th><th>Thời gian</th><th>Ngày đến & Ngày đi</th><th>Trạng thái</th></tr></thead><tbody>{bookings.map(([id, name, type, room, duration, date, status, statusClass]) => <tr key={id}><td><strong>{id}</strong><small>{name}</small></td><td><span className="manager-room-dot" />{type}</td><td>{room}</td><td>{duration}</td><td>{date}</td><td><span className={`manager-status ${statusClass}`}>{status}</span></td></tr>)}</tbody></table></div>
         </section>
 
         <footer className="manager-footer"><span>Bản quyền © 2026 Hotelify</span><a href="/">Chính sách bảo mật</a><a href="/">Điều khoản và điều kiện</a><a href="/">Liên hệ</a></footer>
       </div>
 
       <aside className="manager-side-column">
-        <article className="manager-card"><div className="manager-card-heading"><h2>Tình trạng phòng trống</h2><button className="manager-icon-button" type="button" aria-label="Tùy chọn tình trạng phòng"><Icon name="dots" /></button></div><div className="manager-total-rooms"><span>Tổng số phòng</span><strong>120</strong></div><div className="manager-room-blocks">{Array.from({ length: 68 }, (_, index) => <span className="occupied" key={`occ-${index}`} />)}{Array.from({ length: 22 }, (_, index) => <span className="reserved" key={`res-${index}`} />)}{Array.from({ length: 25 }, (_, index) => <span className="available" key={`avl-${index}`} />)}{Array.from({ length: 5 }, (_, index) => <span className="not-ready" key={`nr-${index}`} />)}</div><div className="manager-room-legend"><span><i className="occupied" /><strong>68</strong> Đang sử dụng</span><span><i className="available" /><strong>25</strong> Sẵn sàng</span><span><i className="reserved" /><strong>22</strong> Đặt trước</span><span><i className="not-ready" /><strong>5</strong> Chưa dọn</span></div></article>
-        <article className="manager-card"><div className="manager-card-heading"><h2>Nhiệm vụ</h2><button className="manager-add-button" type="button" aria-label="Thêm nhiệm vụ"><Icon name="plus" size={16} /></button></div><div className="manager-task-list">{tasks.map(([title, date]) => <label key={title} className="manager-task"><input type="checkbox" /><span><strong>{title}</strong><small>{date}</small></span></label>)}</div></article>
-        <article className="manager-card"><div className="manager-card-heading"><h2>Hoạt động gần đây</h2><button className="manager-icon-button" type="button" aria-label="Tùy chọn hoạt động"><Icon name="dots" /></button></div><div className="manager-timeline">{activities.map(([user, icon, text, time, tone]) => <div className="manager-activity" key={`${user}-${time}`}><span className={`manager-activity-icon ${tone}`}><Icon name={icon} size={14} /></span><strong>{user}</strong><p>{text}</p><small>{time}</small></div>)}</div></article>
+        <article className="manager-card">
+          <div className="manager-card-heading"><h2>Tình trạng phòng</h2></div>
+          <div className="manager-total-rooms"><span>Tổng số phòng</span><strong>{totalRooms}</strong></div>
+          <div className="manager-room-blocks">
+            {Array.from({ length: occupiedRooms }, (_, index) => <span className="occupied" key={`occ-${index}`} />)}
+            {Array.from({ length: reservedRooms }, (_, index) => <span className="reserved" key={`res-${index}`} />)}
+            {Array.from({ length: availableRooms }, (_, index) => <span className="available" key={`avl-${index}`} />)}
+            {Array.from({ length: maintenanceRooms }, (_, index) => <span className="not-ready" key={`nr-${index}`} />)}
+          </div>
+          <div className="manager-room-legend">
+            <span><i className="occupied" /><strong>{occupiedRooms}</strong> Đang sử dụng</span>
+            <span><i className="available" /><strong>{availableRooms}</strong> Sẵn sàng</span>
+            <span><i className="reserved" /><strong>{reservedRooms}</strong> Đặt trước</span>
+            <span><i className="not-ready" /><strong>{maintenanceRooms}</strong> Bảo trì</span>
+          </div>
+        </article>
+        
+        <article className="manager-card">
+          <div className="manager-card-heading"><h2>Nhiệm vụ chưa đóng</h2><button className="manager-add-button" type="button"><Icon name="plus" size={16} /></button></div>
+          <div className="manager-task-list">
+            {stats?.recentTasks?.map(task => (
+              <label key={task._id} className="manager-task">
+                <input type="checkbox" />
+                <span><strong>{task.title}</strong><small>{task.staff_type} - {formatDate(task.deadline)}</small></span>
+              </label>
+            ))}
+            {(!stats?.recentTasks || stats.recentTasks.length === 0) && (
+              <div style={{ color: '#64748b', fontSize: '13px' }}>Không có nhiệm vụ mở.</div>
+            )}
+          </div>
+        </article>
+        
+        <article className="manager-card">
+          <div className="manager-card-heading"><h2>Hoạt động gần đây</h2></div>
+          <div className="manager-timeline">
+            {activities.map((activity, idx) => (
+              <div className="manager-activity" key={`${activity.user}-${idx}`}>
+                <span className={`manager-activity-icon ${activity.tone}`}><Icon name={activity.icon} size={14} /></span>
+                <strong>{activity.user}</strong>
+                <p>{activity.text}</p>
+                <small>{activity.time}</small>
+              </div>
+            ))}
+          </div>
+        </article>
       </aside>
     </div>
   );

@@ -14,7 +14,7 @@ const staffTaskSchema = new mongoose.Schema(
     },
     staff_type: {
       type: String,
-      enum: ['housekeeping', 'technical'],
+      enum: ['housekeeping'],
       default: 'housekeeping',
     },
     assigned_staff_id: {
@@ -31,6 +31,11 @@ const staffTaskSchema = new mongoose.Schema(
       trim: true,
       required: [true, 'Room number is required'],
     },
+    room_type: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     priority: {
       type: String,
       enum: ['low', 'medium', 'high'],
@@ -38,12 +43,48 @@ const staffTaskSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['open', 'assigned', 'in_progress', 'closed', 'canceled', 'cancelled'],
-      default: 'assigned',
+      enum: ['NotStarted', 'Assigned', 'Accepted', 'Cleaning', 'InProgress', 'In Progress', 'WaitingMaintenance', 'Completed', 'Cancelled'],
+      default: 'NotStarted',
     },
     deadline: {
       type: Date,
       required: [true, 'Deadline is required'],
+    },
+    assignedBy: {
+      type: String,
+      trim: true,
+      default: 'Receptionist',
+    },
+    acceptedAt: {
+      type: Date,
+      default: null,
+    },
+    startedAt: {
+      type: Date,
+      default: null,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    cleaningType: {
+      type: String,
+      trim: true,
+      default: 'Checkout Cleaning',
+    },
+    receptionistNote: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    guestRequest: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    checkoutTime: {
+      type: Date,
+      default: null,
     },
   },
   {
