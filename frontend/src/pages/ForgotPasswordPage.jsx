@@ -21,7 +21,7 @@ const ForgotPasswordPage = () => {
         identifier
       });
 
-      setMessage(response.data?.message || 'Password reset email has been sent.');
+      setMessage(response.data?.message || 'Password reset email has been sent. Please check your inbox.');
     } catch (error) {
       setErrorMessage(
         error.response?.data?.message ||

@@ -71,7 +71,7 @@ const isTermsAccepted = (value) => {
 
 const PASSWORD_RESET_EXPIRES_IN_MINUTES = Number(process.env.PASSWORD_RESET_EXPIRES_IN_MINUTES || 30);
 const PASSWORD_RESET_SUCCESS_MESSAGE =
-  'If the account exists, a password reset email has been sent.';
+  'Password reset email has been sent. Please check your inbox.';
 
 const hashResetToken = (token) => {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -411,8 +411,16 @@ const requestPasswordReset = asyncHandler(async (req, res) => {
     $or: [{ login_account: identifier }, { email: identifier }]
   });
 
-  if (!user || user.status !== 'active' || !hasLocalPassword(user)) {
-    return res.send({ message: PASSWORD_RESET_SUCCESS_MESSAGE });
+  if (!user) {
+    return res.status(404).send({ message: 'No account found with this email or login account' });
+  }
+
+  if (user.status !== 'active') {
+    return res.status(403).send({ message: 'This account is not active' });
+  }
+
+  if (!hasLocalPassword(user)) {
+    return res.status(400).send({ message: 'This account uses Google sign-in and does not have a local password to reset' });
   }
 
   const resetToken = crypto.randomBytes(32).toString('hex');
