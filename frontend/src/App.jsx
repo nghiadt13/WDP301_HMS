@@ -19,6 +19,7 @@ import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustome
 import ManagerPoliciesPage from './features/manager/pages/ManagerPoliciesPage.jsx';
 import HousekeepingTasksPage from './features/manager/pages/HousekeepingTasksPage.jsx';
 import HousekeepingSchedulePage from './features/manager/pages/HousekeepingSchedulePage.jsx';
+import HousekeepingDailyTasksPage from './features/manager/pages/HousekeepingDailyTasksPage.jsx';
 import ManagerLayout from './features/manager/layouts/ManagerLayout.jsx';
 
 
@@ -65,17 +66,34 @@ const ManagerProtectedRoute = () => {
   const token = localStorage.getItem('hotelify_token');
   const user = getStoredUser();
   const roleName = String(user?.role?.name || '').toLowerCase();
-  const allowedHousekeepingPaths = ['/manager', '/manager/housekeeping/tasks', '/manager/housekeeping/schedule', '/manager/minibar'];
 
-  if (!token || !(roleName.includes('manager') || roleName.includes('housekeeping'))) {
+  if (!token || !roleName.includes('manager')) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (roleName.includes('housekeeping') && !allowedHousekeepingPaths.includes(location.pathname)) {
+  return <Outlet />;
+};
+
+const HousekeepingProtectedRoute = () => {
+  const location = useLocation();
+  const token = localStorage.getItem('hotelify_token');
+  const user = getStoredUser();
+  const roleName = String(user?.role?.name || '').toLowerCase();
+  const allowedHousekeepingPaths = ['/manager', '/manager/housekeeping', '/manager/housekeeping/daily', '/manager/housekeeping/tasks', '/manager/housekeeping/schedule'];
+
+  if (!token) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (!roleName.includes('housekeeping')) {
+    return <Navigate to="/manager" replace state={{ from: location }} />;
+  }
+
+  if (!allowedHousekeepingPaths.includes(location.pathname)) {
     return <Navigate to="/manager/housekeeping/tasks" replace state={{ from: location }} />;
   }
 
-  if (roleName.includes('housekeeping') && location.pathname === '/manager') {
+  if (location.pathname === '/manager') {
     return <Navigate to="/manager/housekeeping/tasks" replace state={{ from: location }} />;
   }
 
@@ -133,7 +151,7 @@ const App = () => {
           <Route path="customer/feedback" element={<CustomerFeedbackPage />} />
           <Route path="customer/policies" element={<CustomerPoliciesPage />} />
         </Route>
-
+    
         {/* Manager routes */}
         <Route element={<ManagerProtectedRoute />}>
           <Route path="manager" element={<ManagerLayout />}>
@@ -141,8 +159,6 @@ const App = () => {
             <Route path="rooms" element={<RoomManagePage />} />
             <Route path="rooms/add" element={<AddRoomPage />} />
             <Route path="rooms/:id/edit" element={<EditRoomPage />} />
-            <Route path="housekeeping" element={<Navigate to="/manager/housekeeping/tasks" replace />} />
-            <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
             <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />
             <Route path="staff-task" element={<ManagerStaffTasksPage />} />
             <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
@@ -150,6 +166,16 @@ const App = () => {
             <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
             <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
             <Route path="policies" element={<ManagerPoliciesPage />} />
+          </Route>
+        </Route>
+
+        <Route element={<HousekeepingProtectedRoute />}>
+          <Route path="manager" element={<ManagerLayout />}>
+            <Route index element={<Navigate to="/manager/housekeeping/tasks" replace />} />
+            <Route path="housekeeping" element={<Navigate to="/manager/housekeeping/tasks" replace />} />
+            <Route path="housekeeping/daily" element={<HousekeepingDailyTasksPage />} />
+            <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
+            <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />
           </Route>
         </Route>
 

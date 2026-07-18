@@ -195,9 +195,105 @@
   font-size: 12px;
 }
 
-.housekeeping-task-actions {
+.housekeeping-search-field input {
+  width: 100%;
+}
+
+.housekeeping-table-wrap {
+  overflow-x: auto;
+}
+
+.housekeeping-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.housekeeping-table th,
+.housekeeping-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.housekeeping-table th {
+  color: #6b7280;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.housekeeping-daily-assigned-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4b5563;
+}
+
+.housekeeping-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.housekeeping-modal-card {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 24px 60px -28px rgba(15, 23, 42, 0.55);
+}
+
+.housekeeping-issue-modal-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 18px 0;
+}
+
+.housekeeping-issue-modal-grid label {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.housekeeping-issue-modal-wide {
+  grid-column: 1 / -1;
+}
+
+.housekeeping-maintenance-input,
+.housekeeping-maintenance-textarea,
+.housekeeping-issue-modal-grid select {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #111827;
+  background: #fff;
+}
+
+.housekeeping-maintenance-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.housekeeping-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.housekeeping-daily-task-table td strong {
+  color: #111827;
 }
 
 .housekeeping-btn,
@@ -290,6 +386,21 @@
   grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
   gap: 16px;
   align-items: start;
+}
+
+.housekeeping-task-workspace-daily {
+  align-items: stretch;
+}
+
+.housekeeping-task-workspace-daily .housekeeping-task-list-pane,
+.housekeeping-task-workspace-daily .housekeeping-task-detail-pane {
+  max-height: calc(100vh - 300px);
+}
+
+.housekeeping-task-workspace-daily .housekeeping-task-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
 }
 
 .housekeeping-task-list-pane {
@@ -745,6 +856,11 @@
 
   .housekeeping-task-workspace {
     grid-template-columns: 1fr;
+  }
+
+  .housekeeping-task-workspace-daily .housekeeping-task-list-pane,
+  .housekeeping-task-workspace-daily .housekeeping-task-detail-pane {
+    max-height: none;
   }
 
   .housekeeping-task-detail-pane {

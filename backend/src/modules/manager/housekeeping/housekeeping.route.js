@@ -30,7 +30,7 @@ router.put('/service-requests/:id/unable', authorize('manager', 'housekeeping'),
 
 router.get('/inspections', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getInspections);
 router.get('/inspections/:id', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getInspectionById);
-router.get('/inspection/:roomId', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getInspectionByRoom);
+router.get('/inspection/:roomNumber', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getInspectionByRoom);
 router.post('/inspection', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.createInspection);
 router.patch('/inspection/:id', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.updateInspection);
 router.post('/report-issue', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.reportRoomIssue);

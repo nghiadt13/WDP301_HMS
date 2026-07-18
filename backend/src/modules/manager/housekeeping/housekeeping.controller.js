@@ -1,7 +1,8 @@
 const housekeepingService = require('./housekeeping.service');
 
 const sendError = (res, err) => {
-  res.status(err.status || 500).json({
+  const status = err?.statusCode || err?.status || 500;
+  res.status(status).json({
     success: false,
     message: err.message || 'Internal server error',
   });
@@ -199,7 +200,7 @@ const housekeepingController = {
 
   async getInspectionByRoom(req, res) {
     try {
-      const data = await housekeepingService.getInspectionByRoom(req.params.roomId, req.user);
+      const data = await housekeepingService.getInspectionByRoom(req.params.roomNumber || req.params.roomId, req.user);
       res.status(200).json({ success: true, data });
     } catch (err) {
       sendError(res, err);

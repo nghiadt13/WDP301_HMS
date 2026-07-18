@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText } from 'lucide-react';
+import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText, ClipboardCheck } from 'lucide-react';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
@@ -8,7 +8,7 @@ const sidebarItems = [
   { icon: Calendar, label: 'Lịch' },
   { icon: Megaphone, label: 'Chiến dịch', hasSub: true },
   { icon: BedDouble, label: 'Phòng', hasSub: true, matchPath: '/manager/rooms' },
-  { icon: BrushCleaning, label: 'Housekeeping', to: '/manager/housekeeping/tasks' },
+  { icon: Sparkles, label: 'Maintenance Report', to: '/manager/housekeeping/schedule' },
   { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-task' },
   { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar' },
   { icon: FileText, label: 'Chính sách', to: '/manager/policies' },
@@ -18,9 +18,9 @@ const sidebarItems = [
 ];
 
 const housekeepingSidebarItems = [
+  { icon: ClipboardCheck, label: 'Daily Tasks', to: '/manager/housekeeping/daily' },
   { icon: BrushCleaning, label: 'Cleaning Tasks', to: '/manager/housekeeping/tasks' },
   { icon: Sparkles, label: 'Maintenance Report', to: '/manager/housekeeping/schedule' },
-  { icon: Package, label: 'Minibar', to: '/manager/minibar' },
 ];
 
 const ManagerSidebar = () => {
