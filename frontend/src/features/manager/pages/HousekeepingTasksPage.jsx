@@ -644,7 +644,6 @@ const HousekeepingTasksPage = () => {
       <section className="housekeeping-task-workspace">
         <div className="housekeeping-task-list-pane housekeeping-card">
           <div className="housekeeping-card-header">
-            <h3>Customer Service Requests</h3>
             <span className="housekeeping-subtle">Only requests assigned to Housekeeping from MongoDB</span>
           </div>
 
