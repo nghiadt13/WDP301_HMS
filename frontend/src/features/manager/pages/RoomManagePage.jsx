@@ -566,7 +566,7 @@ const RoomManagePage = () => {
         {/* Left: Room list */}
         <div className="rm-list-panel">
           <div className="rm-list-toolbar">
-            <h2>Danh mục phòng</h2>
+            <h2>Danh mục loại phòng</h2>
             <div className="rm-list-toolbar-actions">
               <button type="button" className="rm-add-btn" onClick={handleAdd}><Plus size={14} />Thêm loại phòng mới</button>
               <button type="button" className="rm-sort-btn"><SlidersHorizontal size={14} /></button>

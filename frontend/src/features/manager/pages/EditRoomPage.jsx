@@ -62,7 +62,7 @@ const EditRoomPage = () => {
 
     updateMutation.mutate({ id, data: payload }, {
       onSuccess: () => {
-        navigate('/manager/rooms');
+        navigate('/manager/physical-rooms');
       },
       onError: (err) => {
         const msg = err.response?.data?.message || 'Cập nhật phòng thất bại. Vui lòng thử lại.';
@@ -84,7 +84,7 @@ const EditRoomPage = () => {
   return (
     <div className="ar-page">
       <div className="ar-header">
-        <button type="button" className="ar-back-btn" onClick={() => navigate('/manager/rooms')}>
+        <button type="button" className="ar-back-btn" onClick={() => navigate('/manager/physical-rooms')}>
           <ArrowLeft size={16} /> Quay lại quản lý phòng
         </button>
         <h1>Chỉnh sửa thông tin phòng</h1>
@@ -98,7 +98,7 @@ const EditRoomPage = () => {
               <button type="button" className="ar-btn-save" onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? 'Đang lưu...' : 'Lưu thay đổi'}
               </button>
-              <button type="button" className="ar-btn-cancel" onClick={() => navigate('/manager/rooms')} title="Hủy">
+              <button type="button" className="ar-btn-cancel" onClick={() => navigate('/manager/physical-rooms')} title="Hủy">
                 <X size={15} />
               </button>
             </div>
