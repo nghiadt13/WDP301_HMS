@@ -7,7 +7,6 @@ const getPageTitle = (pathname) => {
   if (pathname === '/manager/rooms') return 'Quản lý phòng';
   if (pathname === '/manager/rooms/add') return 'Thêm phòng mới';
   if (pathname.includes('/manager/rooms/') && pathname.includes('/edit')) return 'Chỉnh sửa phòng';
-  if (pathname === '/manager/housekeeping') return 'Housekeeping Dashboard';
   if (pathname === '/manager/housekeeping/tasks') return 'Housekeeping Tasks';
   if (pathname === '/manager/housekeeping/schedule') return 'Maintenance Report';
   if (pathname === '/manager/housekeeping/staff') return 'Housekeeping Staff';

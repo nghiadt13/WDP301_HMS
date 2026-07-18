@@ -5,7 +5,7 @@ import { BedDouble, Home, LogOut } from 'lucide-react';
 import './ReceptionistDashboardPage.css';
 import '../../manager/styles/manager-layout.css';
 import { receptionistApi } from '../services/receptionist-api.js';
-import { bookings, kpis, menuItems, quickActions, roomStatus, serviceRequests } from '../data/receptionistDashboardData.js';
+import { bookings, kpis, quickActions, roomStatus, serviceRequests } from '../data/receptionistDashboardData.js';
 
 const iconPaths = {
   dashboard: 'M3 13h8V3H3v10Zm10 8h8V3h-8v18ZM3 21h8v-6H3v6Z',
@@ -28,15 +28,6 @@ const Icon = ({ name, size = 20, className = '' }) => (
   <svg className={`receptionist-icon ${className}`} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
     <path d={iconPaths[name]} />
   </svg>
-);
-
-const SidebarItem = ({ label, icon, active, onClick }) => (
-  <button className={`rm-sidebar-item ${active ? 'is-active' : ''}`} type="button" onClick={onClick}>
-    <span className="rm-sidebar-label">
-      <Icon name={icon} />
-      <span>{label}</span>
-    </span>
-  </button>
 );
 
 const KpiCard = ({ title, value, subtitle, icon, tone }) => (
@@ -210,31 +201,8 @@ const ReceptionistDashboardPage = () => {
   };
 
   return (
-    <div className="receptionist-dashboard rm-layout">
-      <aside className="rm-sidebar">
-        <div className="rm-brand">
-          <div className="rm-brand-mark"><BedDouble size={16} className="text-white" /></div>
-          <span>Hotelify</span>
-        </div>
-        <nav className="rm-nav" aria-label="Receptionist navigation">
-          {menuItems.map(([label, icon], index) => (
-            <SidebarItem key={label} label={label} icon={icon} active={index === 0} />
-          ))}
-
-          <div style={{ borderTop: '1px solid #f3f4f6', margin: '16px 8px 12px 8px' }} />
-
-          <SidebarItem label="Trang chủ" icon="dashboard" active={false} onClick={() => navigate('/')} />
-          <SidebarItem label="Đăng xuất" icon="arrow" active={false} onClick={handleLogout} />
-        </nav>
-        <div className="rm-promo">
-          <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
-          <h2>Quản lý thông minh, phục vụ tốt hơn</h2>
-          <p>Tự động hóa thủ tục, giám sát hiệu suất và phòng trống.</p>
-          <button type="button">Nâng cấp bản Pro</button>
-        </div>
-      </aside>
-
-      <main className="receptionist-workspace rm-workspace">
+    <div className="receptionist-dashboard-page">
+      <main className="receptionist-workspace">
         <header className="receptionist-header">
           <div>
             <h1>Bảng điều khiển Lễ tân</h1>

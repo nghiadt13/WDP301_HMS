@@ -83,8 +83,15 @@ export const useCompleteCheckout = (bookingId) => {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['receptionist-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['receptionist-booking', bookingId] });
       queryClient.invalidateQueries({ queryKey: ['checkoutSummary', bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['receptionist-dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['receptionist-operational-board'] });
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
     }
   });
 };

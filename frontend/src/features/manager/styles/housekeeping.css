@@ -580,6 +580,40 @@
   box-shadow: 0 20px 45px -20px rgba(15, 23, 42, 0.45);
 }
 
+.housekeeping-issue-modal {
+  width: min(620px, 100%);
+}
+
+.housekeeping-issue-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.housekeeping-issue-modal-grid label {
+  display: grid;
+  gap: 6px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.housekeeping-issue-modal-grid label span {
+  font-weight: 600;
+}
+
+.housekeeping-issue-modal-grid select {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #111827;
+  background: #fff;
+}
+
+.housekeeping-issue-modal-wide {
+  grid-column: 1 / -1;
+}
+
 .housekeeping-modal-card h3 {
   margin: 0 0 8px;
   color: #111827;

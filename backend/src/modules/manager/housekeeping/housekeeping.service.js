@@ -41,6 +41,8 @@ const normalizeTaskStatus = (status) => {
   return status;
 };
 
+const normalizeMaintenanceValue = (value) => String(value || '').trim();
+
 const ensureWorkflowRole = (user, allowedRoles) => {
   const role = normalizeRole(user);
   const canAccess = allowedRoles.some((allowedRole) => role.includes(allowedRole));
@@ -82,6 +84,7 @@ const createCleaningTaskForRoom = async ({
   const existingTask = await StaffTask.findOne({
     room_number: roomNumber,
     staff_type: 'housekeeping',
+    cleaningType: { $in: ['Checkout Cleaning', 'Post Maintenance Cleaning'] },
     status: { $nin: ['Completed', 'Cancelled'] },
   }).sort({ createdAt: -1 });
 
@@ -976,7 +979,15 @@ const housekeepingService = {
   async reportRoomIssue(body = {}, user) {
     ensureWorkflowRole(user, ['housekeeping', 'manager']);
 
-    const { room_number, task_id, category, description, priority = 'high', image = '', note = '', reportedBy = 'Housekeeping' } = body;
+    const room_number = normalizeMaintenanceValue(body.room_number);
+    const task_id = normalizeMaintenanceValue(body.task_id);
+    const category = normalizeMaintenanceValue(body.category);
+    const description = normalizeMaintenanceValue(body.description);
+    const priority = normalizeMaintenanceValue(body.priority) || 'high';
+    const image = normalizeMaintenanceValue(body.image);
+    const note = normalizeMaintenanceValue(body.note);
+    const reportedBy = normalizeMaintenanceValue(body.reportedBy) || 'Housekeeping';
+
     if (!room_number || !category || !description) {
       throw createHttpError('Room number, category and description are required', 400);
     }
@@ -986,6 +997,31 @@ const housekeepingService = {
       room.status = 'Maintenance';
       room.inspectionStatus = 'Completed';
       await room.save();
+    }
+
+    const duplicateRequest = await MaintenanceRequest.findOne({
+      room: room_number,
+      category,
+      description,
+      status: { $in: ['Open', 'InProgress'] },
+    }).sort({ createdAt: -1 });
+
+    if (duplicateRequest) {
+      const taskQuery = task_id
+        ? { _id: task_id, room_number, staff_type: 'housekeeping' }
+        : { room_number, staff_type: 'housekeeping', status: { $nin: ['Completed', 'Cancelled'] } };
+
+      const task = await StaffTask.findOne(taskQuery).sort({ createdAt: -1 });
+      if (task) {
+        task.status = 'WaitingMaintenance';
+        await task.save();
+      }
+
+      return {
+        task: task ? mapTask(task) : null,
+        maintenanceRequest: mapMaintenanceRequest(duplicateRequest),
+        duplicate: true,
+      };
     }
 
     const maintenanceRequest = await MaintenanceRequest.create({

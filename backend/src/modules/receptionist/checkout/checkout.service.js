@@ -8,6 +8,7 @@ const BookingCharge = require('../../../models/booking-charge.model');
 const Invoice = require('../../../models/invoice.model');
 const StaffTask = require('../../../models/staffTask.model');
 const Room = require('../../../models/room.model');
+const housekeepingService = require('../../manager/housekeeping/housekeeping.service');
 
 const generateInvoiceCode = () => {
   const suffix = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -56,7 +57,8 @@ const checkoutService = {
       staff_type: 'housekeeping',
       room_number: taskData.room_number,
       priority: taskData.priority || 'medium',
-      status: 'open',
+      status: 'Assigned',
+      cleaningType: 'Inspection Review',
       deadline: new Date(Date.now() + 2 * 60 * 60 * 1000) // 2 hours from now
     });
     
@@ -149,27 +151,14 @@ const checkoutService = {
         throw createHttpError(400, 'Booking is not in CheckedIn state');
       }
 
-      // SOP Rule 1: Validate inspection task is closed
       const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
       const roomNames = rooms.map(r => r.room_id ? r.room_id.roomName : r.room_number).filter(Boolean);
-      
-      const tasks = await StaffTask.find({
-        room_number: { $in: roomNames },
-        title: { $regex: /Check-out/i }
-      }).sort({ createdAt: -1 });
-
-      if (tasks.length < roomNames.length) {
-        throw createHttpError(400, `Không thể checkout: Cần yêu cầu kiểm tra cho tất cả các phòng (${tasks.length}/${roomNames.length}).`);
-      }
-      
-      const hasOpenTask = tasks.some(t => t.status !== 'closed');
-      if (hasOpenTask) {
-        throw createHttpError(400, 'Không thể checkout: Buồng phòng chưa hoàn tất kiểm tra.');
-      }
 
       // Find the invoice
-      const invoice = await Invoice.findOne({ booking_id: bookingId });
-      if (!invoice) throw createHttpError(400, 'Invoice must be generated before checkout');
+      let invoice = await Invoice.findOne({ booking_id: bookingId });
+      if (!invoice) {
+        invoice = await checkoutService.generateInvoice(bookingId);
+      }
 
       if (invoice.status !== 'Paid') {
         invoice.status = 'Paid';
@@ -189,14 +178,28 @@ const checkoutService = {
         { status: 'CheckedOut' }
       );
 
-      // Update actual Rooms to Available (or Needs Cleaning)
+      // Mark actual rooms as dirty and create housekeeping cleaning tasks immediately.
       const bookingRooms = await BookingRoom.find({ booking_id: bookingId });
       const roomIds = bookingRooms.map(br => br.room_id).filter(Boolean);
-      
-      // Update actual Rooms to 'Dirty' so Housekeeping can clean it (SOP UC-023)
       await Room.updateMany(
         { _id: { $in: roomIds } },
         { status: 'Dirty' }
+      );
+
+      await Promise.all(
+        roomNames.map((roomNumber) => housekeepingService.confirmCheckout({
+          room_number: roomNumber,
+          priority: 'high',
+          receptionistNote: 'Checkout confirmed by receptionist. Room needs cleaning before next arrival.',
+          guestRequest: '',
+          cleaningType: 'Checkout Cleaning',
+          assignedBy: 'Receptionist',
+          checkoutTime: new Date().toISOString(),
+        }, {
+          _id: null,
+          full_name: 'Receptionist',
+          role_id: { name: 'Receptionist' },
+        }))
       );
 
 

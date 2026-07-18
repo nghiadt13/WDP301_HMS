@@ -8,7 +8,7 @@ const sidebarItems = [
   { icon: Calendar, label: 'Lịch' },
   { icon: Megaphone, label: 'Chiến dịch', hasSub: true },
   { icon: BedDouble, label: 'Phòng', hasSub: true, matchPath: '/manager/rooms' },
-  { icon: BrushCleaning, label: 'Housekeeping', to: '/manager/housekeeping' },
+  { icon: BrushCleaning, label: 'Housekeeping', to: '/manager/housekeeping/tasks' },
   { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-task' },
   { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar' },
   { icon: FileText, label: 'Chính sách', to: '/manager/policies' },

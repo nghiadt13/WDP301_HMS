@@ -8,11 +8,23 @@ const CheckoutStepBilling = ({ bookingId, summary, onPrev, onComplete }) => {
   const { mutate: completeCheckout, isPending: isCompleting } = useCompleteCheckout(bookingId);
 
   const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [invoice, setInvoice] = useState(summary.invoice || null);
 
   useEffect(() => {
-    // Generate or fetch latest invoice when step loads
-    generateInvoice();
-  }, [bookingId, generateInvoice]);
+    setInvoice(summary.invoice || null);
+  }, [summary.invoice]);
+
+  useEffect(() => {
+    if (invoice) {
+      return undefined;
+    }
+
+    generateInvoice(undefined, {
+      onSuccess: (response) => {
+        setInvoice(response?.data || response || null);
+      },
+    });
+  }, [invoice, generateInvoice]);
 
   const handleComplete = () => {
     completeCheckout({ payment_method: paymentMethod }, {
@@ -27,8 +39,6 @@ const CheckoutStepBilling = ({ bookingId, summary, onPrev, onComplete }) => {
   };
 
   const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
-
-  const invoice = summary.invoice;
 
   return (
     <div className="wizard-step-content">

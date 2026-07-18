@@ -26,7 +26,7 @@ const LoginPage = () => {
       if (roleName.includes('admin')) {
         navigate('/admin');
       } else if (roleName.includes('manager') || roleName.includes('housekeeping')) {
-        navigate('/manager/housekeeping');
+        navigate('/manager/housekeeping/tasks');
       } else if (roleName.includes('receptionist')) {
         navigate('/receptionist');
       } else {

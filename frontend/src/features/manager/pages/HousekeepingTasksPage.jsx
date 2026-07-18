@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
 import { useHousekeepingDashboard, useHousekeepingServiceRequests, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
 import { housekeepingApi } from '../services/housekeeping-api.js';
@@ -22,17 +23,6 @@ const getMutationErrorMessage = (error) => {
   if (apiMessage) return apiMessage;
   if (error?.message) return error.message;
   return 'Action failed. Please try again.';
-};
-
-const askWithFallback = (message, defaultValue = '') => {
-  if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
-    try {
-      return window.prompt(message, defaultValue);
-    } catch {
-      return defaultValue;
-    }
-  }
-  return defaultValue;
 };
 
 const formatDateTime = (value) => {
@@ -78,6 +68,17 @@ const HousekeepingTasksPage = () => {
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [selectedRequestId, setSelectedRequestId] = useState('');
   const [requestInternalNote, setRequestInternalNote] = useState('');
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [isIssueSubmitting, setIsIssueSubmitting] = useState(false);
+  const [issueForm, setIssueForm] = useState({
+    task_id: '',
+    room_number: '',
+    category: 'Equipment Failure',
+    priority: 'high',
+    description: '',
+    image: '',
+    note: '',
+  });
 
   const taskActionMutation = useMutation({
     mutationFn: async ({ action, task }) => {
@@ -88,25 +89,6 @@ const HousekeepingTasksPage = () => {
       if (action === 'accept') return housekeepingApi.acceptTask(task.id);
       if (action === 'start') return housekeepingApi.startTask(task.id);
       if (action === 'complete') return housekeepingApi.completeTask(task.id);
-      if (action === 'issue') {
-        const category = askWithFallback('Maintenance category', 'Equipment Failure');
-        if (!category) return null;
-        const priority = askWithFallback('Priority (low|medium|high|urgent)', 'high') || 'high';
-        const description = askWithFallback('Issue description', task?.receptionistNote || 'Maintenance required');
-        if (!description) return null;
-        const image = askWithFallback('Optional photo URL', '') || '';
-        const note = askWithFallback('Optional notes', '') || '';
-        return housekeepingApi.reportIssue({
-          task_id: task.id,
-          room_number: task.roomNumber,
-          category,
-          priority,
-          description,
-          image,
-          note,
-          reportedBy: 'Housekeeping',
-        });
-      }
       return null;
     },
     onSuccess: async () => {
@@ -122,6 +104,89 @@ const HousekeepingTasksPage = () => {
       window.alert(getMutationErrorMessage(error));
     },
   });
+
+  const openIssueModal = (task) => {
+    if (!task?.roomNumber) {
+      toast.error('Room number is required to report maintenance.');
+      return;
+    }
+
+    setIssueForm({
+      task_id: task.id || '',
+      room_number: task.roomNumber || '',
+      category: 'Equipment Failure',
+      priority: 'high',
+      description: task.receptionistNote ? `Maintenance required for room ${task.roomNumber}: ${task.receptionistNote}` : `Maintenance required for room ${task.roomNumber}`,
+      image: '',
+      note: '',
+    });
+    setIsIssueModalOpen(true);
+  };
+
+  const closeIssueModal = () => {
+    setIsIssueModalOpen(false);
+    setIsIssueSubmitting(false);
+    setIssueForm({
+      task_id: '',
+      room_number: '',
+      category: 'Equipment Failure',
+      priority: 'high',
+      description: '',
+      image: '',
+      note: '',
+    });
+    taskActionMutation.reset();
+  };
+
+  const submitIssueReport = async () => {
+    if (isIssueSubmitting) return;
+
+    const roomNumber = issueForm.room_number.trim();
+    const category = issueForm.category.trim();
+    const description = issueForm.description.trim();
+
+    if (!roomNumber) {
+      toast.error('Room number is required.');
+      return;
+    }
+
+    if (!category) {
+      toast.error('Category is required.');
+      return;
+    }
+
+    if (!description) {
+      toast.error('Description is required.');
+      return;
+    }
+
+    try {
+      setIsIssueSubmitting(true);
+      const result = await housekeepingApi.reportIssue({
+        task_id: issueForm.task_id,
+        room_number: roomNumber,
+        category,
+        priority: issueForm.priority,
+        description,
+        image: issueForm.image.trim(),
+        note: issueForm.note.trim(),
+        reportedBy: 'Housekeeping',
+      });
+
+      toast.success(result?.duplicate ? 'Maintenance report already exists.' : 'Maintenance report created successfully.');
+      closeIssueModal();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] }),
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-maintenance'] }),
+        queryClient.invalidateQueries({ queryKey: ['receptionist-operational-board'] }),
+      ]);
+    } catch (error) {
+      toast.error(getMutationErrorMessage(error));
+    } finally {
+      setIsIssueSubmitting(false);
+    }
+  };
 
   const serviceRequestMutation = useMutation({
     mutationFn: async ({ action, request, payload }) => {
@@ -235,6 +300,11 @@ const HousekeepingTasksPage = () => {
   }, [data]);
 
   const onTaskAction = async (action, task) => {
+    if (action === 'issue') {
+      openIssueModal(task);
+      return;
+    }
+
     await taskActionMutation.mutateAsync({ action, task });
     await refetch();
   };
@@ -487,6 +557,89 @@ const HousekeepingTasksPage = () => {
           )}
         </aside>
       </section>
+
+      {isIssueModalOpen ? (
+        <div className="housekeeping-modal-backdrop" role="presentation" onClick={closeIssueModal}>
+          <div className="housekeeping-modal-card housekeeping-issue-modal" role="dialog" aria-modal="true" aria-labelledby="maintenance-report-title" onClick={(event) => event.stopPropagation()}>
+            <h3 id="maintenance-report-title">Report Maintenance</h3>
+            <p>Submit a maintenance request for the selected room.</p>
+
+            <div className="housekeeping-issue-modal-grid">
+              <label>
+                <span>Room Number *</span>
+                <input
+                  className="housekeeping-maintenance-input"
+                  value={issueForm.room_number}
+                  onChange={(event) => setIssueForm((prev) => ({ ...prev, room_number: event.target.value }))}
+                  placeholder="e.g. 305"
+                />
+              </label>
+
+              <label>
+                <span>Category *</span>
+                <input
+                  className="housekeeping-maintenance-input"
+                  value={issueForm.category}
+                  onChange={(event) => setIssueForm((prev) => ({ ...prev, category: event.target.value }))}
+                  placeholder="Equipment Failure"
+                />
+              </label>
+
+              <label>
+                <span>Priority *</span>
+                <select
+                  value={issueForm.priority}
+                  onChange={(event) => setIssueForm((prev) => ({ ...prev, priority: event.target.value }))}
+                >
+                  <option value="urgent">urgent</option>
+                  <option value="high">high</option>
+                  <option value="medium">medium</option>
+                  <option value="low">low</option>
+                </select>
+              </label>
+
+              <label className="housekeeping-issue-modal-wide">
+                <span>Description *</span>
+                <textarea
+                  className="housekeeping-maintenance-textarea"
+                  value={issueForm.description}
+                  onChange={(event) => setIssueForm((prev) => ({ ...prev, description: event.target.value }))}
+                  placeholder="Describe the maintenance issue"
+                />
+              </label>
+
+              <label className="housekeeping-issue-modal-wide">
+                <span>Photo URL</span>
+                <input
+                  className="housekeeping-maintenance-input"
+                  value={issueForm.image}
+                  onChange={(event) => setIssueForm((prev) => ({ ...prev, image: event.target.value }))}
+                  placeholder="Optional photo URL"
+                />
+              </label>
+
+              <label className="housekeeping-issue-modal-wide">
+                <span>Notes</span>
+                <textarea
+                  className="housekeeping-maintenance-textarea"
+                  value={issueForm.note}
+                  onChange={(event) => setIssueForm((prev) => ({ ...prev, note: event.target.value }))}
+                  placeholder="Optional notes"
+                />
+              </label>
+            </div>
+
+            <div className="housekeeping-modal-actions">
+              <button className="housekeeping-outline-btn" type="button" onClick={closeIssueModal} disabled={isIssueSubmitting}>
+                Cancel
+              </button>
+              <button className="housekeeping-btn" type="button" onClick={submitIssueReport} disabled={isIssueSubmitting}>
+                {isIssueSubmitting ? 'Saving...' : 'Submit Report'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="housekeeping-task-workspace">
         <div className="housekeeping-task-list-pane housekeeping-card">

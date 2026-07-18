@@ -17,6 +17,13 @@
   font-size: 14px;
 }
 
+.receptionist-dashboard-page {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+}
+
 .receptionist-icon { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; flex: 0 0 auto; }
 .receptionist-sidebar { width: 280px; min-height: 100vh; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--line); padding-bottom: 20px; }
 .receptionist-brand, .receptionist-sidebar-item span, .receptionist-header, .receptionist-header-actions, .receptionist-search, .receptionist-profile, .receptionist-card-heading, .receptionist-kpi-card, .receptionist-action-card span, .receptionist-room-bars span { display: flex; align-items: center; }
