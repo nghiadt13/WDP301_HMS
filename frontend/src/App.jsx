@@ -13,6 +13,8 @@ import WalkinBookingForm from './features/receptionist/components/WalkinBookingF
 import RoomManagePage from './features/manager/pages/RoomManagePage.jsx';
 import AddRoomPage from './features/manager/pages/AddRoomPage.jsx';
 import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
+import AddRoomTypePage from './features/manager/pages/AddRoomTypePage.jsx';
+import EditRoomTypePage from './features/manager/pages/EditRoomTypePage.jsx';
 import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPage.jsx';
 import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
@@ -142,6 +144,8 @@ const App = () => {
             <Route path="rooms" element={<RoomManagePage />} />
             <Route path="rooms/add" element={<AddRoomPage />} />
             <Route path="rooms/:id/edit" element={<EditRoomPage />} />
+            <Route path="room-types/add" element={<AddRoomTypePage />} />
+            <Route path="room-types/:id/edit" element={<EditRoomTypePage />} />
             <Route path="housekeeping" element={<HousekeepingDashboardPage />} />
             <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
             <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />

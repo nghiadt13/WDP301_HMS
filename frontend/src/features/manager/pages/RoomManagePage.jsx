@@ -219,11 +219,16 @@ function RoomTypeCard({ group, selected, onClick }) {
 
   // Helper for Bed Spec
   const getBedSpec = () => {
-    if (type.beds && type.bed_type) {
-      return `${type.beds} Giường ${type.bed_type}`;
+    // If bed_type already contains formatted text (with "Giường" or numbers), return as-is
+    const bedTypeValue = type.bed_type || sampleRoom.bed_type || '';
+    if (bedTypeValue.includes('Giường') || /\d/.test(bedTypeValue)) {
+      return bedTypeValue;
     }
-    const bed = type.bed_type || sampleRoom.bed_type || 'King';
-    return `1 Giường ${bed}`;
+    // Otherwise, format it
+    if (type.beds && bedTypeValue) {
+      return `${type.beds} Giường ${bedTypeValue}`;
+    }
+    return `1 Giường ${bedTypeValue || 'King'}`;
   };
 
   // Helper for Guests/Capacity
