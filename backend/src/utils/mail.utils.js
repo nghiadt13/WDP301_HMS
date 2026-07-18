@@ -92,13 +92,49 @@ const sendPasswordResetEmail = async ({ to, fullName, resetUrl, expiresInMinutes
   });
 };
 
+const formatCurrency = (value) =>
+  new Intl.NumberFormat('vi-VN', {
+    currency: 'VND',
+    maximumFractionDigits: 0,
+    style: 'currency'
+  }).format(Number(value || 0));
+
+const formatDateTime = (value) => {
+  if (!value) return 'N/A';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'N/A';
+  return new Intl.DateTimeFormat('vi-VN', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date);
+};
+
+const summarizeRefundResults = (refundResults = []) => {
+  return refundResults
+    .map((item, index) => {
+      const transactionNo = item?.payload?.vnp_TransactionNo || item?.request?.vnp_TransactionNo || 'N/A';
+      const requestId = item?.request?.vnp_RequestId || 'N/A';
+      return `${index + 1}. Request ${requestId} - Transaction ${transactionNo}`;
+    })
+    .join(' | ');
+};
+
 const sendReservationCancellationEmail = async ({
   to,
   fullName,
   bookingCode,
   supportPhone,
   refundAmount = 0,
-  kind = 'canceled'
+  kind = 'canceled',
+  roomName = '',
+  roomNumber = '',
+  checkInDate = null,
+  checkOutDate = null,
+  totalAmount = 0,
+  paidAmount = 0,
+  paymentStatus = '',
+  refundStatus = '',
+  refundResults = []
 }) => {
   if (!to) {
     return;
@@ -115,11 +151,14 @@ const sendReservationCancellationEmail = async ({
   const safeDisplayName = escapeHtml(displayName);
   const safeBookingCode = escapeHtml(bookingCode);
   const safeSupportPhone = escapeHtml(supportPhone);
-  const amountText = new Intl.NumberFormat('vi-VN', {
-    currency: 'VND',
-    maximumFractionDigits: 0,
-    style: 'currency'
-  }).format(Number(refundAmount || 0));
+  const safeRoomName = escapeHtml(roomName || 'N/A');
+  const safeRoomNumber = escapeHtml(roomNumber || 'N/A');
+  const safeCheckIn = escapeHtml(formatDateTime(checkInDate));
+  const safeCheckOut = escapeHtml(formatDateTime(checkOutDate));
+  const amountText = formatCurrency(refundAmount || 0);
+  const totalText = formatCurrency(totalAmount || 0);
+  const paidText = formatCurrency(paidAmount || 0);
+  const refundSummary = summarizeRefundResults(refundResults);
 
   const isSupportRequired = kind === 'support-required';
   const subject = isSupportRequired
@@ -131,6 +170,14 @@ const sendReservationCancellationEmail = async ({
         '',
         `Your booking ${bookingCode} is within 48 hours of check-in, so Hotelify cannot process automatic cancellation/refund online.`,
         `Please contact ${supportPhone} directly for support.`,
+        `Room type: ${roomName || 'N/A'}`,
+        `Room number: ${roomNumber || 'N/A'}`,
+        `Check-in: ${formatDateTime(checkInDate)}`,
+        `Check-out: ${formatDateTime(checkOutDate)}`,
+        `Total amount: ${totalText}`,
+        `Paid amount: ${paidText}`,
+        `Refund status: ${refundStatus || 'SupportRequired'}`,
+        '',
         'Please prepare your bank transfer information: account holder, bank name, account number, and booking code.',
         '',
         'Hotelify'
@@ -139,13 +186,20 @@ const sendReservationCancellationEmail = async ({
         `Hello ${displayName},`,
         '',
         `Your booking ${bookingCode} has been canceled.`,
-        refundAmount > 0
-          ? `Refund amount processed through VNPAY: ${amountText}.`
-          : 'No payment refund is required for this booking.',
+        `Room type: ${roomName || 'N/A'}`,
+        `Room number: ${roomNumber || 'N/A'}`,
+        `Check-in: ${formatDateTime(checkInDate)}`,
+        `Check-out: ${formatDateTime(checkOutDate)}`,
+        `Total amount: ${totalText}`,
+        `Paid amount: ${paidText}`,
+        refundAmount > 0 ? `Refund amount processed through VNPAY: ${amountText}.` : 'No payment refund is required for this booking.',
+        `Payment status: ${paymentStatus || 'N/A'}`,
+        `Refund status: ${refundStatus || 'N/A'}`,
+        refundSummary ? `Refund transactions: ${refundSummary}` : '',
         `If you need support, please contact ${supportPhone}.`,
         '',
         'Hotelify'
-      ];
+      ].filter(Boolean);
 
   await transporter.sendMail({
     from: config.from,
@@ -157,13 +211,23 @@ const sendReservationCancellationEmail = async ({
         <h2 style="margin:0 0 12px">${isSupportRequired ? 'Cancellation support required' : 'Booking cancellation update'}</h2>
         <p>Hello ${safeDisplayName},</p>
         <p>Booking code: <strong>${safeBookingCode}</strong></p>
+        <p>Room type: <strong>${safeRoomName}</strong></p>
+        <p>Room number: <strong>${safeRoomNumber}</strong></p>
+        <p>Check-in: <strong>${safeCheckIn}</strong></p>
+        <p>Check-out: <strong>${safeCheckOut}</strong></p>
+        <p>Total amount: <strong>${escapeHtml(totalText)}</strong></p>
+        <p>Paid amount: <strong>${escapeHtml(paidText)}</strong></p>
         ${
           isSupportRequired
             ? `<p>Your booking is within 48 hours of check-in, so Hotelify cannot process automatic cancellation/refund online.</p>
                <p>Please contact <strong>${safeSupportPhone}</strong> directly for support.</p>
+               <p>Refund status: <strong>${escapeHtml(refundStatus || 'SupportRequired')}</strong></p>
                <p>Please prepare your bank transfer information: account holder, bank name, account number, and booking code.</p>`
             : `<p>Your booking has been canceled.</p>
                <p>${refundAmount > 0 ? `Refund amount processed through VNPAY: <strong>${escapeHtml(amountText)}</strong>.` : 'No payment refund is required for this booking.'}</p>
+               <p>Payment status: <strong>${escapeHtml(paymentStatus || 'N/A')}</strong></p>
+               <p>Refund status: <strong>${escapeHtml(refundStatus || 'N/A')}</strong></p>
+               ${refundSummary ? `<p>Refund transactions: <strong>${escapeHtml(refundSummary)}</strong></p>` : ''}
                <p>If you need support, please contact <strong>${safeSupportPhone}</strong>.</p>`
         }
       </div>
@@ -175,3 +239,4 @@ module.exports = {
   sendPasswordResetEmail,
   sendReservationCancellationEmail
 };
+

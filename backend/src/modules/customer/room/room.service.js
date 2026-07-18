@@ -36,7 +36,7 @@ const getBookedRooms = async (db, roomTypeId, checkInDate, checkOutDate) => {
   const reservations = await db
     .collection('reservations')
     .find(buildActiveReservationQuery({
-      room_type_id: roomTypeId,
+      roomTypeId,
       checkInDate,
       checkOutDate
     }))
@@ -377,7 +377,7 @@ const getRoomCalendar = asyncHandler(async (req, res) => {
   const reservations = await db
     .collection('reservations')
     .find(buildActiveReservationQuery({
-      room_type_id: roomType._id,
+      roomTypeId: roomType._id,
       checkInDate: monthStart,
       checkOutDate: rangeEnd
     }))
@@ -521,3 +521,6 @@ module.exports = {
   submitRoomReview,
   getById,
 };
+
+
+

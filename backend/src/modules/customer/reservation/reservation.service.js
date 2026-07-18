@@ -36,7 +36,7 @@ const getBookedRooms = async (db, roomTypeId, checkInDate, checkOutDate) => {
   const reservations = await db
     .collection('reservations')
     .find(buildActiveReservationQuery({
-      room_type_id: roomTypeId,
+      roomTypeId,
       checkInDate,
       checkOutDate
     }))
@@ -55,6 +55,74 @@ const getTotalRoomsByType = (db, roomTypeId) =>
     ...ACTIVE_PHYSICAL_ROOM_QUERY
   });
 
+const getOverlappingAssignedRoomIds = async (db, roomTypeId, checkInDate, checkOutDate) => {
+  await expirePendingReservations(db);
+
+  const reservations = await db
+    .collection('reservations')
+    .find(buildActiveReservationQuery({
+      roomTypeId,
+      checkInDate,
+      checkOutDate
+    }))
+    .project({ _id: 1, room_id: 1, assigned_room_ids: 1 })
+    .toArray();
+
+  const assignedRoomIds = new Set();
+
+  reservations.forEach((reservation) => {
+    if (reservation.room_id) {
+      assignedRoomIds.add(String(reservation.room_id));
+    }
+
+    if (Array.isArray(reservation.assigned_room_ids)) {
+      reservation.assigned_room_ids.forEach((roomId) => {
+        if (roomId) assignedRoomIds.add(String(roomId));
+      });
+    }
+  });
+
+  const reservationIds = reservations.map((reservation) => reservation._id);
+
+  if (reservationIds.length > 0) {
+    const bookingRooms = await db
+      .collection('booking_rooms')
+      .find({
+        booking_id: { $in: reservationIds },
+        room_id: { $ne: null }
+      })
+      .project({ room_id: 1 })
+      .toArray();
+
+    bookingRooms.forEach((bookingRoom) => {
+      if (bookingRoom.room_id) assignedRoomIds.add(String(bookingRoom.room_id));
+    });
+  }
+
+  return assignedRoomIds;
+};
+
+const getAvailablePhysicalRooms = async (db, roomTypeId, checkInDate, checkOutDate, requiredRooms) => {
+  const assignedRoomIds = await getOverlappingAssignedRoomIds(db, roomTypeId, checkInDate, checkOutDate);
+  const excludedIds = Array.from(assignedRoomIds)
+    .filter((roomId) => ObjectId.isValid(roomId))
+    .map((roomId) => new ObjectId(roomId));
+  const query = {
+    room_type_id: roomTypeId,
+    ...ACTIVE_PHYSICAL_ROOM_QUERY
+  };
+
+  if (excludedIds.length > 0) {
+    query._id = { $nin: excludedIds };
+  }
+
+  return db
+    .collection('rooms')
+    .find(query)
+    .sort({ room_number: 1, roomName: 1, _id: 1 })
+    .limit(requiredRooms)
+    .toArray();
+};
 const buildOccupancy = (payload) => {
   const checkIn = parseHotelCheckInDate(payload.checkIn);
   const checkOut = parseHotelCheckOutDate(payload.checkOut);
@@ -356,16 +424,31 @@ const createRoomBooking = asyncHandler(async (req, res) => {
     throw createHttpError(`Only ${availableRooms} room(s) are available for this room type in the selected date range.`, 409);
   }
 
+  const assignedRooms = await getAvailablePhysicalRooms(
+    db,
+    roomType._id,
+    occupancy.checkIn,
+    occupancy.checkOut,
+    occupancy.requiredRooms
+  );
+
+  if (assignedRooms.length < occupancy.requiredRooms) {
+    throw createHttpError('No physical room is available for the selected date range. Please choose another date.', 409);
+  }
+
   const now = new Date();
   const paymentExpiresAt = getPaymentExpiresAt(now);
   const pricePerNight = Number(roomType.base_price || roomType.price || 0);
   const totalAmount = pricePerNight * occupancy.nights * occupancy.requiredRooms;
+  const assignedRoomIds = assignedRooms.map((room) => room._id);
   const reservation = {
     _id: new ObjectId(),
     booking_code: generateBookingCode(req.user),
     customer_id: req.user._id,
     room_type_id: roomType._id,
-    room_id: null,
+    room_id: assignedRoomIds[0] || null,
+    assigned_room_ids: assignedRoomIds,
+    room_assignment_status: 'Assigned',
     check_in_date: occupancy.checkIn,
     check_out_date: occupancy.checkOut,
     guest_count: occupancy.guestCount,
@@ -384,9 +467,23 @@ const createRoomBooking = asyncHandler(async (req, res) => {
 
   await db.collection('reservations').insertOne(reservation);
 
+  await db.collection('booking_rooms').insertMany(
+    assignedRooms.map((room) => ({
+      booking_id: reservation._id,
+      room_id: room._id,
+      room_type_id: roomType._id,
+      room_number: room.room_number || room.roomName || '',
+      status: 'Pending',
+      check_in_date: occupancy.checkIn,
+      check_out_date: occupancy.checkOut,
+      created_at: now,
+      updated_at: now
+    }))
+  );
+
   res.status(201).send({
     message: `Booking created. Please complete full payment within ${PAYMENT_HOLD_MINUTES} minutes to confirm your booking.`,
-    reservation: mapReservation(reservation, roomType)
+    reservation: mapReservation(reservation, roomType, assignedRooms[0] || null)
   });
 });
 
@@ -420,6 +517,10 @@ const cancelCustomerReservation = asyncHandler(async (req, res) => {
   const totalAmount = Number(reservation.total_amount || 0);
   const isFullyPaid = paidAmount >= totalAmount && totalAmount > 0;
   const refundEligible = reservation.check_in_date && new Date(reservation.check_in_date).getTime() - now.getTime() >= REFUND_ALLOWED_WINDOW_MS;
+  const [roomType, assignedRoom] = await Promise.all([
+    reservation.room_type_id ? db.collection('room_types').findOne({ _id: reservation.room_type_id }) : null,
+    reservation.room_id ? db.collection('rooms').findOne({ _id: reservation.room_id }) : null
+  ]);
 
   if (isFullyPaid && !refundEligible) {
     await sendReservationCancellationEmail({
@@ -427,7 +528,15 @@ const cancelCustomerReservation = asyncHandler(async (req, res) => {
       fullName: req.user.full_name,
       bookingCode: reservation.booking_code,
       supportPhone: SUPPORT_PHONE,
-      kind: 'support-required'
+      kind: 'support-required',
+      roomName: roomType?.name || '',
+      roomNumber: assignedRoom?.room_number || assignedRoom?.roomName || '',
+      checkInDate: reservation.check_in_date,
+      checkOutDate: reservation.check_out_date,
+      totalAmount,
+      paidAmount,
+      refundStatus: 'SupportRequired',
+      paymentStatus: reservation.payment_status || ''
     });
 
     throw createHttpError(
@@ -436,8 +545,10 @@ const cancelCustomerReservation = asyncHandler(async (req, res) => {
     );
   }
 
+  let refundResults = [];
+
   if (paidAmount > 0 && refundEligible) {
-    await refundCompletedPayments({ db, req, reservation, payments: completedPayments });
+    refundResults = await refundCompletedPayments({ db, req, reservation, payments: completedPayments });
   }
 
   await db.collection('reservations').updateOne(
@@ -455,10 +566,17 @@ const cancelCustomerReservation = asyncHandler(async (req, res) => {
     }
   );
 
+  await db.collection('booking_rooms').updateMany(
+    { booking_id: reservation._id },
+    {
+      $set: {
+        status: CANCELED_STATUS,
+        updated_at: now
+      }
+    }
+  );
+
   const updatedReservation = await db.collection('reservations').findOne({ _id: reservation._id });
-  const roomType = updatedReservation.room_type_id
-    ? await db.collection('room_types').findOne({ _id: updatedReservation.room_type_id })
-    : null;
 
   await sendReservationCancellationEmail({
     to: req.user.email,
@@ -466,12 +584,21 @@ const cancelCustomerReservation = asyncHandler(async (req, res) => {
     bookingCode: updatedReservation.booking_code,
     supportPhone: SUPPORT_PHONE,
     refundAmount: paidAmount,
-    kind: paidAmount > 0 ? 'refunded' : 'canceled'
+    kind: paidAmount > 0 ? 'refunded' : 'canceled',
+    roomName: roomType?.name || '',
+    roomNumber: assignedRoom?.room_number || assignedRoom?.roomName || '',
+    checkInDate: updatedReservation.check_in_date,
+    checkOutDate: updatedReservation.check_out_date,
+    totalAmount: Number(updatedReservation.total_amount || totalAmount || 0),
+    paidAmount,
+    paymentStatus: updatedReservation.payment_status || '',
+    refundStatus: updatedReservation.refund_status || '',
+    refundResults
   });
 
   res.send({
     message: paidAmount > 0 ? 'Reservation canceled and refund request was completed through VNPAY.' : 'Reservation canceled.',
-    reservation: mapReservation(updatedReservation, roomType)
+    reservation: mapReservation(updatedReservation, roomType, assignedRoom)
   });
 });
 
@@ -507,3 +634,5 @@ module.exports = {
   createRoomBooking,
   getCustomerReservation
 };
+
+

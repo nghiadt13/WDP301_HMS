@@ -172,13 +172,23 @@ const register = asyncHandler(async (req, res) => {
     return res.status(400).send({ message: 'You must agree to the terms and conditions' });
   }
 
-  const existingUser = await User.findOne({
+  const existingUsers = await User.find({
     $or: [{ email }, { login_account: loginAccount }]
-  });
+  }).select('email login_account');
 
-  if (existingUser) {
-    const duplicatedField = existingUser.email === email ? 'Email address' : 'Login account';
-    return res.status(409).send({ message: `${duplicatedField} is already registered` });
+  const duplicateErrors = [];
+  if (existingUsers.some((user) => user.email === email)) {
+    duplicateErrors.push('Email address is already registered');
+  }
+  if (existingUsers.some((user) => user.login_account === loginAccount)) {
+    duplicateErrors.push('Login account is already registered');
+  }
+
+  if (duplicateErrors.length > 0) {
+    return res.status(409).send({
+      message: duplicateErrors[0],
+      errors: duplicateErrors
+    });
   }
 
   const customerRole = await getCustomerRole();
@@ -447,3 +457,4 @@ module.exports = {
   requestPasswordReset,
   resetPassword
 };
+
