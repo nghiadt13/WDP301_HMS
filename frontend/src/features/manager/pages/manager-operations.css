@@ -892,6 +892,161 @@
   justify-content: flex-start;
 }
 
+.staff-schedule-card {
+  padding: 18px;
+}
+
+.staff-schedule-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.staff-schedule-heading h2 {
+  color: #101828;
+  font-size: 26px;
+  margin: 0;
+}
+
+.staff-schedule-heading p {
+  color: #667085;
+  line-height: 1.55;
+  margin: 6px 0 0;
+  max-width: 720px;
+}
+
+.staff-week-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.staff-week-controls .manager-ops-button,
+.staff-week-controls .manager-ops-secondary {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.staff-schedule-toolbar {
+  justify-content: flex-start;
+}
+
+.staff-week-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(7, minmax(160px, 1fr));
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.staff-day-column {
+  background: #f8fbff;
+  border: 1px solid #eef2f7;
+  border-radius: 18px;
+  display: grid;
+  gap: 12px;
+  min-height: 430px;
+  min-width: 170px;
+  padding: 12px;
+}
+
+.staff-day-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.staff-day-header strong {
+  color: #101828;
+  display: block;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.staff-day-header span {
+  color: #98a2b3;
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.staff-day-task-list {
+  display: grid;
+  gap: 10px;
+}
+
+.staff-schedule-item {
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.05);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  text-align: left;
+}
+
+.staff-schedule-item:hover {
+  border-color: #d4ed31;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.09);
+}
+
+.staff-schedule-item-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.staff-schedule-item-head strong {
+  color: #101828;
+  line-height: 1.35;
+}
+
+.staff-schedule-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.staff-schedule-meta span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.staff-schedule-item p {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.staff-schedule-item p.is-muted {
+  color: #98a2b3;
+}
+
+.staff-day-empty {
+  align-items: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  color: #98a2b3;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 86px;
+  text-align: center;
+}
+
 .policy-hero-card {
   align-items: center;
   display: flex;
@@ -963,6 +1118,14 @@
 @media (max-width: 1180px) {
   .staff-task-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-schedule-heading {
+    display: grid;
+  }
+
+  .staff-week-controls {
+    justify-content: flex-start;
   }
 }
 
