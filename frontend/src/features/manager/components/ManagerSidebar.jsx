@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText, Grid } from 'lucide-react';
+import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText, Grid, ClipboardCheck } from 'lucide-react';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
@@ -19,9 +19,9 @@ const sidebarItems = [
 ];
 
 const housekeepingSidebarItems = [
+  { icon: ClipboardCheck, label: 'Daily Tasks', to: '/manager/housekeeping/daily' },
   { icon: BrushCleaning, label: 'Cleaning Tasks', to: '/manager/housekeeping/tasks' },
   { icon: Sparkles, label: 'Maintenance Report', to: '/manager/housekeeping/schedule' },
-  { icon: Package, label: 'Minibar', to: '/manager/minibar' },
 ];
 
 const ManagerSidebar = () => {
@@ -65,7 +65,7 @@ const ManagerSidebar = () => {
         {visibleSidebarItems.map((item) => {
           const { icon: Icon, label, to, hasSub, badge, matchPath } = item;
           const active = isActive(item);
-          const isRooms = label === 'Loại phòng';
+          const isRooms = label === 'Loại phòng' || label === 'Phòng';
           const isPhysicalRooms = label === 'Quản lý phòng';
 
           const content = (

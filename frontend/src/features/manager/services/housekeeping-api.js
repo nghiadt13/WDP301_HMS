@@ -6,6 +6,7 @@ const normalizeTask = (task) => ({
   id: task?._id || task?.id,
   title: task?.title || 'Cleaning task',
   roomNumber: task?.room_number || '',
+  description: task?.description || task?.receptionistNote || '',
   cleaningType: task?.cleaningType || 'Checkout Cleaning',
   priority: task?.priority || 'medium',
   receptionistNote: task?.receptionistNote || '',

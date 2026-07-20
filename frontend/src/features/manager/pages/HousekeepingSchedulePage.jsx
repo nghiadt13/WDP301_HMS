@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Eye, Pencil, Plus, RefreshCw, Search } from 'lucide-react';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
@@ -379,8 +379,8 @@ const HousekeepingSchedulePage = () => {
               <span>Priority</span><b><HousekeepingStatusBadge value={viewItem.priority} variant="priority" /></b>
               <span>Status</span><b><HousekeepingStatusBadge value={viewItem.status} /></b>
               <span>Assigned</span><b>{viewItem.assignedTech || 'Not assigned'}</b>
-              <span>Description</span><b>{viewItem.description || '—'}</b>
-              <span>Note</span><b>{viewItem.note || '—'}</b>
+              <span>Description</span><b>{viewItem.description || 'ΓÇö'}</b>
+              <span>Note</span><b>{viewItem.note || 'ΓÇö'}</b>
             </div>
             <div className="housekeeping-modal-actions">
               <button className="housekeeping-btn" type="button" onClick={() => setViewItem(null)}>Close</button>
@@ -393,7 +393,6 @@ const HousekeepingSchedulePage = () => {
         <div className="housekeeping-modal-backdrop">
           <div className="housekeeping-modal-card">
             <h3>Edit Maintenance Report</h3>
-            <p>Room {editForm.room} • {editForm.category}</p>
             <div className="housekeeping-maintenance-edit-grid">
               <label>
                 Room

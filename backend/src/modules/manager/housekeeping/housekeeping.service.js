@@ -1138,7 +1138,17 @@ const housekeepingService = {
     if (!role.includes('manager') && !role.includes('housekeeping') && !role.includes('receptionist')) {
       throw createHttpError('Forbidden', 403);
     }
-    const inspection = await Inspection.findOne({ room_number: roomId }).sort({ createdAt: -1 }).lean();
+
+    const roomNumber = String(roomId || '').trim();
+    if (!roomNumber) {
+      throw createHttpError('Room number is required', 400);
+    }
+
+    if (!/^[A-Za-z0-9-]+$/.test(roomNumber)) {
+      throw createHttpError('Invalid room number format', 400);
+    }
+
+    const inspection = await Inspection.findOne({ room_number: roomNumber }).sort({ createdAt: -1 }).lean();
     if (!inspection) throw createHttpError('Inspection not found', 404);
     return mapInspection(inspection);
   },
