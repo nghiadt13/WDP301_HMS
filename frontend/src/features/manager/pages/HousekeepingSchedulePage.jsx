@@ -393,28 +393,50 @@ const HousekeepingSchedulePage = () => {
         <div className="housekeeping-modal-backdrop">
           <div className="housekeeping-modal-card">
             <h3>Edit Maintenance Report</h3>
-            <p>Room {editForm.room} ΓÇó {editForm.category}</p>
-            <select
-              value={editForm.status}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}
-            >
-              <option value="Open">Open</option>
-              <option value="InProgress">InProgress</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-            <textarea
-              value={editForm.note}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, note: event.target.value }))}
-              placeholder="Update note"
-              className="housekeeping-maintenance-textarea"
-            />
-            <input
-              value={editForm.image}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, image: event.target.value }))}
-              placeholder="Photo URL"
-              className="housekeeping-maintenance-input"
-            />
+            <div className="housekeeping-maintenance-edit-grid">
+              <label>
+                Room
+                <input value={editForm.room} disabled className="housekeeping-maintenance-input" />
+              </label>
+              <label>
+                Category
+                <input value={editForm.category} disabled className="housekeeping-maintenance-input" />
+              </label>
+              <label>
+                Current status
+                <div><HousekeepingStatusBadge value={editForm.status} /></div>
+              </label>
+              <label>
+                Update status
+                <select
+                  value={editForm.status}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}
+                >
+                  <option value="Open">Open</option>
+                  <option value="InProgress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </label>
+              <label className="housekeeping-maintenance-edit-wide">
+                Note
+                <textarea
+                  value={editForm.note}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, note: event.target.value }))}
+                  placeholder="Update note"
+                  className="housekeeping-maintenance-textarea"
+                />
+              </label>
+              <label className="housekeeping-maintenance-edit-wide">
+                Photo URL
+                <input
+                  value={editForm.image}
+                  onChange={(event) => setEditForm((prev) => ({ ...prev, image: event.target.value }))}
+                  placeholder="Photo URL"
+                  className="housekeeping-maintenance-input"
+                />
+              </label>
+            </div>
             <div className="housekeeping-modal-actions">
               <button className="housekeeping-outline-btn" type="button" onClick={() => setEditForm(null)}>Cancel</button>
               <button className="housekeeping-btn" type="button" onClick={submitEditReport} disabled={updateReportMutation.isPending}>
