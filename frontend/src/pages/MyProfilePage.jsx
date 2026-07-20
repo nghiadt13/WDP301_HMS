@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  CalendarDays,
   ChevronDown,
   CreditCard,
-  Gift,
   Search,
-  ShieldCheck,
   UserRound
 } from 'lucide-react';
 
@@ -16,12 +13,6 @@ const sidebarItems = [
   { label: 'Guest Profile', icon: UserRound, targetId: 'guest-profile' },
   { label: 'Booking History', icon: CreditCard, targetId: 'booking-history' }
 ];
-
-const rewardIcons = {
-  calendar: CalendarDays,
-  gift: Gift,
-  shield: ShieldCheck
-};
 
 const getInitials = (name) =>
   String(name || 'Guest User')
@@ -80,10 +71,6 @@ const formatDuration = (nights) => {
   return `${value} ${value === 1 ? 'Night' : 'Nights'}`;
 };
 
-const formatPoints = (points) => new Intl.NumberFormat('en-US').format(Number(points || 0));
-
-const renderStars = (rating) => '★'.repeat(Math.max(0, Math.min(5, Number(rating || 0))));
-
 const MyProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(() => {
@@ -104,11 +91,31 @@ const MyProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [bookingActionMessage, setBookingActionMessage] = useState('');
   const [cancelingReservationId, setCancelingReservationId] = useState('');
+  const [selectedBookingId, setSelectedBookingId] = useState('');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+  const [hotelPolicies, setHotelPolicies] = useState([]);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [pendingCancelBooking, setPendingCancelBooking] = useState(null);
+  const [acceptedCancelPolicy, setAcceptedCancelPolicy] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    address: '',
+    avatar: '',
+    full_name: '',
+    phone_number: ''
+  });
 
   const loadProfile = useCallback(async () => {
     try {
       const response = await axiosClient.get('/profile/me');
       setUser(response.data.user);
+      setProfileForm({
+        address: response.data.user?.address || '',
+        avatar: response.data.user?.avatar || '',
+        full_name: response.data.user?.full_name || '',
+        phone_number: response.data.user?.phone_number || ''
+      });
       setProfileData({
         currentStay: response.data.currentStay || null,
         bookingHistory: response.data.bookingHistory || [],
@@ -139,6 +146,19 @@ const MyProfilePage = () => {
     loadProfile();
   }, [loadProfile, navigate]);
 
+  useEffect(() => {
+    const loadHotelPolicies = async () => {
+      try {
+        const response = await axiosClient.get('/payments/hotel-policies');
+        setHotelPolicies(response.data?.policies || []);
+      } catch {
+        setHotelPolicies([]);
+      }
+    };
+
+    loadHotelPolicies();
+  }, []);
+
   const handleCancelBooking = async (reservationId) => {
     setBookingActionMessage('');
     setCancelingReservationId(String(reservationId));
@@ -154,20 +174,122 @@ const MyProfilePage = () => {
     }
   };
 
+  const openCancelConfirmation = (booking) => {
+    setPendingCancelBooking(booking);
+    setAcceptedCancelPolicy(false);
+    setBookingActionMessage('');
+    setIsCancelModalOpen(true);
+  };
+
+  const closeCancelConfirmation = () => {
+    if (cancelingReservationId) {
+      return;
+    }
+
+    setIsCancelModalOpen(false);
+    setPendingCancelBooking(null);
+    setAcceptedCancelPolicy(false);
+  };
+
+  const handleConfirmCancelBooking = async () => {
+    if (!pendingCancelBooking?.id || !acceptedCancelPolicy) {
+      return;
+    }
+
+    await handleCancelBooking(pendingCancelBooking.id);
+    setIsCancelModalOpen(false);
+    setPendingCancelBooking(null);
+    setAcceptedCancelPolicy(false);
+  };
+
+  const handleProfileFieldChange = (event) => {
+    const { name, value } = event.target;
+    setProfileForm((current) => ({
+      ...current,
+      [name]: value
+    }));
+  };
+
+  const handleProfileEdit = () => {
+    setProfileForm({
+      address: user?.address || '',
+      avatar: user?.avatar || '',
+      full_name: user?.full_name || '',
+      phone_number: user?.phone_number || ''
+    });
+    setProfileMessage('');
+    setIsEditingProfile(true);
+  };
+
+  const handleProfileCancel = () => {
+    setProfileForm({
+      address: user?.address || '',
+      avatar: user?.avatar || '',
+      full_name: user?.full_name || '',
+      phone_number: user?.phone_number || ''
+    });
+    setProfileMessage('');
+    setIsEditingProfile(false);
+  };
+
+  const handleProfileSave = async (event) => {
+    event.preventDefault();
+    setIsSavingProfile(true);
+    setProfileMessage('');
+
+    try {
+      const response = await axiosClient.patch('/profile/me', profileForm);
+      setUser(response.data.user);
+      localStorage.setItem('hotelify_user', JSON.stringify(response.data.user));
+      window.dispatchEvent(new Event('hotelify-auth-change'));
+      setProfileMessage(response.data.message || 'Profile updated successfully.');
+      setIsEditingProfile(false);
+    } catch (error) {
+      setProfileMessage(error.response?.data?.message || 'Cannot update profile right now.');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   const profileRows = useMemo(
     () => [
-      { label: 'Login Account', value: user?.login_account || 'Not updated' },
-      { label: 'Phone Number', value: user?.phone_number || 'Not updated' },
-      { label: 'Email Address', value: user?.email || 'Not updated' },
-      { label: 'Address', value: user?.address || 'Not updated' },
-      { label: 'Member Since', value: formatJoinDate(user?.createdAt) }
+      { editable: false, label: 'Login Account', value: user?.login_account || 'Not updated' },
+      { editable: true, label: 'Phone Number', name: 'phone_number', value: user?.phone_number || 'Not updated' },
+      { editable: false, label: 'Email Address', value: user?.email || 'Not updated' },
+      { editable: true, label: 'Address', name: 'address', value: user?.address || 'Not updated' },
+      { editable: false, label: 'Member Since', value: formatJoinDate(user?.createdAt) }
     ],
     [user]
   );
 
-  const membership = profileData.membership || {};
   const currentStay = profileData.currentStay;
-  const stayGallery = currentStay?.gallery || [];
+  const selectedBooking = profileData.bookingHistory.find(
+    (booking) => String(booking.id || booking.bookingCode) === selectedBookingId
+  );
+  const selectedStay = selectedBooking || currentStay;
+  const stayGallery = selectedBooking
+    ? [selectedBooking.image].filter(Boolean)
+    : selectedStay?.gallery || [];
+  const selectedStayStatus = String(selectedStay?.bookingStatus || selectedStay?.displayStatus || '').toLowerCase();
+  const selectedPaymentStatus = String(selectedStay?.paymentStatus || '').toLowerCase();
+  const canContinuePayment =
+    Boolean(selectedStay?.id) &&
+    !selectedStayStatus.includes('cancel') &&
+    !selectedStayStatus.includes('completed') &&
+    !selectedStayStatus.includes('checkedout') &&
+    selectedPaymentStatus !== 'paid';
+  const cancellationPolicies = hotelPolicies.filter((policy) => {
+    const searchable = `${policy.category || ''} ${policy.title || ''} ${policy.content || ''}`.toLowerCase();
+    return (
+      searchable.includes('cancel') ||
+      searchable.includes('refund') ||
+      searchable.includes('hủy') ||
+      searchable.includes('huy') ||
+      searchable.includes('hoàn') ||
+      searchable.includes('hoan')
+    );
+  });
+  const visibleCancellationPolicies = cancellationPolicies.length > 0 ? cancellationPolicies : hotelPolicies;
 
   if (isLoading) {
     return (
@@ -197,53 +319,73 @@ const MyProfilePage = () => {
             );
           })}
         </nav>
-
-        <div className="profile-upgrade-card">
-          <img
-            src="https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_01.jpg"
-            alt="Hotel preview"
-          />
-          <h3>Manage Smarter, Serve Better</h3>
-          <p>Automate check-ins, monitor occupancy, and track performance effortlessly.</p>
-          <button type="button">Upgrade to Pro</button>
-        </div>
       </aside>
 
       <div className="profile-main">
         <div className="profile-grid">
           <article className="profile-card profile-identity-card" id="guest-profile">
             <div className="profile-avatar-large">
-              {user?.avatar ? <img src={user.avatar} alt={user.full_name} /> : <span>{getInitials(user?.full_name)}</span>}
+              {(isEditingProfile ? profileForm.avatar : user?.avatar) ? (
+                <img src={isEditingProfile ? profileForm.avatar : user.avatar} alt={isEditingProfile ? profileForm.full_name : user.full_name} />
+              ) : (
+                <span>{getInitials(isEditingProfile ? profileForm.full_name : user?.full_name)}</span>
+              )}
             </div>
-            <h1>{user?.full_name || 'Guest User'}</h1>
+            {isEditingProfile ? (
+              <input
+                className="profile-name-input"
+                name="full_name"
+                onChange={handleProfileFieldChange}
+                value={profileForm.full_name}
+              />
+            ) : (
+              <h1>{user?.full_name || 'Guest User'}</h1>
+            )}
             <p>{user?.role?.name || 'Customer'} · {user?.status || 'active'}</p>
 
-            <div className="profile-info-list">
+            <form className="profile-info-list" onSubmit={handleProfileSave}>
               {profileRows.map((row) => (
                 <div key={row.label}>
                   <span>{row.label}</span>
-                  <strong>{row.value}</strong>
+                  {isEditingProfile && row.editable ? (
+                    <input
+                      name={row.name}
+                      onChange={handleProfileFieldChange}
+                      value={profileForm[row.name]}
+                    />
+                  ) : (
+                    <strong>{row.value}</strong>
+                  )}
                 </div>
               ))}
-            </div>
-          </article>
-
-          <article className="profile-member-card">
-            <div>
-              <h2>{membership.tier || 'Standard Member'}</h2>
-              <span>{formatPoints(membership.points)} pts</span>
-            </div>
-            <ShieldCheck size={78} strokeWidth={1.5} />
-            <div className="profile-progress">
-              <span style={{ width: `${Math.min(100, Math.max(0, membership.progressPercent || 0))}%` }} />
-            </div>
-            <footer>
-              <p>
-                {membership.note ||
-                  `Earn ${formatPoints(membership.pointsToNextTier)} points to reach ${membership.nextTier || 'the next tier'}`}
-              </p>
-              <button type="button">Learn How</button>
-            </footer>
+              {isEditingProfile ? (
+                <div>
+                  <span>Avatar URL</span>
+                  <input
+                    name="avatar"
+                    onChange={handleProfileFieldChange}
+                    value={profileForm.avatar}
+                  />
+                </div>
+              ) : null}
+              {profileMessage ? <p className="profile-edit-message">{profileMessage}</p> : null}
+              <div className="profile-edit-actions">
+                {isEditingProfile ? (
+                  <>
+                    <button disabled={isSavingProfile} type="submit">
+                      {isSavingProfile ? 'Saving...' : 'Save'}
+                    </button>
+                    <button disabled={isSavingProfile} onClick={handleProfileCancel} type="button">
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={handleProfileEdit} type="button">
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+            </form>
           </article>
 
           <article className="profile-card profile-stay-card">
@@ -251,52 +393,49 @@ const MyProfilePage = () => {
               <h2>Stay Info</h2>
               <button type="button">...</button>
             </header>
-            {currentStay ? (
+            {selectedStay ? (
               <>
                 <div className="profile-stay-gallery">
                   {stayGallery.slice(0, 5).map((image, index) => (
-                    <img src={image} alt={index === 0 ? currentStay.roomType : ''} key={image} />
+                    <img src={image} alt={index === 0 ? selectedStay.roomType : ''} key={image} />
                   ))}
                 </div>
-                <h2>{currentStay.roomType}</h2>
+                <h2>{selectedStay.roomType}</h2>
                 <div className="profile-stay-details">
-                  <span><small>Check-In</small>{formatDate(currentStay.checkInDate)}</span>
-                  <span><small>Check-Out</small>{formatDate(currentStay.checkOutDate)}</span>
-                  <span><small>Current Booking Status</small><mark>{currentStay.displayStatus}</mark></span>
-                  <span><small>Room Number</small>{currentStay.roomNumber || 'Not assigned'}</span>
-                  <span><small>Number of Guests</small>{currentStay.guestCount} Guest(s)</span>
-                  <span><small>Current Booking Code</small><mark>{currentStay.bookingCode}</mark></span>
-                  <span><small>Duration</small>{formatDuration(currentStay.durationNights)}</span>
-                  <span><small>Request</small>{currentStay.specialRequest || 'None'}</span>
-                  <span><small>Payment Status</small>{currentStay.paymentStatus || 'Not updated'}</span>
+                  <span><small>Check-In</small>{formatDate(selectedStay.checkInDate)}</span>
+                  <span><small>Check-Out</small>{formatDate(selectedStay.checkOutDate)}</span>
+                  <span><small>Booking Status</small><mark>{selectedStay.displayStatus}</mark></span>
+                  <span><small>Room Number</small>{selectedStay.roomNumber || 'Not assigned'}</span>
+                  <span><small>Number of Guests</small>{selectedStay.guestCount || selectedStay.guestTotal || 'N/A'} Guest(s)</span>
+                  <span><small>Booking Code</small><mark>{selectedStay.bookingCode}</mark></span>
+                  <span><small>Duration</small>{formatDuration(selectedStay.durationNights)}</span>
+                  <span><small>Booking Date</small>{formatDate(selectedStay.bookingDate)}</span>
+                  <span><small>Payment Status</small>{selectedStay.paymentStatus || 'Not updated'}</span>
+                  <span><small>Request</small>{selectedStay.specialRequest || 'None'}</span>
                 </div>
+                {(selectedStay.canCancel || canContinuePayment) ? (
+                  <div className="profile-stay-actions">
+                    {canContinuePayment ? (
+                      <button type="button" onClick={() => navigate(`/payment/${selectedStay.id}`)}>
+                        Continue Payment
+                      </button>
+                    ) : null}
+                    {selectedStay.canCancel ? (
+                      <button
+                        className="is-danger"
+                        disabled={cancelingReservationId === String(selectedStay.id)}
+                        onClick={() => openCancelConfirmation(selectedStay)}
+                        type="button"
+                      >
+                        {cancelingReservationId === String(selectedStay.id) ? 'Canceling...' : 'Cancel Booking'}
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
               </>
             ) : (
               <div className="profile-empty-state">No stay information in database yet.</div>
             )}
-          </article>
-
-          <article className="profile-card profile-rewards-card">
-            <header>
-              <h2>Rewards</h2>
-              <button type="button">...</button>
-            </header>
-            <div className="profile-rewards-list">
-              {profileData.rewards.length > 0 ? (
-                profileData.rewards.map((reward) => {
-                  const Icon = rewardIcons[reward.icon] || Gift;
-
-                  return (
-                    <div key={reward.id || reward.title}>
-                      <span><Icon size={20} /></span>
-                      <strong>{reward.title}</strong>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="profile-empty-state">No rewards in database yet.</div>
-              )}
-            </div>
           </article>
 
           <article className="profile-card profile-booking-card" id="booking-history">
@@ -323,7 +462,19 @@ const MyProfilePage = () => {
               </div>
               {profileData.bookingHistory.length > 0 ? (
                 profileData.bookingHistory.map((booking) => (
-                  <div className="profile-booking-row" key={booking.id || booking.bookingCode}>
+                  <div
+                    className={`profile-booking-row${selectedBookingId === String(booking.id || booking.bookingCode) ? ' is-selected' : ''}`}
+                    key={booking.id || booking.bookingCode}
+                    onClick={() => setSelectedBookingId(String(booking.id || booking.bookingCode))}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelectedBookingId(String(booking.id || booking.bookingCode));
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
                     {booking.image ? (
                       <img src={booking.image} alt={booking.roomType} />
                     ) : (
@@ -342,7 +493,10 @@ const MyProfilePage = () => {
                           type="button"
                           className="profile-cancel-booking"
                           disabled={cancelingReservationId === String(booking.id)}
-                          onClick={() => handleCancelBooking(booking.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openCancelConfirmation(booking);
+                          }}
                         >
                           {cancelingReservationId === String(booking.id) ? 'Đang hủy...' : 'Hủy'}
                         </button>
@@ -356,35 +510,76 @@ const MyProfilePage = () => {
             </div>
           </article>
 
-          <article className="profile-card profile-reviews-card">
-            <header>
-              <h2>Reviews</h2>
-              <button type="button">...</button>
-            </header>
-            {profileData.reviews.length > 0 ? (
-              profileData.reviews.map((review) => (
-                <div className="profile-review-item" key={review.id || `${review.title}-${review.submittedAt}`}>
-                  <h3>{review.title}</h3>
-                  <div>
-                    <span>{renderStars(review.rating)}</span>
-                    <small>{formatDate(review.submittedAt)}</small>
-                  </div>
-                  <p>{review.text}</p>
-                </div>
-              ))
-            ) : (
-              <div className="profile-empty-state">No reviews in database yet.</div>
-            )}
-          </article>
         </div>
-
-        <footer className="profile-footer">
-          <span>Copyright © 2026 Hotelify</span>
-          <Link to="/">Privacy Policy</Link>
-          <Link to="/">Term and conditions</Link>
-          <Link to="/">Contact</Link>
-        </footer>
       </div>
+      {isCancelModalOpen ? (
+        <div className="hotel-policy-modal-backdrop" role="presentation" onMouseDown={closeCancelConfirmation}>
+          <section
+            className="hotel-policy-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-policy-modal-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <span>Điều khoản hoàn hủy</span>
+                <h2 id="cancel-policy-modal-title">Xác nhận hủy booking</h2>
+              </div>
+              <button type="button" aria-label="Đóng xác nhận hủy" onClick={closeCancelConfirmation}>
+                X
+              </button>
+            </header>
+
+            <div className="hotel-policy-modal-content">
+              {pendingCancelBooking ? (
+                <div className="cancel-booking-summary">
+                  <strong>{pendingCancelBooking.bookingCode}</strong>
+                  <span>{pendingCancelBooking.roomType}</span>
+                  <span>{formatStayRange(pendingCancelBooking.checkInDate, pendingCancelBooking.checkOutDate)}</span>
+                </div>
+              ) : null}
+
+              {visibleCancellationPolicies.length > 0 ? (
+                visibleCancellationPolicies.map((policy) => (
+                  <article key={policy.id || policy.title} className="hotel-policy-item">
+                    <span>{policy.category || 'Policy'}</span>
+                    <h3>{policy.title}</h3>
+                    <p>{policy.content}</p>
+                  </article>
+                ))
+              ) : (
+                <p className="hotel-policy-empty">
+                  Chưa có điều khoản hoàn hủy được cấu hình. Vui lòng liên hệ khách sạn trước khi xác nhận hủy.
+                </p>
+              )}
+
+              <label className="cancel-policy-confirm">
+                <input
+                  checked={acceptedCancelPolicy}
+                  onChange={(event) => setAcceptedCancelPolicy(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>Tôi đã đọc, hiểu và đồng ý với điều khoản hoàn hủy của booking này.</span>
+              </label>
+            </div>
+
+            <footer>
+              <button type="button" onClick={closeCancelConfirmation}>
+                Đóng
+              </button>
+              <button
+                className="hotel-policy-accept is-danger"
+                disabled={!acceptedCancelPolicy || cancelingReservationId === String(pendingCancelBooking?.id)}
+                onClick={handleConfirmCancelBooking}
+                type="button"
+              >
+                {cancelingReservationId === String(pendingCancelBooking?.id) ? 'Đang hủy...' : 'Xác nhận hủy'}
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 };
