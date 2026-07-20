@@ -152,11 +152,16 @@ const mapInspection = (inspection) => ({
   damage: inspection.damage || [],
   lostItem: inspection.lostItem || [],
   minibar: inspection.minibar || [],
+  minibarReport: {
+    items: inspection.invoice_items || [],
+    total: Number(inspection.minibar_total || 0),
+  },
   photos: inspection.photos || [],
   note: inspection.note || '',
   status: inspection.status,
   remarks: inspection.remarks,
   minibar_used: inspection.minibar_used,
+  minibar_total: Number(inspection.minibar_total || 0),
   invoice_items: inspection.invoice_items || [],
   missing_items: inspection.missing_items || [],
   damaged_items: inspection.damaged_items || [],
@@ -896,6 +901,7 @@ const housekeepingService = {
     }
 
     const {
+      task_id = null,
       room_number,
       room = '',
       guest = '',
@@ -917,17 +923,45 @@ const housekeepingService = {
     if (!room_number) throw createHttpError('Room number is required', 400);
 
     const roomRecord = await Room.findOne({ roomName: room_number });
+    const sourceTask = task_id ? await StaffTask.findById(task_id) : null;
+    const isInspectionReviewTask = Boolean(
+      sourceTask
+      && String(sourceTask.staff_type || '').trim().toLowerCase() === 'housekeeping'
+      && String(sourceTask.cleaningType || '').trim().toLowerCase() === 'inspection review'
+    );
     let task = null;
     let invoiceItems = [];
+    let minibarTotal = 0;
 
     if (minibar_used || minibar.length) {
       const minibarItems = await MinibarItem.find({ is_active: true }).lean();
-      const selectedItems = minibar.length ? minibar : minibarItems.slice(0, 3).map((item) => ({ item: item.name, qty: 1, price: item.price || 0, total: item.price || 0 }));
-      invoiceItems = selectedItems.map((entry) => ({
-        name: entry.item || entry.name || 'Minibar item',
-        quantity: entry.qty || 1,
-        unit_price: entry.price || 0,
-        total: entry.total || (entry.qty || 1) * (entry.price || 0),
+      const minibarItemById = new Map(minibarItems.map((item) => [String(item._id), item]));
+      const minibarItemByName = new Map(minibarItems.map((item) => [String(item.name).toLowerCase(), item]));
+
+      const selectedItems = minibar.length ? minibar : [];
+      const resolvedItems = selectedItems.map((entry) => {
+        const qty = Math.max(1, Number(entry.qty || 1));
+        const dbItem = minibarItemById.get(String(entry.item_id || entry.itemId || entry._id || ''))
+          || minibarItemByName.get(String(entry.item || entry.name || '').toLowerCase())
+          || null;
+        const itemName = dbItem?.name || entry.item || entry.name || 'Minibar item';
+        const unitPrice = Number(dbItem?.price ?? entry.price ?? 0);
+        const total = qty * unitPrice;
+        minibarTotal += total;
+        return {
+          item_id: dbItem?._id || entry.item_id || entry.itemId || null,
+          item: itemName,
+          qty,
+          price: unitPrice,
+          total,
+        };
+      });
+
+      invoiceItems = resolvedItems.map((entry) => ({
+        name: entry.item,
+        quantity: entry.qty,
+        unit_price: entry.price,
+        total: entry.total,
         note: 'Minibar usage recorded during inspection',
       }));
 
@@ -936,25 +970,23 @@ const housekeepingService = {
         if (!roomRecord.minibar) roomRecord.minibar = [];
         const currentMinibar = [...roomRecord.minibar];
 
-        for (const entry of selectedItems) {
-          const itemName = entry.item || entry.name;
+        for (const entry of resolvedItems) {
+          const dbItemIdStr = String(entry.item_id || '');
           const qtyUsed = entry.qty || 1;
-          if (itemName) {
-            const dbItem = await MinibarItem.findOne({ name: itemName });
-            if (dbItem) {
-              const dbItemIdStr = dbItem._id.toString();
-              const itemIndex = currentMinibar.findIndex(m => m.item_id?.toString() === dbItemIdStr);
-              
-              if (itemIndex > -1) {
-                currentMinibar[itemIndex].quantity = Math.max(0, (currentMinibar[itemIndex].quantity || 0) - qtyUsed);
-              } else {
-                // Default room stocking quantity to 5, minus consumed qty
-                currentMinibar.push({
-                  item_id: dbItem._id,
-                  quantity: Math.max(0, 5 - qtyUsed)
-                });
-              }
-            }
+          if (!dbItemIdStr) {
+            continue;
+          }
+
+          const itemIndex = currentMinibar.findIndex((m) => m.item_id?.toString() === dbItemIdStr);
+
+          if (itemIndex > -1) {
+            currentMinibar[itemIndex].quantity = Math.max(0, (currentMinibar[itemIndex].quantity || 0) - qtyUsed);
+          } else {
+            // Default room stocking quantity to 5, minus consumed qty
+            currentMinibar.push({
+              item_id: entry.item_id,
+              quantity: Math.max(0, 5 - qtyUsed)
+            });
           }
         }
         roomRecord.minibar = currentMinibar;
@@ -962,7 +994,7 @@ const housekeepingService = {
     }
 
     if (roomRecord) {
-      roomRecord.status = maintenance_required || damaged_items.length || damage.length ? 'Maintenance' : 'Cleaning';
+      roomRecord.status = maintenance_required || damaged_items.length || damage.length ? 'Maintenance' : 'Dirty';
       roomRecord.inspectionStatus = 'Completed';
       roomRecord.currentGuest = guest || roomRecord.currentGuest || '';
       await roomRecord.save();
@@ -982,7 +1014,7 @@ const housekeepingService = {
         assignedBy: 'Receptionist',
         receptionistNote: note || remarks || 'Maintenance required',
       });
-    } else {
+    } else if (!isInspectionReviewTask) {
       task = await StaffTask.create({
         title: `Cleaning required for room ${room_number}`,
         description: remarks || 'Room needs cleaning after inspection',
@@ -997,6 +1029,11 @@ const housekeepingService = {
         receptionistNote: note || remarks || 'Ready for cleaning',
         cleaningType: 'Checkout Cleaning',
       });
+    } else if (sourceTask) {
+      sourceTask.status = 'Completed';
+      sourceTask.completedAt = new Date();
+      await sourceTask.save();
+      task = sourceTask;
     }
 
     const inspection = await Inspection.create({
@@ -1014,11 +1051,12 @@ const housekeepingService = {
       status: 'submitted',
       remarks,
       minibar_used: minibar_used || minibar.length > 0,
+      minibar_total: minibarTotal,
       invoice_items: invoiceItems,
       missing_items: missing_items || [],
       damaged_items: damaged_items || [],
       maintenance_required: maintenance_required || damaged_items.length > 0 || damage.length > 0,
-      task_id: task._id,
+      task_id: sourceTask?._id || task?._id || null,
       room_status_before,
       room_status_after,
     });

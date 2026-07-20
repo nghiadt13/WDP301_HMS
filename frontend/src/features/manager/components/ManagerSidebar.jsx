@@ -9,7 +9,7 @@ const sidebarItems = [
   { icon: Megaphone, label: 'Chiến dịch', hasSub: true },
   { icon: BedDouble, label: 'Loại phòng', hasSub: true, matchPath: '/manager/rooms' },
   { icon: Grid, label: 'Quản lý phòng', hasSub: true, matchPath: '/manager/physical-rooms' },
-  { icon: BrushCleaning, label: 'Housekeeping', to: '/manager/housekeeping' },
+  { icon: BrushCleaning, label: 'Maintenance', to: '/manager/housekeeping/schedule' },
   { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-task' },
   { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar' },
   { icon: FileText, label: 'Chính sách', to: '/manager/policies' },

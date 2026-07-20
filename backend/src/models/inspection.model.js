@@ -41,6 +41,7 @@ const inspectionSchema = new mongoose.Schema(
     minibar: {
       type: [
         {
+          item_id: { type: mongoose.Schema.Types.ObjectId, ref: 'MinibarItem', default: null },
           item: { type: String, trim: true, required: true },
           qty: { type: Number, default: 1 },
           price: { type: Number, default: 0 },
@@ -48,6 +49,10 @@ const inspectionSchema = new mongoose.Schema(
         },
       ],
       default: [],
+    },
+    minibar_total: {
+      type: Number,
+      default: 0,
     },
     photos: {
       type: [String],

@@ -182,7 +182,7 @@ const App = () => {
             <Route path="rooms/:id/edit" element={<EditRoomPage />} />
             <Route path="room-types/add" element={<AddRoomTypePage />} />
             <Route path="room-types/:id/edit" element={<EditRoomTypePage />} />
-            <Route path="housekeeping" element={<Navigate to="/manager/housekeeping/tasks" replace />} />
+            <Route path="housekeeping" element={<Navigate to="/manager/housekeeping/schedule" replace />} />
             <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
             <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />
             <Route path="staff-task" element={<ManagerStaffTasksPage />} />
@@ -196,8 +196,8 @@ const App = () => {
 
         <Route element={<HousekeepingProtectedRoute />}>
           <Route path="manager" element={<ManagerLayout />}>
-            <Route index element={<Navigate to="/manager/housekeeping/tasks" replace />} />
-            <Route path="housekeeping" element={<Navigate to="/manager/housekeeping/tasks" replace />} />
+            <Route index element={<Navigate to="/manager/housekeeping/schedule" replace />} />
+            <Route path="housekeeping" element={<Navigate to="/manager/housekeeping/schedule" replace />} />
             <Route path="housekeeping/daily" element={<HousekeepingDailyTasksPage />} />
             <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
             <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />

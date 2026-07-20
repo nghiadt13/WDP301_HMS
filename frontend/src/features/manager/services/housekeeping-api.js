@@ -53,6 +53,14 @@ const normalizeInspection = (inspection) => ({
   note: inspection?.note || '',
   remarks: inspection?.remarks || '',
   status: inspection?.status || '',
+  taskId: inspection?.task_id || null,
+  minibarUsed: Boolean(inspection?.minibar_used),
+  minibar: Array.isArray(inspection?.minibar) ? inspection.minibar : [],
+  damage: Array.isArray(inspection?.damage) ? inspection.damage : [],
+  lostItem: Array.isArray(inspection?.lostItem) ? inspection.lostItem : [],
+  missingItems: Array.isArray(inspection?.missing_items) ? inspection.missing_items : [],
+  damagedItems: Array.isArray(inspection?.damaged_items) ? inspection.damaged_items : [],
+  maintenanceRequired: Boolean(inspection?.maintenance_required),
   createdAt: inspection?.createdAt || null,
   updatedAt: inspection?.updatedAt || null,
 });
@@ -173,6 +181,20 @@ export const housekeepingApi = {
   async completeTask(id) {
     const response = await axiosClient.patch(`/housekeeping/tasks/${id}/complete`);
     return normalizeTask(unwrap(response));
+  },
+
+  async updateTaskStatus(id, payload) {
+    const response = await axiosClient.put(`/housekeeping/tasks/${id}/status`, payload);
+    return normalizeTask(unwrap(response));
+  },
+
+  async createInspection(payload) {
+    const response = await axiosClient.post('/housekeeping/inspection', payload);
+    const result = unwrap(response) || {};
+    return {
+      inspection: normalizeInspection(result.inspection),
+      task: result.task ? normalizeTask(result.task) : null,
+    };
   },
 
   async reportIssue(payload) {

@@ -166,14 +166,12 @@ const checkinService = {
       blockingReasons.push('Booking not fully paid');
     }
 
-    // Check if every assigned room has status = Available
+    // Assigned rooms are only a soft warning at this step because the receptionist
+    // can reassign rooms in the wizard if the initially selected room is unavailable.
     const roomIds = rooms.map(r => r.room_id).filter(Boolean);
     const assignedRooms = await Room.find({ _id: { $in: roomIds } });
-    
+
     assignedRooms.forEach(room => {
-      if (room.status !== 'Available') {
-        blockingReasons.push(`Room ${room.roomName} is currently ${room.status}`);
-      }
       if (!room.isActive) {
         blockingReasons.push(`Room ${room.roomName} is inactive`);
       }
@@ -189,7 +187,7 @@ const checkinService = {
       blockingReasons.push(`Booking is already ${booking.booking_status}`);
     } else if (booking.payment_status !== 'Paid') {
       canCheckin = false;
-    } else if (roomIds.length > 0 && assignedRooms.some(r => r.status !== 'Available' || !r.isActive)) {
+    } else if (roomIds.length > 0 && assignedRooms.some(r => !r.isActive)) {
       canCheckin = false;
     }
 
@@ -298,7 +296,7 @@ const checkinService = {
           newRooms.push({
             booking_id: booking._id,
             room_id: null,
-            room_type_id: booking.room_type_id._id,
+            room_type_id: booking.room_type_id,
             room_number: '',
             status: 'Pending',
             check_in_date: booking.check_in_date,

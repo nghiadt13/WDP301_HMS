@@ -6,7 +6,7 @@ const getClasses = (value, variant = 'status') => {
     return 'housekeeping-badge low';
   }
 
-  if (['dirty', 'cancelled', 'closed'].includes(normalized)) return 'housekeeping-badge dirty';
+  if (['dirty', 'cancelled', 'canceled', 'closed'].includes(normalized)) return 'housekeeping-badge dirty';
   if (['cleaning', 'in progress', 'inprogress'].includes(normalized)) return 'housekeeping-badge cleaning';
   if (['waitingmaintenance', 'maintenance'].includes(normalized)) return 'housekeeping-badge dirty';
   if (['assigned', 'accepted', 'open'].includes(normalized)) return 'housekeeping-badge inspection';
@@ -34,6 +34,7 @@ const labelMap = {
   inprogress: 'Đang xử lý',
   resolved: 'Đã xử lý',
   cancelled: 'Đã hủy',
+  canceled: 'Đã hủy',
   'in progress': 'Đang xử lý',
   pending: 'Chờ xử lý',
 };

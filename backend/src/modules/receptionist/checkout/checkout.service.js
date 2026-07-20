@@ -8,11 +8,135 @@ const BookingCharge = require('../../../models/booking-charge.model');
 const Invoice = require('../../../models/invoice.model');
 const StaffTask = require('../../../models/staffTask.model');
 const Room = require('../../../models/room.model');
+const Inspection = require('../../../models/inspection.model');
 const housekeepingService = require('../../manager/housekeeping/housekeeping.service');
 
 const generateInvoiceCode = () => {
   const suffix = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `INV-${suffix}`;
+};
+
+const sumMinibarTotal = (inspection) => {
+  if (!inspection) return 0;
+  if (typeof inspection.minibar_total === 'number') {
+    return inspection.minibar_total;
+  }
+
+  const sourceItems = Array.isArray(inspection.invoice_items) && inspection.invoice_items.length > 0
+    ? inspection.invoice_items
+    : Array.isArray(inspection.minibar)
+      ? inspection.minibar
+      : [];
+
+  return sourceItems.reduce((total, item) => {
+    if (typeof item?.total === 'number') {
+      return total + item.total;
+    }
+    const quantity = Number(item?.quantity || 0);
+    const unitPrice = Number(item?.unit_price || item?.price || 0);
+    return total + (quantity * unitPrice);
+  }, 0);
+};
+
+const buildApprovedMinibarState = (inspectionState) => {
+  const rooms = (inspectionState?.rooms || []).map((room) => {
+    const items = room?.minibarReport?.items || [];
+    const total = items.reduce((sum, item) => sum + Number(item.total || (Number(item.quantity || 0) * Number(item.unit_price || 0))), 0);
+
+    return {
+      ...room,
+      minibarReport: {
+        items,
+        total,
+      },
+    };
+  });
+
+  return {
+    rooms,
+    total: rooms.reduce((sum, room) => sum + Number(room?.minibarReport?.total || 0), 0),
+  };
+};
+
+const buildInspectionState = async (bookingId) => {
+  const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
+  const roomNames = rooms
+    .map((room) => (room.room_id ? room.room_id.roomName : room.room_number))
+    .filter(Boolean);
+
+  const requestedTasks = await StaffTask.find({
+    room_number: { $in: roomNames },
+    cleaningType: 'Inspection Review',
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const inspections = await Inspection.find({ room_number: { $in: roomNames } })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const latestTaskByRoom = new Map();
+  requestedTasks.forEach((task) => {
+    if (!latestTaskByRoom.has(task.room_number)) {
+      latestTaskByRoom.set(task.room_number, task);
+    }
+  });
+
+  const latestInspectionByRoom = new Map();
+  inspections.forEach((inspection) => {
+    if (!latestInspectionByRoom.has(inspection.room_number)) {
+      latestInspectionByRoom.set(inspection.room_number, inspection);
+    }
+  });
+
+  const roomsState = roomNames.map((roomNumber) => {
+    const task = latestTaskByRoom.get(roomNumber) || null;
+    const inspection = latestInspectionByRoom.get(roomNumber) || null;
+    const requestedAt = task?.createdAt ? new Date(task.createdAt).getTime() : null;
+    const inspectedAt = inspection?.createdAt ? new Date(inspection.createdAt).getTime() : null;
+    const inspectionConfirmed = Boolean(task && inspection && inspectedAt !== null && requestedAt !== null && inspectedAt >= requestedAt);
+    const minibarItems = Array.isArray(inspection?.invoice_items)
+      ? inspection.invoice_items.map((item) => ({
+        name: item.name || 'Minibar item',
+        quantity: Number(item.quantity || 1),
+        unit_price: Number(item.unit_price || 0),
+        total: Number(item.total || 0),
+        note: item.note || 'Minibar usage recorded during inspection',
+      }))
+      : [];
+    const minibarTotal = sumMinibarTotal(inspection);
+
+    return {
+      roomNumber,
+      task,
+      inspection,
+      inspectionConfirmed,
+      minibarReport: {
+        items: minibarItems,
+        total: minibarTotal,
+      },
+    };
+  });
+
+  return {
+    rooms: roomsState,
+    tasks: roomsState
+      .filter((entry) => entry.task)
+      .map(({ roomNumber, task, inspection, inspectionConfirmed, minibarReport }) => ({
+        ...task,
+        room_number: roomNumber,
+        inspectionConfirmed,
+        inspectionId: inspection?._id || null,
+        inspectionStatus: inspection?.status || null,
+        confirmedAt: inspection?.createdAt || null,
+        inspectionNote: inspection?.note || inspection?.remarks || '',
+        minibarReport,
+      })),
+    allRoomsConfirmed: roomsState.length > 0 && roomsState.every((entry) => entry.inspectionConfirmed),
+    pendingRooms: roomsState
+      .filter((entry) => !entry.inspectionConfirmed)
+      .map((entry) => entry.roomNumber),
+  };
 };
 
 const checkoutService = {
@@ -24,6 +148,8 @@ const checkoutService = {
     const stayGuests = await StayGuest.find({ booking_id: bookingId });
     const charges = await BookingCharge.find({ booking_id: bookingId });
     const invoices = await Invoice.find({ booking_id: bookingId });
+
+    const inspectionState = await buildInspectionState(bookingId);
 
     return {
       booking: {
@@ -43,6 +169,7 @@ const checkoutService = {
       })),
       stayGuests,
       charges,
+      inspectionState,
       invoice: invoices.length > 0 ? invoices[0] : null
     };
   },
@@ -67,16 +194,7 @@ const checkoutService = {
   },
 
   getInspectionResults: async (bookingId) => {
-    const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
-    const roomNames = rooms.map(r => r.room_id ? r.room_id.roomName : r.room_number).filter(Boolean);
-
-    // Find tasks for these rooms created recently (e.g., within the last 24h, or just open/closed tasks related to check-out)
-    const tasks = await StaffTask.find({
-      room_number: { $in: roomNames },
-      title: { $regex: /Check-out/i }
-    }).sort({ createdAt: -1 });
-
-    return tasks;
+    return buildInspectionState(bookingId);
   },
 
   addCharge: async (bookingId, chargeData) => {
@@ -114,8 +232,15 @@ const checkoutService = {
     const existingPaid = await Invoice.findOne({ booking_id: bookingId, status: 'Paid' });
     if (existingPaid) return existingPaid;
 
+    const inspectionState = await buildInspectionState(bookingId);
+    const approvedMinibarState = buildApprovedMinibarState(inspectionState);
+    const minibarChargesTotal = approvedMinibarState.total;
+
     const charges = await BookingCharge.find({ booking_id: bookingId });
-    const extraChargesTotal = charges.reduce((sum, charge) => sum + charge.amount, 0);
+    const manualChargesTotal = charges
+      .filter((charge) => String(charge.charge_type || '').toLowerCase() !== 'minibar')
+      .reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
+    const extraChargesTotal = manualChargesTotal + minibarChargesTotal;
 
     const roomCharge = booking.total_amount;
     const subtotal = roomCharge + extraChargesTotal;
@@ -151,6 +276,14 @@ const checkoutService = {
         throw createHttpError(400, 'Booking is not in CheckedIn state');
       }
 
+      const inspectionState = await buildInspectionState(bookingId);
+      if (!inspectionState.allRoomsConfirmed) {
+        const pendingRoomsLabel = inspectionState.pendingRooms.join(', ');
+        throw createHttpError(`Housekeeping must confirm inspection before checkout can continue${pendingRoomsLabel ? ` for room(s): ${pendingRoomsLabel}` : ''}`, 409);
+      }
+
+      const approvedMinibarState = buildApprovedMinibarState(inspectionState);
+
       const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
       const roomNames = rooms.map(r => r.room_id ? r.room_id.roomName : r.room_number).filter(Boolean);
 
@@ -160,12 +293,25 @@ const checkoutService = {
         invoice = await checkoutService.generateInvoice(bookingId);
       }
 
-      if (invoice.status !== 'Paid') {
-        invoice.status = 'Paid';
-        invoice.payment_method = paymentMethod;
-        invoice.payment_date = new Date();
-        await invoice.save();
-      }
+      const charges = await BookingCharge.find({ booking_id: bookingId });
+      const manualChargesTotal = charges
+        .filter((charge) => String(charge.charge_type || '').toLowerCase() !== 'minibar')
+        .reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
+      const minibarChargesTotal = approvedMinibarState.total;
+      const roomCharge = booking.total_amount;
+      const subtotal = roomCharge + manualChargesTotal + minibarChargesTotal;
+      const depositDeducted = booking.deposit_amount || 0;
+      const finalTotal = Math.max(0, subtotal - depositDeducted);
+
+      invoice.room_charge = roomCharge;
+      invoice.extra_charges = manualChargesTotal + minibarChargesTotal;
+      invoice.subtotal = subtotal;
+      invoice.deposit_deducted = depositDeducted;
+      invoice.final_total = finalTotal;
+      invoice.status = 'Paid';
+      invoice.payment_method = paymentMethod;
+      invoice.payment_date = new Date();
+      await invoice.save();
 
       // Update Booking
       booking.booking_status = 'CheckedOut';

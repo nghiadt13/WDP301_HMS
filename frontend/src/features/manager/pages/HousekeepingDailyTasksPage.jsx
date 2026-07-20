@@ -3,11 +3,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
-import { useHousekeepingDashboard } from '../hooks/use-housekeeping.js';
+import { useHousekeepingDashboard, useHousekeepingMaintenance } from '../hooks/use-housekeeping.js';
 import { housekeepingApi } from '../services/housekeeping-api.js';
 import '../styles/housekeeping.css';
 
 const normalizeStatus = (value) => String(value || '').toLowerCase().replace(/\s+/g, '');
+const isCompletedTask = (task) => ['completed', 'cancelled', 'canceled'].includes(normalizeStatus(task?.status));
+const TASKS_PER_PAGE = 6;
 
 const getStageClass = (status) => {
   const normalized = normalizeStatus(status);
@@ -24,8 +26,18 @@ const isActionAllowed = (action, status) => {
   if (action === 'accept') return ['assigned', 'accepted'].includes(normalized);
   if (action === 'start') return ['assigned', 'accepted'].includes(normalized);
   if (action === 'complete') return normalized === 'cleaning';
-  if (action === 'issue') return !['completed', 'cancelled'].includes(normalized);
+  if (action === 'issue') return !['completed', 'cancelled', 'canceled'].includes(normalized);
   return true;
+};
+
+const hasActiveMaintenanceRequest = (maintenanceRequests, roomNumber) => {
+  const targetRoom = String(roomNumber || '').trim().toLowerCase();
+  if (!targetRoom) return false;
+  return (maintenanceRequests || []).some((request) => {
+    const requestRoom = String(request?.room || request?.roomNumber || request?.room_number || '').trim().toLowerCase();
+    const requestStatus = normalizeStatus(request?.status);
+    return requestRoom === targetRoom && ['open', 'inprogress'].includes(requestStatus);
+  });
 };
 
 const getMutationErrorMessage = (error) => {
@@ -66,9 +78,12 @@ const HousekeepingDailyTasksPage = () => {
     refetchInterval: 5_000,
   });
   const dashboardQuery = useHousekeepingDashboard();
+  const maintenanceQuery = useHousekeepingMaintenance();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [taskTab, setTaskTab] = useState('active');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isIssueSubmitting, setIsIssueSubmitting] = useState(false);
@@ -192,7 +207,7 @@ const HousekeepingDailyTasksPage = () => {
     }
   };
 
-  const tasks = useMemo(() => {
+  const baseTasks = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     return (tasksQuery.data || []).filter((task) => {
       const matchKeyword = !keyword || [task.roomNumber, task.cleaningType, task.receptionistNote, task.assignedBy]
@@ -203,20 +218,52 @@ const HousekeepingDailyTasksPage = () => {
     });
   }, [tasksQuery.data, search, filter, priorityFilter]);
 
+  const taskTabCounts = useMemo(() => ({
+    active: baseTasks.filter((task) => !isCompletedTask(task)).length,
+    completed: baseTasks.filter((task) => isCompletedTask(task)).length,
+    all: baseTasks.length,
+  }), [baseTasks]);
+
+  const tasks = useMemo(() => {
+    if (taskTab === 'completed') {
+      return baseTasks.filter((task) => isCompletedTask(task));
+    }
+    if (taskTab === 'all') {
+      return baseTasks;
+    }
+    return baseTasks.filter((task) => !isCompletedTask(task));
+  }, [baseTasks, taskTab]);
+
+  const totalPages = Math.max(1, Math.ceil(tasks.length / TASKS_PER_PAGE));
+  const paginatedTasks = useMemo(() => {
+    const startIndex = (currentPage - 1) * TASKS_PER_PAGE;
+    return tasks.slice(startIndex, startIndex + TASKS_PER_PAGE);
+  }, [tasks, currentPage]);
+
   useEffect(() => {
-    if (!tasks.length) {
+    setCurrentPage(1);
+  }, [taskTab]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    if (!paginatedTasks.length) {
       setSelectedTaskId('');
       return;
     }
-    const exists = tasks.some((task) => task.id === selectedTaskId);
+    const exists = paginatedTasks.some((task) => task.id === selectedTaskId);
     if (!exists) {
-      setSelectedTaskId(tasks[0].id);
+      setSelectedTaskId(paginatedTasks[0].id);
     }
-  }, [tasks, selectedTaskId]);
+  }, [paginatedTasks, selectedTaskId]);
 
   const selectedTask = useMemo(
-    () => tasks.find((task) => task.id === selectedTaskId) || null,
-    [tasks, selectedTaskId]
+    () => paginatedTasks.find((task) => task.id === selectedTaskId) || null,
+    [paginatedTasks, selectedTaskId]
   );
 
   const roomsByNumber = useMemo(() => {
@@ -224,6 +271,7 @@ const HousekeepingDailyTasksPage = () => {
   }, [dashboardQuery.data?.rooms]);
 
   const selectedRoom = selectedTask ? roomsByNumber[selectedTask.roomNumber] || null : null;
+  const selectedTaskHasActiveMaintenance = hasActiveMaintenanceRequest(maintenanceQuery.data, selectedTask?.roomNumber);
 
   const inspectionQuery = useQuery({
     queryKey: ['housekeeping-room-inspection', selectedTask?.roomNumber],
@@ -324,6 +372,33 @@ const HousekeepingDailyTasksPage = () => {
           </select>
           <button className="housekeeping-outline-btn" type="button" onClick={() => tasksQuery.refetch()}><RefreshCw size={14} /> Refresh</button>
         </div>
+
+        <div className="housekeeping-task-tabs" role="tablist" aria-label="Daily housekeeping task groups">
+          <button
+            type="button"
+            className={`housekeeping-task-tab${taskTab === 'active' ? ' is-active' : ''}`}
+            onClick={() => setTaskTab('active')}
+          >
+            Đang xử lý
+            <span>{taskTabCounts.active}</span>
+          </button>
+          <button
+            type="button"
+            className={`housekeeping-task-tab${taskTab === 'completed' ? ' is-active' : ''}`}
+            onClick={() => setTaskTab('completed')}
+          >
+            Hoàn thành
+            <span>{taskTabCounts.completed}</span>
+          </button>
+          <button
+            type="button"
+            className={`housekeeping-task-tab${taskTab === 'all' ? ' is-active' : ''}`}
+            onClick={() => setTaskTab('all')}
+          >
+            Tất cả
+            <span>{taskTabCounts.all}</span>
+          </button>
+        </div>
       </div>
 
       <div className="housekeeping-task-summary-grid">
@@ -338,7 +413,7 @@ const HousekeepingDailyTasksPage = () => {
       <section className="housekeeping-task-workspace housekeeping-task-workspace-daily">
         <div className="housekeeping-task-list-pane housekeeping-card">
           <div className="housekeeping-task-list">
-            {tasks.map((task) => (
+            {paginatedTasks.map((task) => (
               <button
                 key={task.id}
                 type="button"
@@ -359,13 +434,45 @@ const HousekeepingDailyTasksPage = () => {
                 </small>
               </button>
             ))}
-            {!tasks.length ? (
+            {!paginatedTasks.length ? (
               <div className="housekeeping-state-card">
                 <h3>No matching tasks</h3>
                 <p>All filters are based on manager-assigned task records.</p>
               </div>
             ) : null}
           </div>
+          {tasks.length > 0 ? (
+            <div className="housekeeping-list-pagination">
+              <button
+                className="housekeeping-outline-btn"
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              >
+                Prev
+              </button>
+              <div className="housekeeping-list-pagination-pages">
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    className={`housekeeping-page-number${currentPage === page ? ' is-active' : ''}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="housekeeping-outline-btn"
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <aside className={`housekeeping-task-detail-pane housekeeping-card ${getStageClass(selectedTask?.status)}`}>
@@ -464,7 +571,8 @@ const HousekeepingDailyTasksPage = () => {
                 <button
                   className="housekeeping-outline-btn"
                   type="button"
-                  disabled={!isActionAllowed('accept', selectedTask.status) || taskActionMutation.isPending}
+                  disabled={!isActionAllowed('accept', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
+                  title={selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
                   onClick={() => onTaskAction('accept', selectedTask)}
                 >
                   Accept Task
@@ -472,7 +580,8 @@ const HousekeepingDailyTasksPage = () => {
                 <button
                   className="housekeeping-outline-btn"
                   type="button"
-                  disabled={!isActionAllowed('start', selectedTask.status) || taskActionMutation.isPending}
+                  disabled={!isActionAllowed('start', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
+                  title={selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
                   onClick={() => onTaskAction('start', selectedTask)}
                 >
                   Start Cleaning
@@ -494,6 +603,11 @@ const HousekeepingDailyTasksPage = () => {
                   Report Maintenance
                 </button>
               </section>
+              {selectedTaskHasActiveMaintenance ? (
+                <p className="housekeeping-task-warning">
+                  This room already has an active maintenance request, so cleaning cannot be accepted or started yet.
+                </p>
+              ) : null}
             </div>
           )}
         </aside>

@@ -135,6 +135,86 @@
   min-width: 220px;
 }
 
+.housekeeping-task-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.housekeeping-task-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.housekeeping-task-tab span {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.housekeeping-task-tab.is-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.housekeeping-task-tab.is-active span {
+  background: #2563eb;
+  color: #fff;
+}
+
+.housekeeping-list-pagination {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.housekeeping-list-pagination-pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.housekeeping-page-number {
+  min-width: 34px;
+  height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.housekeeping-page-number.is-active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
 .housekeeping-list {
   display: flex;
   flex-direction: column;
@@ -741,6 +821,17 @@
   cursor: not-allowed;
 }
 
+.housekeeping-task-warning {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .housekeeping-skeleton {
   display: grid;
   gap: 14px;
@@ -1048,6 +1139,11 @@
   }
 
   .housekeeping-maintenance-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .housekeeping-list-pagination {
     flex-direction: column;
     align-items: stretch;
   }

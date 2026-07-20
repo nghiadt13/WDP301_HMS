@@ -8,12 +8,15 @@ import CheckoutStepBilling from './CheckoutStepBilling';
 const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
   const { data, isLoading, error } = useCheckoutSummary(bookingId);
   const [currentStep, setCurrentStep] = useState(1);
+  const [isInspectionConfirmed, setIsInspectionConfirmed] = useState(false);
 
   const steps = [
     { num: 1, label: 'Kiểm tra phòng' },
     { num: 2, label: 'Phụ phí' },
     { num: 3, label: 'Hóa đơn & Thanh toán' }
   ];
+
+  const summary = data?.data;
 
   if (isLoading) {
     return (
@@ -38,9 +41,11 @@ const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
     );
   }
 
-  const summary = data.data;
-
   const handleNext = () => {
+    if (currentStep === 1 && !isInspectionConfirmed) {
+      return;
+    }
+
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
@@ -95,6 +100,7 @@ const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
             <CheckoutStepInspection 
               bookingId={bookingId} 
               summary={summary} 
+              onValidationChange={setIsInspectionConfirmed}
             />
           )}
           {currentStep === 2 && (
@@ -128,6 +134,8 @@ const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
              <button
                 type="button"
                 className="wizard-btn-next"
+               disabled={currentStep === 1 && !isInspectionConfirmed}
+               title={currentStep === 1 && !isInspectionConfirmed ? 'Housekeeping must confirm inspection before continuing' : undefined}
                 onClick={handleNext}
              >
                 Tiếp theo

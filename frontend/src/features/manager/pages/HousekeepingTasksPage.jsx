@@ -2,12 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import HousekeepingMinibarPicker from '../components/HousekeepingMinibarPicker.jsx';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
-import { useHousekeepingDashboard, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
+import { useHousekeepingDashboard, useHousekeepingMaintenance, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
+import { managerApi } from '../services/manager-api.js';
 import { housekeepingApi } from '../services/housekeeping-api.js';
 import '../styles/housekeeping.css';
 
 const normalizeStatus = (value) => String(value || '').toLowerCase().replace(/\s+/g, '');
+const isInspectionReviewTask = (task) => String(task?.cleaningType || '').trim().toLowerCase() === 'inspection review';
+const isCompletedTask = (task) => ['completed', 'cancelled', 'canceled'].includes(normalizeStatus(task?.status));
+const TASKS_PER_PAGE = 6;
 
 const getStageClass = (status) => {
   const normalized = normalizeStatus(status);
@@ -24,8 +29,18 @@ const isActionAllowed = (action, status) => {
   if (action === 'accept') return ['assigned', 'accepted'].includes(normalized);
   if (action === 'start') return ['assigned', 'accepted'].includes(normalized);
   if (action === 'complete') return normalized === 'cleaning';
-  if (action === 'issue') return !['completed', 'cancelled'].includes(normalized);
+  if (action === 'issue') return !['completed', 'cancelled', 'canceled'].includes(normalized);
   return true;
+};
+
+const hasActiveMaintenanceRequest = (maintenanceRequests, roomNumber) => {
+  const targetRoom = String(roomNumber || '').trim().toLowerCase();
+  if (!targetRoom) return false;
+  return (maintenanceRequests || []).some((request) => {
+    const requestRoom = String(request?.room || request?.roomNumber || request?.room_number || '').trim().toLowerCase();
+    const requestStatus = normalizeStatus(request?.status);
+    return requestRoom === targetRoom && ['open', 'inprogress'].includes(requestStatus);
+  });
 };
 
 const getMutationErrorMessage = (error) => {
@@ -60,12 +75,22 @@ const HousekeepingTasksPage = () => {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useHousekeepingTasks();
   const dashboardQuery = useHousekeepingDashboard();
+  const maintenanceQuery = useHousekeepingMaintenance();
+  const minibarCatalogQuery = useQuery({
+    queryKey: ['minibar-catalog'],
+    queryFn: () => managerApi.getMinibarItems({ is_active: 'true' }),
+    retry: 1,
+    staleTime: 60_000,
+  });
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [taskTab, setTaskTab] = useState('active');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isIssueSubmitting, setIsIssueSubmitting] = useState(false);
+  const [minibarSelection, setMinibarSelection] = useState([]);
   const [issueForm, setIssueForm] = useState({
     task_id: '',
     room_number: '',
@@ -95,6 +120,41 @@ const HousekeepingTasksPage = () => {
         queryClient.invalidateQueries({ queryKey: ['housekeeping-service-requests'] }),
         queryClient.invalidateQueries({ queryKey: ['receptionist-operational-board'] }),
       ]);
+    },
+    onError: (error) => {
+      window.alert(getMutationErrorMessage(error));
+    },
+  });
+
+  const handoverMutation = useMutation({
+    mutationFn: async ({ task, inspection, roomStatus }) => housekeepingApi.createInspection({
+      task_id: task.id,
+      room_number: task.roomNumber,
+      room: task.roomNumber,
+      checklist: inspection?.checklist || {},
+      damage: inspection?.damage || [],
+      lostItem: inspection?.lostItem || [],
+      minibar: inspection?.minibar || [],
+      photos: inspection?.photos || [],
+      note: inspection?.note || `Room ${task.roomNumber} is ready for receptionist checkout review.`,
+      remarks: inspection?.remarks || 'Ready for checkout',
+      minibar_used: inspection?.minibarUsed || false,
+      missing_items: inspection?.missingItems || [],
+      damaged_items: inspection?.damagedItems || [],
+      maintenance_required: inspection?.maintenanceRequired || false,
+      room_status_before: roomStatus || '',
+      room_status_after: 'Dirty',
+    }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] }),
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-room-inspection'] }),
+        queryClient.invalidateQueries({ queryKey: ['inspectionResults'] }),
+        queryClient.invalidateQueries({ queryKey: ['checkoutSummary'] }),
+        queryClient.invalidateQueries({ queryKey: ['receptionist-operational-board'] }),
+      ]);
+      toast.success('Inspection handed over to receptionist.');
     },
     onError: (error) => {
       window.alert(getMutationErrorMessage(error));
@@ -184,7 +244,7 @@ const HousekeepingTasksPage = () => {
     }
   };
 
-  const tasks = useMemo(() => {
+  const baseTasks = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     return (data || []).filter((task) => {
       const matchKeyword = !keyword || [task.roomNumber, task.cleaningType, task.receptionistNote, task.assignedBy]
@@ -195,27 +255,80 @@ const HousekeepingTasksPage = () => {
     });
   }, [data, search, filter, priorityFilter]);
 
+  const taskTabCounts = useMemo(() => ({
+    active: baseTasks.filter((task) => !isCompletedTask(task)).length,
+    completed: baseTasks.filter((task) => isCompletedTask(task)).length,
+    all: baseTasks.length,
+  }), [baseTasks]);
+
+  const tasks = useMemo(() => {
+    if (taskTab === 'completed') {
+      return baseTasks.filter((task) => isCompletedTask(task));
+    }
+    if (taskTab === 'all') {
+      return baseTasks;
+    }
+    return baseTasks.filter((task) => !isCompletedTask(task));
+  }, [baseTasks, taskTab]);
+
+  const totalPages = Math.max(1, Math.ceil(tasks.length / TASKS_PER_PAGE));
+  const paginatedTasks = useMemo(() => {
+    const startIndex = (currentPage - 1) * TASKS_PER_PAGE;
+    return tasks.slice(startIndex, startIndex + TASKS_PER_PAGE);
+  }, [tasks, currentPage]);
+
   useEffect(() => {
-    if (!tasks.length) {
+    setCurrentPage(1);
+  }, [taskTab]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    if (!paginatedTasks.length) {
       setSelectedTaskId('');
       return;
     }
-    const exists = tasks.some((task) => task.id === selectedTaskId);
+    const exists = paginatedTasks.some((task) => task.id === selectedTaskId);
     if (!exists) {
-      setSelectedTaskId(tasks[0].id);
+      setSelectedTaskId(paginatedTasks[0].id);
     }
-  }, [tasks, selectedTaskId]);
+  }, [paginatedTasks, selectedTaskId]);
 
   const selectedTask = useMemo(
-    () => tasks.find((task) => task.id === selectedTaskId) || null,
-    [tasks, selectedTaskId]
+    () => paginatedTasks.find((task) => task.id === selectedTaskId) || null,
+    [paginatedTasks, selectedTaskId]
   );
 
   const roomsByNumber = useMemo(() => {
     return Object.fromEntries((dashboardQuery.data?.rooms || []).map((room) => [room.roomNumber, room]));
   }, [dashboardQuery.data?.rooms]);
 
+  const minibarItems = useMemo(() => {
+    const payload = minibarCatalogQuery.data;
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : [];
+
+    return rows
+      .map((entry) => ({
+        _id: entry?._id || entry?.id || null,
+        name: entry?.name || 'Minibar item',
+        category: entry?.category || '-',
+        price: Number(entry?.price ?? 0),
+        availableQty: Number(entry?.quantity ?? 0),
+      }))
+      .filter((entry) => entry._id);
+  }, [minibarCatalogQuery.data]);
+
   const selectedRoom = selectedTask ? roomsByNumber[selectedTask.roomNumber] || null : null;
+  const selectedTaskHasActiveMaintenance = hasActiveMaintenanceRequest(maintenanceQuery.data, selectedTask?.roomNumber);
+  const selectedTaskIsInspectionReview = isInspectionReviewTask(selectedTask);
 
   const inspectionQuery = useQuery({
     queryKey: ['housekeeping-room-inspection', selectedTask?.roomNumber],
@@ -232,6 +345,39 @@ const HousekeepingTasksPage = () => {
 
   const checklistDone = checklistEntries.filter(([, done]) => Boolean(done)).length;
   const checklistProgress = checklistEntries.length ? Math.round((checklistDone / checklistEntries.length) * 100) : 0;
+
+  useEffect(() => {
+    if (!selectedTaskIsInspectionReview) {
+      setMinibarSelection([]);
+      return;
+    }
+
+    const existingSelection = Array.isArray(inspectionQuery.data?.minibar) ? inspectionQuery.data.minibar : [];
+
+    if (!existingSelection.length) {
+      setMinibarSelection([]);
+      return;
+    }
+
+    const nextSelection = existingSelection
+      .map((entry) => {
+        const entryId = String(entry.item_id || entry.itemId || '').trim();
+        const entryName = String(entry.item || entry.name || '').trim().toLowerCase();
+        const matchedItem = minibarItems.find((item) => String(item._id) === entryId)
+          || minibarItems.find((item) => String(item.name || '').trim().toLowerCase() === entryName)
+          || null;
+
+        return {
+          item_id: matchedItem?._id || entry.item_id || entry.itemId || null,
+          item: matchedItem?.name || entry.item || entry.name || 'Minibar item',
+          qty: Number(entry.qty || entry.quantity || 1),
+          price: Number(matchedItem?.price ?? entry.price ?? 0),
+        };
+      })
+      .filter((entry) => entry.item_id);
+
+    setMinibarSelection(nextSelection);
+  }, [inspectionQuery.data?.minibar, minibarItems, selectedTaskIsInspectionReview]);
 
   const summary = useMemo(() => {
     const all = data || [];
@@ -255,6 +401,20 @@ const HousekeepingTasksPage = () => {
     }
 
     await taskActionMutation.mutateAsync({ action, task });
+    await refetch();
+  };
+
+  const onReadyForCheckout = async () => {
+    if (!selectedTask) return;
+    await handoverMutation.mutateAsync({
+      task: selectedTask,
+      inspection: {
+        ...inspectionQuery.data,
+        minibar: minibarSelection,
+        minibar_used: minibarSelection.length > 0,
+      },
+      roomStatus: selectedRoom?.status || '',
+    });
     await refetch();
   };
 
@@ -320,6 +480,33 @@ const HousekeepingTasksPage = () => {
             </select>
           </div>
 
+          <div className="housekeeping-task-tabs" role="tablist" aria-label="Housekeeping task groups">
+            <button
+              type="button"
+              className={`housekeeping-task-tab${taskTab === 'active' ? ' is-active' : ''}`}
+              onClick={() => setTaskTab('active')}
+            >
+              Đang xử lý
+              <span>{taskTabCounts.active}</span>
+            </button>
+            <button
+              type="button"
+              className={`housekeeping-task-tab${taskTab === 'completed' ? ' is-active' : ''}`}
+              onClick={() => setTaskTab('completed')}
+            >
+              Hoàn thành
+              <span>{taskTabCounts.completed}</span>
+            </button>
+            <button
+              type="button"
+              className={`housekeeping-task-tab${taskTab === 'all' ? ' is-active' : ''}`}
+              onClick={() => setTaskTab('all')}
+            >
+              Tất cả
+              <span>{taskTabCounts.all}</span>
+            </button>
+          </div>
+
           <div className="housekeeping-task-summary-grid">
             {summary.map((item) => (
               <article key={item.label} className="housekeeping-task-summary-card">
@@ -330,7 +517,7 @@ const HousekeepingTasksPage = () => {
           </div>
 
           <div className="housekeeping-task-list">
-            {tasks.map((task) => (
+            {paginatedTasks.map((task) => (
               <button
                 key={task.id}
                 type="button"
@@ -351,13 +538,45 @@ const HousekeepingTasksPage = () => {
                 </small>
               </button>
             ))}
-            {!tasks.length ? (
+            {!paginatedTasks.length ? (
               <div className="housekeeping-state-card">
                 <h3>No matching tasks</h3>
                 <p>All filters are based on MongoDB task records.</p>
               </div>
             ) : null}
           </div>
+          {tasks.length > 0 ? (
+            <div className="housekeeping-list-pagination">
+              <button
+                className="housekeeping-outline-btn"
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              >
+                Prev
+              </button>
+              <div className="housekeeping-list-pagination-pages">
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    className={`housekeeping-page-number${currentPage === page ? ' is-active' : ''}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="housekeeping-outline-btn"
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <aside className={`housekeeping-task-detail-pane housekeeping-card ${getStageClass(selectedTask?.status)}`}>
@@ -452,19 +671,40 @@ const HousekeepingTasksPage = () => {
                 ) : null}
               </section>
 
+              {selectedTaskIsInspectionReview ? (
+                <HousekeepingMinibarPicker
+                  items={minibarItems}
+                  value={minibarSelection}
+                  onChange={setMinibarSelection}
+                  disabled={handoverMutation.isPending || minibarCatalogQuery.isLoading}
+                />
+              ) : null}
+
               <section className="housekeeping-task-detail-actions">
                 <button
                   className="housekeeping-outline-btn"
                   type="button"
-                  disabled={!isActionAllowed('accept', selectedTask.status) || taskActionMutation.isPending}
+                  disabled={!isActionAllowed('accept', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
+                  title={selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
                   onClick={() => onTaskAction('accept', selectedTask)}
                 >
                   Accept Task
                 </button>
+                {selectedTaskIsInspectionReview ? (
+                  <button
+                    className="housekeeping-btn"
+                    type="button"
+                    disabled={normalizeStatus(selectedTask.status) !== 'accepted' || handoverMutation.isPending}
+                    onClick={onReadyForCheckout}
+                  >
+                    {handoverMutation.isPending ? 'Handing Over...' : 'Ready for Checkout'}
+                  </button>
+                ) : null}
                 <button
                   className="housekeeping-outline-btn"
                   type="button"
-                  disabled={!isActionAllowed('start', selectedTask.status) || taskActionMutation.isPending}
+                  disabled={selectedTaskIsInspectionReview || !isActionAllowed('start', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
+                  title={selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
                   onClick={() => onTaskAction('start', selectedTask)}
                 >
                   Start Cleaning
@@ -472,7 +712,7 @@ const HousekeepingTasksPage = () => {
                 <button
                   className="housekeeping-btn"
                   type="button"
-                  disabled={!isActionAllowed('complete', selectedTask.status) || taskActionMutation.isPending}
+                  disabled={selectedTaskIsInspectionReview || !isActionAllowed('complete', selectedTask.status) || taskActionMutation.isPending}
                   onClick={() => onTaskAction('complete', selectedTask)}
                 >
                   Complete Cleaning
@@ -486,6 +726,16 @@ const HousekeepingTasksPage = () => {
                   Report Maintenance
                 </button>
               </section>
+              {selectedTaskHasActiveMaintenance ? (
+                <p className="housekeeping-task-warning">
+                  This room already has an active maintenance request, so cleaning cannot be accepted or started yet.
+                </p>
+              ) : null}
+              {selectedTaskIsInspectionReview ? (
+                <p className="housekeeping-task-warning">
+                  Accept the inspection task, then use Ready for Checkout to hand the room back to receptionist with minibar consumption recorded in the inspection result.
+                </p>
+              ) : null}
             </div>
           )}
         </aside>

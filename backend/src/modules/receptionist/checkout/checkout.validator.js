@@ -20,7 +20,7 @@ const checkoutValidator = {
     if (amount === undefined || amount === null || typeof amount !== 'number' || amount < 0) {
       return next(createHttpError(400, 'amount is required and must be a non-negative number'));
     }
-    if (charge_type && !['minibar', 'damage', 'service', 'other'].includes(charge_type)) {
+    if (charge_type && !['damage', 'service', 'other'].includes(charge_type)) {
       return next(createHttpError(400, 'invalid charge_type'));
     }
     next();

@@ -2,6 +2,21 @@
 
 const unwrap = (response) => response.data?.data ?? response.data;
 
+const normalizeMaintenance = (item) => ({
+  id: item?._id || item?.id,
+  room: item?.room || '',
+  category: item?.category || '',
+  priority: item?.priority || 'medium',
+  description: item?.description || '',
+  image: item?.image || '',
+  status: item?.status || 'Open',
+  assignedTech: item?.assignedTech || '',
+  reportedBy: item?.reportedBy || 'Housekeeping',
+  note: item?.note || '',
+  createdAt: item?.createdAt || null,
+  updatedAt: item?.updatedAt || null,
+});
+
 export const managerApi = {
   getRooms: (params) => axiosClient.get('/manager/rooms', { params }).then(unwrap),
 
@@ -25,4 +40,15 @@ export const managerApi = {
   createPolicy: (data) => axiosClient.post('/manager/policies', data).then(unwrap),
   updatePolicy: (id, data) => axiosClient.put(`/manager/policies/${id}`, data).then(unwrap),
   deletePolicy: (id) => axiosClient.delete(`/manager/policies/${id}`).then(unwrap),
+
+  getMaintenanceRequests: (params = {}) => axiosClient.get('/housekeeping/maintenance-requests', { params }).then((response) => {
+    const payload = unwrap(response);
+    const rows = Array.isArray(payload) ? payload : [];
+    return rows.map(normalizeMaintenance);
+  }),
+
+  getMaintenanceRequestById: (id) => axiosClient.get(`/housekeeping/maintenance-requests/${id}`).then((response) => normalizeMaintenance(unwrap(response))),
+  assignMaintenanceRequest: (id, data) => axiosClient.patch(`/housekeeping/maintenance-requests/${id}/assign`, data).then((response) => normalizeMaintenance(unwrap(response))),
+  updateMaintenanceRequestStatus: (id, data) => axiosClient.patch(`/housekeeping/maintenance-requests/${id}/status`, data).then((response) => normalizeMaintenance(unwrap(response))),
+  reportMaintenanceIssue: (data) => axiosClient.post('/housekeeping/report-issue', data).then(unwrap),
 };

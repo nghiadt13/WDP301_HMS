@@ -1,14 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCreateInspection, useInspectionResults } from '../hooks/use-checkout';
 import { ClipboardCheck, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const CheckoutStepInspection = ({ bookingId, summary, onNext }) => {
+const CheckoutStepInspection = ({ bookingId, summary, onValidationChange }) => {
   const { data: inspectionData, isLoading: isLoadingResults } = useInspectionResults(bookingId);
   const { mutateAsync: requestInspectionAsync, mutate: requestInspection, isPending } = useCreateInspection(bookingId);
   const [isRequestingAll, setIsRequestingAll] = useState(false);
 
   const [selectedRoom, setSelectedRoom] = useState(summary.rooms[0]?.roomName || '');
+  const inspectionState = inspectionData?.data || {};
+  const tasks = inspectionState.tasks || [];
+  const pendingRooms = inspectionState.pendingRooms || [];
+  const allRoomsConfirmed = Boolean(inspectionState.allRoomsConfirmed);
+
+  useEffect(() => {
+    onValidationChange?.(allRoomsConfirmed);
+  }, [allRoomsConfirmed, onValidationChange]);
 
   const handleRequestInspection = () => {
     if (!selectedRoom) {
@@ -29,8 +37,6 @@ const CheckoutStepInspection = ({ bookingId, summary, onNext }) => {
       }
     });
   };
-
-  const tasks = inspectionData?.data || [];
 
   const handleRequestAll = async () => {
     const roomsToRequest = summary.rooms.filter(room => 
@@ -129,6 +135,20 @@ const CheckoutStepInspection = ({ bookingId, summary, onNext }) => {
         <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
           Lịch sử & Kết quả kiểm tra
         </h4>
+
+        {!allRoomsConfirmed ? (
+          <div style={{ marginBottom: '16px', padding: '14px 16px', borderRadius: '14px', background: '#fff7ed', border: '1px solid #fdba74', color: '#9a3412' }}>
+            <div style={{ fontWeight: '700', marginBottom: '4px' }}>Chưa thể chuyển sang bước tiếp theo</div>
+            <div style={{ fontSize: '14px', lineHeight: '1.5' }}>
+              Housekeeping phải xác nhận kiểm tra cho tất cả các phòng trước khi receptionist tiếp tục checkout.
+              {pendingRooms.length ? ` Phòng đang chờ xác nhận: ${pendingRooms.join(', ')}.` : ''}
+            </div>
+          </div>
+        ) : (
+          <div style={{ marginBottom: '16px', padding: '14px 16px', borderRadius: '14px', background: '#f0fdf4', border: '1px solid #86efac', color: '#166534' }}>
+            Tất cả phòng đã được housekeeping xác nhận kiểm tra. Receptionist có thể tiếp tục bước tiếp theo.
+          </div>
+        )}
         
         {isLoadingResults ? (
           <div style={{ padding: '40px', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
@@ -147,12 +167,12 @@ const CheckoutStepInspection = ({ bookingId, summary, onNext }) => {
             {tasks.map(task => (
               <div key={task._id} style={{ background: '#fff', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: task.status === 'closed' ? '#f0fdf4' : '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center', color: task.status === 'closed' ? '#16a34a' : '#ea580c' }}>
-                    {task.status === 'closed' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+                  <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: task.inspectionConfirmed ? '#f0fdf4' : '#fff7ed', display: 'flex', alignItems: 'center', justifyContent: 'center', color: task.inspectionConfirmed ? '#16a34a' : '#ea580c' }}>
+                    {task.inspectionConfirmed ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
                   </div>
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '4px' }}>{task.title}</div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>Trạng thái: <span style={{ fontWeight: '600', color: task.status === 'closed' ? '#16a34a' : '#ea580c' }}>{task.status === 'closed' ? 'Đã hoàn tất kiểm tra' : 'Đang tiến hành dọn/kiểm tra'}</span></div>
+                    <div style={{ fontSize: '13px', color: '#64748b' }}>Trạng thái: <span style={{ fontWeight: '600', color: task.inspectionConfirmed ? '#16a34a' : '#ea580c' }}>{task.inspectionConfirmed ? 'Housekeeping đã xác nhận kiểm tra' : 'Đang chờ housekeeping xác nhận'}</span></div>
                   </div>
                 </div>
               </div>

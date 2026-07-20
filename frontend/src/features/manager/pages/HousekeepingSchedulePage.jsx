@@ -1,9 +1,8 @@
 ﻿import { useMemo, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, Pencil, Plus, RefreshCw, Search } from 'lucide-react';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
-import { housekeepingApi } from '../services/housekeeping-api.js';
-import { useHousekeepingMaintenance } from '../hooks/use-housekeeping.js';
+import { managerApi } from '../services/manager-api.js';
 import '../styles/housekeeping.css';
 
 const getMutationErrorMessage = (error) => {
@@ -15,7 +14,13 @@ const getMutationErrorMessage = (error) => {
 
 const HousekeepingSchedulePage = () => {
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, refetch } = useHousekeepingMaintenance();
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['manager-maintenance-report'],
+    queryFn: managerApi.getMaintenanceRequests,
+    retry: 1,
+    staleTime: 5_000,
+    refetchInterval: 5_000,
+  });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -35,9 +40,10 @@ const HousekeepingSchedulePage = () => {
   const [editForm, setEditForm] = useState(null);
 
   const createReportMutation = useMutation({
-    mutationFn: (payload) => housekeepingApi.reportIssue(payload),
+    mutationFn: (payload) => managerApi.reportMaintenanceIssue(payload),
     onSuccess: async () => {
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['manager-maintenance-report'] }),
         queryClient.invalidateQueries({ queryKey: ['housekeeping-maintenance'] }),
         queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
       ]);
@@ -48,9 +54,10 @@ const HousekeepingSchedulePage = () => {
   });
 
   const updateReportMutation = useMutation({
-    mutationFn: ({ id, payload }) => housekeepingApi.updateMaintenanceRequestStatus(id, payload),
+    mutationFn: ({ id, payload }) => managerApi.updateMaintenanceRequestStatus(id, payload),
     onSuccess: async () => {
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['manager-maintenance-report'] }),
         queryClient.invalidateQueries({ queryKey: ['housekeeping-maintenance'] }),
         queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
       ]);
@@ -118,7 +125,7 @@ const HousekeepingSchedulePage = () => {
 
   const handleView = async (id) => {
     try {
-      const detail = await housekeepingApi.getMaintenanceRequestById(id);
+      const detail = await managerApi.getMaintenanceRequestById(id);
       setViewItem(detail);
     } catch (error) {
       window.alert(getMutationErrorMessage(error));
@@ -127,7 +134,7 @@ const HousekeepingSchedulePage = () => {
 
   const handleEdit = async (id) => {
     try {
-      const detail = await housekeepingApi.getMaintenanceRequestById(id);
+      const detail = await managerApi.getMaintenanceRequestById(id);
       setEditForm({
         id: detail.id,
         room: detail.room,
@@ -379,8 +386,8 @@ const HousekeepingSchedulePage = () => {
               <span>Priority</span><b><HousekeepingStatusBadge value={viewItem.priority} variant="priority" /></b>
               <span>Status</span><b><HousekeepingStatusBadge value={viewItem.status} /></b>
               <span>Assigned</span><b>{viewItem.assignedTech || 'Not assigned'}</b>
-              <span>Description</span><b>{viewItem.description || 'ΓÇö'}</b>
-              <span>Note</span><b>{viewItem.note || 'ΓÇö'}</b>
+              <span>Description</span><b>{viewItem.description || '-'}</b>
+              <span>Note</span><b>{viewItem.note || '-'}</b>
             </div>
             <div className="housekeeping-modal-actions">
               <button className="housekeeping-btn" type="button" onClick={() => setViewItem(null)}>Close</button>

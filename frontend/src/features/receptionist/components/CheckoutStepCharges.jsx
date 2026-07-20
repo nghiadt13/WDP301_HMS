@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useAddCharge, useRemoveCharge } from '../hooks/use-checkout';
-import { Receipt, Plus, Trash2 } from 'lucide-react';
+import { Receipt, Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const CheckoutStepCharges = ({ bookingId, summary, onNext, onPrev }) => {
+const CheckoutStepCharges = ({ bookingId, summary }) => {
   const { mutate: addCharge, isPending: isAdding } = useAddCharge(bookingId);
   const { mutate: removeCharge, isPending: isRemoving } = useRemoveCharge(bookingId);
+  const minibarRooms = summary?.inspectionState?.rooms || [];
 
   const [chargeData, setChargeData] = useState({
     room_id: summary.rooms[0]?.roomId || '',
     description: '',
     amount: '',
-    charge_type: 'minibar'
+    charge_type: 'service'
   });
 
   const handleAddCharge = (e) => {
@@ -46,6 +47,11 @@ const CheckoutStepCharges = ({ bookingId, summary, onNext, onPrev }) => {
 
   const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
+  const minibarTotal = minibarRooms.reduce(
+    (roomSum, room) => roomSum + (room.minibarReport?.items || []).reduce((itemSum, item) => itemSum + Number(item.total || (Number(item.quantity || 0) * Number(item.unit_price || 0))), 0),
+    0
+  );
+
   return (
     <div className="wizard-step-content">
       <div className="wizard-step-header" style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e2e8f0' }}>
@@ -56,8 +62,46 @@ const CheckoutStepCharges = ({ bookingId, summary, onNext, onPrev }) => {
           Ghi nhận Phụ phí phát sinh
         </h3>
         <p style={{ color: '#64748b', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-          Thêm các khoản phí như sử dụng minibar, bồi thường hư hại tài sản, hoặc dịch vụ phát sinh trước khi thanh toán.
+          Minibar được hệ thống tự động lấy từ báo cáo kiểm tra của Housekeeping. Receptionist chỉ thêm các khoản phí phát sinh khác nếu có.
         </p>
+      </div>
+
+      <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Báo cáo minibar từ Housekeeping</h4>
+        {minibarRooms.some((room) => (room.minibarReport?.items || []).length > 0) ? (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {minibarRooms.map((room) => {
+              const items = room.minibarReport?.items || [];
+              const total = items.reduce((sum, item) => sum + Number(item.total || (Number(item.quantity || 0) * Number(item.unit_price || 0))), 0);
+              if (!items.length && total <= 0) return null;
+
+              return (
+                <article key={room.roomNumber} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
+                    <strong style={{ color: '#0f172a' }}>Phòng {room.roomNumber}</strong>
+                    <span style={{ fontWeight: '700', color: '#ea580c' }}>{formatCurrency(total)}</span>
+                  </div>
+                  <div style={{ display: 'grid', gap: '8px' }}>
+                    {items.map((item, index) => (
+                      <div key={`${room.roomNumber}-${index}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 110px 120px 120px', alignItems: 'center', gap: '12px', fontSize: '14px', padding: '8px 0', borderBottom: index === items.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
+                        <span>{item.name}</span>
+                        <span style={{ textAlign: 'right' }}>{Number(item.quantity || 0)}</span>
+                        <span style={{ textAlign: 'right' }}>{formatCurrency(item.unit_price || 0)}</span>
+                        <span style={{ textAlign: 'right', fontWeight: '600' }}>{formatCurrency(item.total || 0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: '12px', background: '#fff7ed', border: '1px solid #fdba74', fontWeight: '700', color: '#9a3412' }}>
+              <span>Tổng minibar charge</span>
+              <span>{formatCurrency(minibarTotal)}</span>
+            </div>
+          </div>
+        ) : (
+          <p style={{ margin: 0, color: '#64748b' }}>Không có minibar phát sinh từ báo cáo Housekeeping.</p>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
@@ -70,7 +114,6 @@ const CheckoutStepCharges = ({ bookingId, summary, onNext, onPrev }) => {
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#475569', marginBottom: '8px' }}>Loại phụ phí</label>
               <div style={{ position: 'relative' }}>
                 <select style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '14px', color: '#0f172a', outline: 'none', appearance: 'none', cursor: 'pointer' }} value={chargeData.charge_type} onChange={e => setChargeData({...chargeData, charge_type: e.target.value})}>
-                  <option value="minibar">Sử dụng Minibar</option>
                   <option value="damage">Bồi thường hư hại</option>
                   <option value="service">Dịch vụ thêm</option>
                   <option value="other">Khác</option>
