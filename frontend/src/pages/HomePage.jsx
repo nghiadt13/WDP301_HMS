@@ -276,7 +276,6 @@ const HomePage = () => {
 
       <section className="home-lobby-section" id="hotel-lobby" aria-label="Hotel lobby gallery">
         <div className="home-lobby-copy">
-          <span>{homeData.lobby.eyebrow}</span>
           <h2>{homeData.lobby.title}</h2>
           <p>{homeData.lobby.description}</p>
         </div>
