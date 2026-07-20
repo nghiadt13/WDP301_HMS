@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, X } from 'lucide-react';
-import { useRoomType, useUpdateRoomType, useAmenities, useFeatures } from '../hooks/use-rooms';
+import { useRoomType, useUpdateRoomType, useAmenities } from '../hooks/use-rooms';
 import { uploadApi } from '../services/room-api';
 import './add-room.css';
 
@@ -14,15 +14,22 @@ const toFullUrl = (url) => {
 
 const BED_TYPES = ['Giường King', 'Giường Queen', 'Giường đôi (Twin)', 'Giường Sofa', 'Giường đơn', 'Giường tầng'];
 
+const BED_RULES = {
+  'Giường King': { adults: 2, children: 1 },
+  'Giường Queen': { adults: 2, children: 1 },
+  'Giường đôi (Twin)': { adults: 2, children: 1 },
+  'Giường Sofa': { adults: 1, children: 1 },
+  'Giường đơn': { adults: 1, children: 0 },
+  'Giường tầng': { adults: 2, children: 1 },
+};
+
 const EditRoomTypePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const updateMutation = useUpdateRoomType();
   const { data: rtData, isLoading: rtLoading } = useRoomType(id);
   const { data: amData } = useAmenities();
-  const { data: ftData } = useFeatures();
   const amenities = amData?.data ?? [];
-  const features = ftData?.data ?? [];
 
   const roomType = rtData?.data;
 
@@ -45,14 +52,53 @@ const EditRoomTypePage = () => {
   const [coverIndex, setCoverIndex] = useState(0);
   const fileInputRef = useRef(null);
 
+  const [bedCount, setBedCount] = useState(1);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+
+  const formatGuests = (ad, ch) => {
+    const parts = [];
+    if (ad > 0) parts.push(`${ad} Người Lớn`);
+    if (ch > 0) parts.push(`${ch} Trẻ Em`);
+    return parts.join(', ');
+  };
+
   useEffect(() => {
     if (!roomType) return;
+
+    // Parse bed count
+    let count = 1;
+    if (roomType.beds) {
+      const match = String(roomType.beds).match(/^(\d+)/);
+      if (match) {
+        count = parseInt(match[1], 10);
+      }
+    }
+
+    // Parse adults & children
+    let ad = 2;
+    let ch = 0;
+    if (roomType.guests) {
+      const adultMatch = String(roomType.guests).match(/(\d+)\s*Người\s*Lớn/i);
+      const childMatch = String(roomType.guests).match(/(\d+)\s*Trẻ\s*Em/i);
+      if (adultMatch) ad = parseInt(adultMatch[1], 10);
+      if (childMatch) ch = parseInt(childMatch[1], 10);
+    } else {
+      const rule = BED_RULES[roomType.bed_type] || { adults: 2, children: 1 };
+      ad = rule.adults * count;
+      ch = 0;
+    }
+
+    setBedCount(count);
+    setAdults(ad);
+    setChildren(ch);
+
     setForm({
       name: roomType.name || '',
       description: roomType.description || '',
       base_price: roomType.base_price ?? '',
       bed_type: roomType.bed_type || '',
-      capacity: roomType.capacity ?? 2,
+      capacity: roomType.capacity ?? (ad + ch),
       area: roomType.area || '',
       guests: roomType.guests || '',
       beds: roomType.beds || '',
@@ -65,8 +111,84 @@ const EditRoomTypePage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    if (name === 'bed_type') {
+      const rule = BED_RULES[value] || { adults: 2, children: 1 };
+      const defaultCount = 1;
+      const defaultAdults = rule.adults;
+      const defaultChildren = 0;
+
+      setBedCount(defaultCount);
+      setAdults(defaultAdults);
+      setChildren(defaultChildren);
+
+      setForm((prev) => ({
+        ...prev,
+        bed_type: value,
+        beds: value ? `${defaultCount} ${value}` : '',
+        guests: value ? `${defaultAdults} Người Lớn` : '',
+        capacity: defaultAdults,
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  };
+
+  const handleBedCountChange = (amount) => {
+    const newCount = Math.max(1, bedCount + amount);
+    setBedCount(newCount);
+
+    const rule = BED_RULES[form.bed_type] || { adults: 2, children: 1 };
+    const maxAdults = rule.adults * newCount;
+    const maxChildren = rule.children * newCount;
+
+    const newAdults = Math.min(adults, maxAdults);
+    const newChildren = Math.min(children, maxChildren);
+
+    setAdults(newAdults);
+    setChildren(newChildren);
+
+    setForm((prev) => {
+      const guestsStr = formatGuests(newAdults, newChildren);
+      return {
+        ...prev,
+        beds: prev.bed_type ? `${newCount} ${prev.bed_type}` : '',
+        guests: guestsStr,
+        capacity: newAdults + newChildren,
+      };
+    });
+  };
+
+  const handleAdultsChange = (amount) => {
+    const rule = BED_RULES[form.bed_type] || { adults: 2, children: 1 };
+    const maxAdults = rule.adults * bedCount;
+    const newAdults = Math.min(maxAdults, Math.max(1, adults + amount));
+    setAdults(newAdults);
+
+    setForm((prev) => {
+      const guestsStr = formatGuests(newAdults, children);
+      return {
+        ...prev,
+        guests: guestsStr,
+        capacity: newAdults + children,
+      };
+    });
+  };
+
+  const handleChildrenChange = (amount) => {
+    const rule = BED_RULES[form.bed_type] || { adults: 2, children: 1 };
+    const maxChildren = rule.children * bedCount;
+    const newChildren = Math.min(maxChildren, Math.max(0, children + amount));
+    setChildren(newChildren);
+
+    setForm((prev) => {
+      const guestsStr = formatGuests(adults, newChildren);
+      return {
+        ...prev,
+        guests: guestsStr,
+        capacity: adults + newChildren,
+      };
+    });
   };
 
   const handleStatusChange = (val) => {
@@ -82,14 +204,7 @@ const EditRoomTypePage = () => {
     }));
   };
 
-  const handleFeatureToggle = (name) => {
-    setForm((prev) => ({
-      ...prev,
-      features: prev.features.includes(name)
-        ? prev.features.filter((f) => f !== name)
-        : [...prev.features, name],
-    }));
-  };
+
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -144,6 +259,7 @@ const EditRoomTypePage = () => {
     if (!form.name.trim()) errs.name = 'Tên loại phòng là bắt buộc';
     const priceNum = Number(form.base_price);
     if (!form.base_price || isNaN(priceNum) || priceNum < 0) errs.base_price = 'Giá phòng hợp lệ là bắt buộc';
+    if (!form.bed_type) errs.bed_type = 'Vui lòng chọn loại giường chính';
     if (!form.area.trim()) errs.area = 'Diện tích là bắt buộc (Ví dụ: 32 m²)';
     if (!form.guests.trim()) errs.guests = 'Số khách mô tả là bắt buộc (Ví dụ: 2 Người Lớn)';
     if (!form.beds.trim()) errs.beds = 'Mô tả giường là bắt buộc (Ví dụ: 1 Giường đôi)';
@@ -267,7 +383,7 @@ const EditRoomTypePage = () => {
             </div>
 
             <div className="ar-field">
-              <label className="ar-label">Loại giường chính</label>
+              <label className="ar-label">Loại giường chính *</label>
               <select
                 className="ar-select"
                 name="bed_type"
@@ -279,7 +395,82 @@ const EditRoomTypePage = () => {
                   <option key={bt} value={bt}>{bt}</option>
                 ))}
               </select>
+              {errors.bed_type && <div className="ar-error">{errors.bed_type}</div>}
             </div>
+
+            {form.bed_type && (
+              <>
+                <div className="ar-field">
+                  <label className="ar-label">Số lượng giường *</label>
+                  <div className="ar-counter-container">
+                    <button
+                      type="button"
+                      className="ar-counter-btn"
+                      onClick={() => handleBedCountChange(-1)}
+                      disabled={bedCount <= 1}
+                    >
+                      -
+                    </button>
+                    <span className="ar-counter-val">{bedCount}</span>
+                    <button
+                      type="button"
+                      className="ar-counter-btn"
+                      onClick={() => handleBedCountChange(1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="ar-row-controls">
+                  <div className="ar-field">
+                    <label className="ar-label">Số người lớn *</label>
+                    <div className="ar-counter-container">
+                      <button
+                        type="button"
+                        className="ar-counter-btn"
+                        onClick={() => handleAdultsChange(-1)}
+                        disabled={adults <= 1}
+                      >
+                        -
+                      </button>
+                      <span className="ar-counter-val">{adults}</span>
+                      <button
+                        type="button"
+                        className="ar-counter-btn"
+                        onClick={() => handleAdultsChange(1)}
+                        disabled={adults >= (BED_RULES[form.bed_type]?.adults || 2) * bedCount}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="ar-field">
+                    <label className="ar-label">Số trẻ em *</label>
+                    <div className="ar-counter-container">
+                      <button
+                        type="button"
+                        className="ar-counter-btn"
+                        onClick={() => handleChildrenChange(-1)}
+                        disabled={children <= 0}
+                      >
+                        -
+                      </button>
+                      <span className="ar-counter-val">{children}</span>
+                      <button
+                        type="button"
+                        className="ar-counter-btn"
+                        onClick={() => handleChildrenChange(1)}
+                        disabled={children >= (BED_RULES[form.bed_type]?.children || 1) * bedCount}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="ar-field">
               <label className="ar-label">Sức chứa tối đa (người) *</label>
@@ -289,7 +480,8 @@ const EditRoomTypePage = () => {
                 name="capacity"
                 min="1"
                 value={form.capacity}
-                onChange={handleChange}
+                readOnly
+                style={{ backgroundColor: '#f9fafb', cursor: 'not-allowed' }}
               />
             </div>
 
@@ -307,26 +499,28 @@ const EditRoomTypePage = () => {
             </div>
 
             <div className="ar-field">
-              <label className="ar-label">Mô tả số khách *</label>
+              <label className="ar-label">Mô tả số khách (Tự động cập nhật) *</label>
               <input
                 className="ar-input"
                 type="text"
                 name="guests"
                 value={form.guests}
-                onChange={handleChange}
+                readOnly
+                style={{ backgroundColor: '#f9fafb', cursor: 'not-allowed' }}
                 placeholder="Ví dụ: 2 Người Lớn"
               />
               {errors.guests && <div className="ar-error">{errors.guests}</div>}
             </div>
 
             <div className="ar-field">
-              <label className="ar-label">Mô tả chi tiết giường *</label>
+              <label className="ar-label">Mô tả chi tiết giường (Tự động cập nhật) *</label>
               <input
                 className="ar-input"
                 type="text"
                 name="beds"
                 value={form.beds}
-                onChange={handleChange}
+                readOnly
+                style={{ backgroundColor: '#f9fafb', cursor: 'not-allowed' }}
                 placeholder="Ví dụ: 1 Giường đôi / 2 Giường đơn"
               />
               {errors.beds && <div className="ar-error">{errors.beds}</div>}
@@ -410,7 +604,7 @@ const EditRoomTypePage = () => {
 
           <div className="ar-card">
             <div className="ar-card-header">
-              <span className="ar-card-title">Tiện nghi & Đặc điểm</span>
+              <span className="ar-card-title">Tiện nghi</span>
             </div>
 
             {/* Facilities */}
@@ -426,24 +620,6 @@ const EditRoomTypePage = () => {
                       onChange={() => handleFacilityToggle(a.name)}
                     />
                     <span>{a.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Features */}
-            <div className="ar-field">
-              <label className="ar-label">Đặc điểm (Lưu vào Features)</label>
-              <div className="ar-checkbox-grid">
-                {features.map((f) => (
-                  <label key={f._id} className="ar-checkbox-label">
-                    <input
-                      type="checkbox"
-                      className="ar-checkbox"
-                      checked={form.features.includes(f.name)}
-                      onChange={() => handleFeatureToggle(f.name)}
-                    />
-                    <span>{f.name}</span>
                   </label>
                 ))}
               </div>

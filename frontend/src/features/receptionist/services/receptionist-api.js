@@ -66,6 +66,7 @@ export const bookingApi = {
   getById: (id) => axiosClient.get(`/receptionist/bookings/${id}`).then((response) => response.data),
   checkIn: (id, data) => axiosClient.post(`/receptionist/bookings/${id}/checkin`, data).then((response) => response.data),
   createWalkIn: (data) => axiosClient.post('/receptionist/bookings/walkin', data).then((response) => response.data),
+  confirmWalkIn: (id, data) => axiosClient.post(`/receptionist/bookings/${id}/walkin-confirm`, data).then((response) => response.data),
   getDashboardStats: () => axiosClient.get('/receptionist/dashboard-stats').then((response) => response.data),
 };
 
