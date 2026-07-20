@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   BedDouble,
@@ -53,6 +53,7 @@ const getNightCount = (checkInDate, checkOutDate) => {
 const PaymentPage = () => {
   const { reservationId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const storedUserStr = localStorage.getItem('hotelify_user');
   let isReceptionist = false;
@@ -68,10 +69,15 @@ const PaymentPage = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
-  const [isMockPaying, setIsMockPaying] = useState(false);
+  const [isStartingVnpay, setIsStartingVnpay] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [paymentError, setPaymentError] = useState('');
+  const [paymentNotice, setPaymentNotice] = useState('');
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [acceptedHotelPolicies, setAcceptedHotelPolicies] = useState(false);
+  const [hotelPolicies, setHotelPolicies] = useState([]);
+  const [isPolicyPanelOpen, setIsPolicyPanelOpen] = useState(false);
+  const [isLoadingPolicies, setIsLoadingPolicies] = useState(false);
 
   // Receptionist Walk-in specific state
   const [guestName, setGuestName] = useState('');
@@ -124,6 +130,27 @@ const PaymentPage = () => {
 
     loadReservation();
   }, [navigate, reservationId, isReceptionist]);
+
+  useEffect(() => {
+    if (isReceptionist) {
+      return;
+    }
+
+    const loadHotelPolicies = async () => {
+      setIsLoadingPolicies(true);
+
+      try {
+        const response = await axiosClient.get('/payments/hotel-policies');
+        setHotelPolicies(response.data?.policies || []);
+      } catch (error) {
+        setPaymentError(error.response?.data?.message || 'Không thể tải chính sách khách sạn.');
+      } finally {
+        setIsLoadingPolicies(false);
+      }
+    };
+
+    loadHotelPolicies();
+  }, [isReceptionist]);
 
   const reservation = pageData.reservation;
   const room = pageData.room;
@@ -228,6 +255,23 @@ const PaymentPage = () => {
   };
 
   useEffect(() => {
+    const vnpayStatus = searchParams.get('vnpayStatus');
+    const message = searchParams.get('message');
+
+    if (!vnpayStatus) {
+      return;
+    }
+
+    if (vnpayStatus === 'success') {
+      setPaymentNotice(message || 'Thanh toán VNPay đã hoàn tất.');
+      checkPaymentStatus({ silent: true });
+      return;
+    }
+
+    setPaymentError(message || 'Giao dịch VNPay chưa thành công. Vui lòng thử lại.');
+  }, [searchParams, reservation?.id]);
+
+  useEffect(() => {
     if (!reservation?.id || isPaid) {
       return undefined;
     }
@@ -239,25 +283,40 @@ const PaymentPage = () => {
     return () => window.clearInterval(timer);
   }, [reservation?.id, isPaid]);
 
-  const handleMockPayment = async () => {
+  const handleVnpayPayment = async () => {
     if (!reservation?.id || isPaid) {
       return;
     }
 
-    setIsMockPaying(true);
+    if (!acceptedHotelPolicies) {
+      setIsPolicyPanelOpen(true);
+    }
+
+    if (!acceptedHotelPolicies) {
+      setPaymentError('Vui lòng đồng ý chính sách khách sạn trước khi thanh toán VNPay.');
+      return;
+    }
+
+    setIsStartingVnpay(true);
     setPaymentError('');
+    setPaymentNotice('');
 
     try {
-      const response = await axiosClient.post(`/payments/reservations/${reservation.id}/mock`, {
-        provider: 'MockAPI',
-        cardLast4: '4242'
+      const response = await axiosClient.post(`/payments/reservations/${reservation.id}/vnpay`, {
+        acceptedHotelPolicies: true,
+        locale: 'vn'
       });
+
+      if (response.data?.paymentUrl) {
+        window.location.assign(response.data.paymentUrl);
+        return;
+      }
 
       applyPaymentStatus(response.data);
     } catch (error) {
-      setPaymentError(error.response?.data?.message || 'Không thể thanh toán bằng MockAPI.');
+      setPaymentError(error.response?.data?.message || 'Không thể khởi tạo thanh toán VNPay.');
     } finally {
-      setIsMockPaying(false);
+      setIsStartingVnpay(false);
     }
   };
 
@@ -301,7 +360,7 @@ const PaymentPage = () => {
             <p>
               {isReceptionist
                 ? 'Nhập thông tin tên và SĐT của khách, chọn phòng vật lý (nếu có) và xác nhận phương thức thanh toán trực tiếp tại quầy.'
-                : 'Booking của bạn đã được tạo. Dùng MockAPI để giả lập thanh toán thành công và cập nhật trạng thái đặt phòng.'}
+                : 'Booking của bạn đã được tạo. Hoàn tất thanh toán qua VNPay để xác nhận đặt phòng.'}
             </p>
           </header>
 
@@ -485,33 +544,67 @@ const PaymentPage = () => {
                 <label>
                   <input type="radio" name="payment-method" checked readOnly />
                   <span>
-                    <strong>MockAPI thanh toán demo</strong>
-                    <small>Giả lập giao dịch thành công để kiểm thử luồng booking trước khi nối cổng thanh toán thật.</small>
+                    <strong>VNPay</strong>
+                    <small>Thanh toán qua cổng VNPay sandbox. Sau khi giao dịch hoàn tất, hệ thống sẽ tự động cập nhật trạng thái booking.</small>
                   </span>
                 </label>
+                <label>
+                  <input
+                    checked={acceptedHotelPolicies}
+                    onChange={(event) => setAcceptedHotelPolicies(event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>
+                    <strong>Đồng ý chính sách khách sạn</strong>
+                    <small>Tôi đã đọc và đồng ý với chính sách đặt phòng, thanh toán và hủy phòng.</small>
+                  </span>
+                </label>
+                <div className="payment-policy-panel">
+                  <button type="button" onClick={() => setIsPolicyPanelOpen(true)}>
+                    {isPolicyPanelOpen ? 'Ẩn chính sách' : 'Xem toàn bộ chính sách'}
+                  </button>
+                  {false ? (
+                    <div className="payment-policy-list">
+                      {isLoadingPolicies ? (
+                        <p>Đang tải chính sách...</p>
+                      ) : hotelPolicies.length > 0 ? (
+                        hotelPolicies.map((policy) => (
+                          <article key={policy.id || policy.title}>
+                            <span>{policy.category || 'Policy'}</span>
+                            <h3>{policy.title}</h3>
+                            <p>{policy.content}</p>
+                          </article>
+                        ))
+                      ) : (
+                        <p>Chưa có chính sách khách sạn đang áp dụng.</p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               </section>
 
-              <section className="vietqr-payment-card mockapi-payment-card">
+              <section className="vietqr-payment-card">
                 <div className="vietqr-payment-heading">
-                  <span><CreditCard size={18} /> MockAPI</span>
+                  <span><Building2 size={18} /> VNPay</span>
                   <strong>{currentPaymentStatus}</strong>
                 </div>
 
                 {isPaid ? (
                   <div className="vietqr-paid-state">
                     <CheckCircle2 size={32} />
-                    <strong>Thanh toán đã được xác nhận bằng MockAPI.</strong>
+                    <strong>Thanh toán đã được xác nhận qua VNPay.</strong>
                   </div>
                 ) : (
-                  <div className="mockapi-payment-box">
-                    <p>MockAPI sẽ tạo một giao dịch thành công và cập nhật booking sang trạng thái đã thanh toán.</p>
-                    <button type="button" disabled={isMockPaying} onClick={handleMockPayment}>
+                  <div className="vnpay-payment-box">
+                    <p>Bấm thanh toán để chuyển sang cổng VNPay và hoàn tất giao dịch cho booking này.</p>
+                    <button type="button" disabled={isStartingVnpay} onClick={handleVnpayPayment}>
                       <CreditCard size={17} />
-                      {isMockPaying ? 'Đang thanh toán...' : `Thanh toán ${formatCurrency(remainingAmount)}`}
+                      {isStartingVnpay ? 'Đang chuyển sang VNPay...' : `Thanh toán VNPay ${formatCurrency(remainingAmount)}`}
                     </button>
                   </div>
                 )}
 
+                {paymentNotice ? <p className="vietqr-payment-success">{paymentNotice}</p> : null}
                 {paymentError ? <p className="vietqr-payment-error">{paymentError}</p> : null}
               </section>
             </>
@@ -560,6 +653,60 @@ const PaymentPage = () => {
           </button>
         </aside>
       </div>
+      {isPolicyPanelOpen ? (
+        <div className="hotel-policy-modal-backdrop" role="presentation" onMouseDown={() => setIsPolicyPanelOpen(false)}>
+          <section
+            className="hotel-policy-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="payment-policy-modal-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <span>Chính sách Hotelify</span>
+                <h2 id="payment-policy-modal-title">Điều khoản và điều kiện thanh toán</h2>
+              </div>
+              <button type="button" aria-label="Đóng chính sách" onClick={() => setIsPolicyPanelOpen(false)}>
+                X
+              </button>
+            </header>
+
+            <div className="hotel-policy-modal-content">
+              {isLoadingPolicies ? <p className="hotel-policy-empty">Đang tải chính sách...</p> : null}
+              {!isLoadingPolicies && hotelPolicies.length > 0 ? (
+                hotelPolicies.map((policy) => (
+                  <article key={policy.id || policy.title} className="hotel-policy-item">
+                    <span>{policy.category || 'Policy'}</span>
+                    <h3>{policy.title}</h3>
+                    <p>{policy.content}</p>
+                  </article>
+                ))
+              ) : null}
+              {!isLoadingPolicies && hotelPolicies.length === 0 ? (
+                <p className="hotel-policy-empty">Chưa có chính sách khách sạn đang áp dụng.</p>
+              ) : null}
+            </div>
+
+            <footer>
+              <button type="button" onClick={() => setIsPolicyPanelOpen(false)}>
+                Đóng
+              </button>
+              <button
+                type="button"
+                className="hotel-policy-accept"
+                onClick={() => {
+                  setAcceptedHotelPolicies(true);
+                  setPaymentError('');
+                  setIsPolicyPanelOpen(false);
+                }}
+              >
+                Đồng ý điều khoản
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 };

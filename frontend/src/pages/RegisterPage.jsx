@@ -58,7 +58,8 @@ const RegisterPage = () => {
     setValidationErrors([]);
 
     if (!formData.accepted_terms) {
-      setErrorMessage('You must agree to the terms and conditions.');
+      setErrorMessage('Vui lòng đọc và đồng ý điều khoản, điều kiện trước khi tạo tài khoản.');
+      setIsPolicyModalOpen(true);
       return;
     }
 
@@ -183,7 +184,7 @@ const RegisterPage = () => {
                 checked={formData.accepted_terms}
                 onChange={handleChange}
               />
-              <span>I agree to the</span>
+              <span>Tôi đã đọc và đồng ý với</span>
             </label>
             <button
               type="button"
@@ -193,7 +194,7 @@ const RegisterPage = () => {
                 setIsPolicyModalOpen(true);
               }}
             >
-              Terms & Conditions
+              Điều khoản và điều kiện
             </button>
           </div>
 
@@ -230,8 +231,8 @@ const RegisterPage = () => {
           >
             <header>
               <div>
-                <span>Hotelify policies</span>
-                <h2 id="hotel-policy-modal-title">Terms & Conditions</h2>
+                <span>Chính sách Hotelify</span>
+                <h2 id="hotel-policy-modal-title">Điều khoản và điều kiện</h2>
               </div>
               <button type="button" aria-label="Close terms" onClick={() => setIsPolicyModalOpen(false)}>
                 <X size={20} />
@@ -257,7 +258,21 @@ const RegisterPage = () => {
 
             <footer>
               <button type="button" onClick={() => setIsPolicyModalOpen(false)}>
-                Close
+                Đóng
+              </button>
+              <button
+                type="button"
+                className="hotel-policy-accept"
+                onClick={() => {
+                  setFormData((currentData) => ({
+                    ...currentData,
+                    accepted_terms: true
+                  }));
+                  setErrorMessage('');
+                  setIsPolicyModalOpen(false);
+                }}
+              >
+                Đồng ý điều khoản
               </button>
             </footer>
           </section>
