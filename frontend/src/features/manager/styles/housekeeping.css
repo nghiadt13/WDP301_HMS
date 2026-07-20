@@ -715,6 +715,31 @@
   resize: vertical;
 }
 
+.housekeeping-maintenance-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.housekeeping-maintenance-edit-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.housekeeping-maintenance-edit-grid select,
+.housekeeping-maintenance-edit-grid input,
+.housekeeping-maintenance-edit-grid textarea {
+  margin-bottom: 0;
+}
+
+.housekeeping-maintenance-edit-wide {
+  grid-column: 1 / -1;
+}
+
 .housekeeping-maintenance-detail-grid {
   display: grid;
   grid-template-columns: auto 1fr;

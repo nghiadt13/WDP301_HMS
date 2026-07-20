@@ -280,6 +280,51 @@ const mapMaintenanceRequest = (request) => ({
   updatedAt: request.updatedAt,
 });
 
+const normalizeMaintenanceStatus = (status, fallback = 'InProgress') => {
+  const raw = String(status || fallback).trim();
+  const normalized = raw.toLowerCase();
+
+  if (normalized === 'open') return 'Open';
+  if (['inprogress', 'in progress', 'in_progress'].includes(normalized)) return 'InProgress';
+  if (['resolved', 'complete', 'completed'].includes(normalized)) return 'Resolved';
+  if (['cancelled', 'canceled'].includes(normalized)) return 'Cancelled';
+  return raw;
+};
+
+const applyMaintenanceResolvedEffects = async (request, note = '') => {
+  const roomNumber = String(request?.room || '').trim();
+  if (!roomNumber) return;
+
+  const room = await Room.findOne({ roomName: roomNumber });
+  if (room) {
+    room.status = 'Dirty';
+    room.inspectionStatus = 'Pending';
+    await room.save();
+  }
+
+  await StaffTask.updateMany(
+    {
+      room_number: roomNumber,
+      staff_type: 'housekeeping',
+      status: { $in: ['WaitingMaintenance', 'waitingmaintenance', 'waiting maintenance'] },
+    },
+    {
+      $set: {
+        status: 'Cancelled',
+      },
+    }
+  );
+
+  await createCleaningTaskForRoom({
+    roomNumber,
+    priority: 'medium',
+    receptionistNote: note || 'Maintenance completed. Please perform cleaning.',
+    cleaningType: 'Post Maintenance Cleaning',
+    assignedBy: 'Manager',
+    checkoutTime: new Date(),
+  });
+};
+
 const housekeepingService = {
   async getRooms(query = {}, user) {
     ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist']);
@@ -594,7 +639,8 @@ const housekeepingService = {
     const request = await MaintenanceRequest.findById(id);
     if (!request) throw createHttpError('Maintenance request not found', 404);
 
-    const nextStatus = String(body.status || request.status || 'InProgress');
+    const currentStatus = normalizeMaintenanceStatus(request.status, 'Open');
+    const nextStatus = normalizeMaintenanceStatus(body.status || request.status || 'InProgress');
     const allowedStatuses = ['Open', 'InProgress', 'Resolved', 'Cancelled'];
     if (!allowedStatuses.includes(nextStatus)) {
       throw createHttpError('Invalid maintenance status', 400);
@@ -607,6 +653,11 @@ const housekeepingService = {
     request.status = nextStatus;
     if (body.note !== undefined) request.note = body.note;
     if (body.image !== undefined) request.image = body.image;
+
+    if (nextStatus === 'Resolved' && currentStatus !== 'Resolved') {
+      await applyMaintenanceResolvedEffects(request, body.note);
+    }
+
     await request.save();
     return mapMaintenanceRequest(request);
   },
@@ -646,34 +697,7 @@ const housekeepingService = {
     if (body.note !== undefined) request.note = body.note;
     if (body.image !== undefined) request.image = body.image;
 
-    const room = await Room.findOne({ roomName: request.room });
-    if (room) {
-      room.status = 'Dirty';
-      room.inspectionStatus = 'Pending';
-      await room.save();
-    }
-
-    await StaffTask.updateMany(
-      {
-        room_number: request.room,
-        staff_type: 'housekeeping',
-        status: 'WaitingMaintenance',
-      },
-      {
-        $set: {
-          status: 'Cancelled',
-        },
-      }
-    );
-
-    await createCleaningTaskForRoom({
-      roomNumber: request.room,
-      priority: 'medium',
-      receptionistNote: body.note || 'Maintenance completed. Please perform cleaning.',
-      cleaningType: 'Post Maintenance Cleaning',
-      assignedBy: 'Manager',
-      checkoutTime: new Date(),
-    });
+    await applyMaintenanceResolvedEffects(request, body.note);
 
     await request.save();
     return mapMaintenanceRequest(request);
