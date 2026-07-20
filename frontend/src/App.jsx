@@ -71,9 +71,22 @@ const ManagerProtectedRoute = () => {
   const token = localStorage.getItem('hotelify_token');
   const user = getStoredUser();
   const roleName = String(user?.role?.name || '').toLowerCase();
+  const isManager = roleName.includes('manager');
+  const isHousekeeping = roleName.includes('housekeeping');
+  const allowedHousekeepingPaths = ['/manager', '/manager/housekeeping', '/manager/housekeeping/daily', '/manager/housekeeping/tasks', '/manager/housekeeping/schedule'];
 
-  if (!token || !roleName.includes('manager')) {
+  if (!token || (!isManager && !isHousekeeping)) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (isHousekeeping) {
+    if (location.pathname === '/manager') {
+      return <Navigate to="/manager/housekeeping/tasks" replace state={{ from: location }} />;
+    }
+
+    if (!allowedHousekeepingPaths.includes(location.pathname)) {
+      return <Navigate to="/manager/housekeeping/tasks" replace state={{ from: location }} />;
+    }
   }
 
   return <Outlet />;

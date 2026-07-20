@@ -9,6 +9,16 @@ import '../styles/housekeeping.css';
 
 const normalizeStatus = (value) => String(value || '').toLowerCase().replace(/\s+/g, '');
 
+const getStageClass = (status) => {
+  const normalized = normalizeStatus(status);
+  if (normalized === 'assigned') return 'housekeeping-stage-assigned';
+  if (normalized === 'accepted') return 'housekeeping-stage-accepted';
+  if (normalized === 'cleaning') return 'housekeeping-stage-cleaning';
+  if (normalized === 'waitingmaintenance') return 'housekeeping-stage-waiting-maintenance';
+  if (normalized === 'completed') return 'housekeeping-stage-completed';
+  return 'housekeeping-stage-default';
+};
+
 const isActionAllowed = (action, status) => {
   const normalized = normalizeStatus(status);
   if (action === 'accept') return ['assigned', 'accepted'].includes(normalized);
@@ -324,7 +334,7 @@ const HousekeepingTasksPage = () => {
               <button
                 key={task.id}
                 type="button"
-                className={`housekeeping-task-list-item${selectedTaskId === task.id ? ' is-selected' : ''}`}
+                className={`housekeeping-task-list-item ${getStageClass(task.status)}${selectedTaskId === task.id ? ' is-selected' : ''}`}
                 onClick={() => setSelectedTaskId(task.id)}
               >
                 <div className="housekeeping-task-list-item-head">
@@ -350,7 +360,7 @@ const HousekeepingTasksPage = () => {
           </div>
         </div>
 
-        <aside className="housekeeping-task-detail-pane housekeeping-card">
+        <aside className={`housekeeping-task-detail-pane housekeeping-card ${getStageClass(selectedTask?.status)}`}>
           {!selectedTask ? (
             <div className="housekeeping-state-card">
               <h3>No task selected</h3>
@@ -358,7 +368,7 @@ const HousekeepingTasksPage = () => {
             </div>
           ) : (
             <div className="housekeeping-task-detail-content">
-              <header className="housekeeping-card-header">
+              <header className="housekeeping-card-header housekeeping-task-stage-header">
                 <h3>Room {selectedTask.roomNumber}</h3>
                 <HousekeepingStatusBadge value={selectedTask.status} />
               </header>

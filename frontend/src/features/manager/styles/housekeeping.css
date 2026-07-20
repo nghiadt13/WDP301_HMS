@@ -468,16 +468,61 @@
   padding: 12px 14px;
   background: #fff;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .housekeeping-task-list-item:hover {
   border-color: #bfdbfe;
   box-shadow: 0 8px 20px -16px rgba(37, 99, 235, 0.7);
+  transform: translateY(-1px);
 }
 
 .housekeeping-task-list-item.is-selected {
   border-color: #93c5fd;
   background: #eff6ff;
+}
+
+.housekeeping-task-list-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #cbd5e1;
+}
+
+.housekeeping-task-list-item.housekeeping-stage-assigned::before,
+.housekeeping-task-detail-pane.housekeeping-stage-assigned .housekeeping-card-header::before {
+  background: linear-gradient(180deg, #3b82f6, #60a5fa);
+}
+
+.housekeeping-task-list-item.housekeeping-stage-accepted::before,
+.housekeeping-task-detail-pane.housekeeping-stage-accepted .housekeeping-card-header::before {
+  background: linear-gradient(180deg, #0ea5e9, #38bdf8);
+}
+
+.housekeeping-task-list-item.housekeeping-stage-cleaning::before,
+.housekeeping-task-detail-pane.housekeeping-stage-cleaning .housekeeping-card-header::before {
+  background: linear-gradient(180deg, #f59e0b, #fbbf24);
+}
+
+.housekeeping-task-list-item.housekeeping-stage-waiting-maintenance::before,
+.housekeeping-task-detail-pane.housekeeping-stage-waiting-maintenance .housekeeping-card-header::before {
+  background: linear-gradient(180deg, #ef4444, #f97316);
+}
+
+.housekeeping-task-list-item.housekeeping-stage-completed::before,
+.housekeeping-task-detail-pane.housekeeping-stage-completed .housekeeping-card-header::before {
+  background: linear-gradient(180deg, #10b981, #34d399);
+}
+
+.housekeeping-task-list-item.is-selected.housekeeping-stage-assigned,
+.housekeeping-task-list-item.is-selected.housekeeping-stage-accepted,
+.housekeeping-task-list-item.is-selected.housekeeping-stage-cleaning,
+.housekeeping-task-list-item.is-selected.housekeeping-stage-waiting-maintenance,
+.housekeeping-task-list-item.is-selected.housekeeping-stage-completed {
+  box-shadow: 0 14px 30px -22px rgba(37, 99, 235, 0.6);
 }
 
 .housekeeping-task-list-item-head,
@@ -515,6 +560,51 @@
   top: 16px;
   max-height: calc(100vh - 120px);
   overflow: auto;
+}
+
+.housekeeping-task-detail-pane {
+  border-width: 1px;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-assigned {
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 36%);
+  border-color: #bfdbfe;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-accepted {
+  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 36%);
+  border-color: #bae6fd;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-cleaning {
+  background: linear-gradient(180deg, #fffaf0 0%, #ffffff 40%);
+  border-color: #fed7aa;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-waiting-maintenance {
+  background: linear-gradient(180deg, #fff7f7 0%, #ffffff 40%);
+  border-color: #fecaca;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-completed {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 40%);
+  border-color: #bbf7d0;
+}
+
+.housekeeping-task-stage-header {
+  position: relative;
+  padding-left: 14px;
+}
+
+.housekeeping-task-stage-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 999px;
+  background: #cbd5e1;
 }
 
 .housekeeping-task-detail-content {
@@ -622,6 +712,28 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-assigned .housekeeping-task-detail-actions .housekeeping-outline-btn,
+.housekeeping-task-detail-pane.housekeeping-stage-accepted .housekeeping-task-detail-actions .housekeeping-outline-btn {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-cleaning .housekeeping-task-detail-actions .housekeeping-btn {
+  background: linear-gradient(90deg, #f59e0b, #fb7185);
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-waiting-maintenance .housekeeping-task-detail-actions .housekeeping-btn,
+.housekeeping-task-detail-pane.housekeeping-stage-waiting-maintenance .housekeeping-task-detail-actions .housekeeping-outline-btn {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.housekeeping-task-detail-pane.housekeeping-stage-completed .housekeeping-task-detail-actions .housekeeping-btn,
+.housekeeping-task-detail-pane.housekeeping-stage-completed .housekeeping-task-detail-actions .housekeeping-outline-btn {
+  background: #ecfdf5;
+  color: #047857;
 }
 
 .housekeeping-task-detail-actions button:disabled {
