@@ -134,7 +134,7 @@ const ReceptionistBookingListPage = () => {
             type="button"
             className="btn-checkin-primary"
             style={{ padding: '8px 16px', fontSize: '13px', width: 'auto', marginTop: 0 }}
-            onClick={() => navigate('/receptionist/walkin')}
+            onClick={() => navigate('/booking')}
           >
             <UserPlus size={16} />
             Tạo đặt phòng walk-in
@@ -178,7 +178,7 @@ const ReceptionistBookingListPage = () => {
                     onClick={() => navigate(`/receptionist/bookings/${b.id}`)}
                   >
                     <td><strong>{b.bookingCode}</strong><small>Nguồn: {b.source}</small></td>
-                    <td>{b.customerName}</td>
+                    <td><strong>{b.customerName}</strong>{b.customerPhone ? <small style={{ display: 'block', color: 'var(--muted)', fontSize: '12px' }}>SĐT: {b.customerPhone}</small> : null}</td>
                     <td><strong>{b.roomTypeName}</strong><small>{b.roomQuantity} phòng / {b.guestCount} khách</small></td>
                     <td>{formatDate(b.checkInDate)} - {formatDate(b.checkOutDate)}</td>
                     <td><strong>{formatCurrency(b.totalAmount)}</strong></td>

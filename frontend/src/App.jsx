@@ -11,8 +11,11 @@ import ReceptionistBookingListPage from './features/receptionist/pages/Reception
 import ReceptionistBookingDetailPage from './features/receptionist/pages/ReceptionistBookingDetailPage.jsx';
 import WalkinBookingForm from './features/receptionist/components/WalkinBookingForm.jsx';
 import RoomManagePage from './features/manager/pages/RoomManagePage.jsx';
+import PhysicalRoomManagePage from './features/manager/pages/PhysicalRoomManagePage.jsx';
 import AddRoomPage from './features/manager/pages/AddRoomPage.jsx';
 import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
+import AddRoomTypePage from './features/manager/pages/AddRoomTypePage.jsx';
+import EditRoomTypePage from './features/manager/pages/EditRoomTypePage.jsx';
 import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPage.jsx';
 import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
@@ -31,12 +34,14 @@ import AdminProfilePage from './features/admin/pages/AdminProfilePage.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import BookingPage from './pages/BookingPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import MyProfilePage from './pages/MyProfilePage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import RoomDetailPage from './pages/RoomDetailPage.jsx';
 import RoomListPage from './pages/RoomListPage.jsx';
 import RoomSearchResultsPage from './pages/RoomSearchResultsPage.jsx';
@@ -119,6 +124,8 @@ const App = () => {
         <Route path="home" element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="booking" element={<BookingPage />} />
         <Route path="listRoom" element={<RoomListPage />} />
         <Route path="rooms" element={<RoomListPage />} />
@@ -139,8 +146,11 @@ const App = () => {
           <Route path="manager" element={<ManagerLayout />}>
             <Route index element={<ManagerDashboardPage />} />
             <Route path="rooms" element={<RoomManagePage />} />
+            <Route path="physical-rooms" element={<PhysicalRoomManagePage />} />
             <Route path="rooms/add" element={<AddRoomPage />} />
             <Route path="rooms/:id/edit" element={<EditRoomPage />} />
+            <Route path="room-types/add" element={<AddRoomTypePage />} />
+            <Route path="room-types/:id/edit" element={<EditRoomTypePage />} />
             <Route path="housekeeping" element={<Navigate to="/manager/housekeeping/tasks" replace />} />
             <Route path="housekeeping/tasks" element={<HousekeepingTasksPage />} />
             <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />

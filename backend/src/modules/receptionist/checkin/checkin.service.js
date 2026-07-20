@@ -81,21 +81,28 @@ const checkinService = {
       Booking.countDocuments(filter)
     ]);
 
-    const mappedData = bookings.map(b => ({
-      id: b._id.toString(),
-      bookingCode: b.booking_code,
-      customerName: b.customer_id ? b.customer_id.full_name : 'Walk-in Guest',
-      roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
-      checkInDate: b.check_in_date,
-      checkOutDate: b.check_out_date,
-      guestCount: b.guest_count,
-      roomQuantity: b.room_quantity,
-      totalAmount: b.total_amount,
-      depositAmount: b.deposit_amount,
-      paymentStatus: b.payment_status,
-      bookingStatus: b.booking_status,
-      source: b.source
-    }));
+    const mappedData = bookings.map(b => {
+      const isReceptionistAccount = b.customer_id && (b.customer_id.full_name === 'Front Desk Receptionist' || b.customer_id.role === 'receptionist');
+      const customerName = b.guest_name || (!isReceptionistAccount && b.customer_id ? b.customer_id.full_name : 'Walk-in Guest');
+      const customerPhone = b.guest_phone || (!isReceptionistAccount && b.customer_id ? b.customer_id.phone_number : '');
+
+      return {
+        id: b._id.toString(),
+        bookingCode: b.booking_code,
+        customerName,
+        customerPhone,
+        roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
+        checkInDate: b.check_in_date,
+        checkOutDate: b.check_out_date,
+        guestCount: b.guest_count,
+        roomQuantity: b.room_quantity,
+        totalAmount: b.total_amount,
+        depositAmount: b.deposit_amount,
+        paymentStatus: b.payment_status,
+        bookingStatus: b.booking_status,
+        source: b.source
+      };
+    });
 
     return {
       data: mappedData,
@@ -186,17 +193,23 @@ const checkinService = {
       canCheckin = false;
     }
 
+    const isReceptionistAccount = booking.customer_id && (booking.customer_id.full_name === 'Front Desk Receptionist' || booking.customer_id.role === 'receptionist');
+    const customerName = booking.guest_name || (!isReceptionistAccount && booking.customer_id ? booking.customer_id.full_name : 'Walk-in Guest');
+    const customerPhone = booking.guest_phone || (!isReceptionistAccount && booking.customer_id ? booking.customer_id.phone_number : '');
+    const customerEmail = !isReceptionistAccount && booking.customer_id ? booking.customer_id.email : '';
+    const customerIdCard = !isReceptionistAccount && booking.customer_id ? booking.customer_id.id_card_number : '';
+
     return {
       booking: {
         id: booking._id.toString(),
         bookingCode: booking.booking_code,
-        customer: booking.customer_id ? {
-          id: booking.customer_id._id,
-          fullName: booking.customer_id.full_name,
-          email: booking.customer_id.email,
-          phoneNumber: booking.customer_id.phone_number,
-          idCardNumber: booking.customer_id.id_card_number
-        } : null,
+        customer: {
+          id: isReceptionistAccount ? null : (booking.customer_id ? booking.customer_id._id : null),
+          fullName: customerName,
+          email: customerEmail,
+          phoneNumber: customerPhone,
+          idCardNumber: customerIdCard
+        },
         roomType: booking.room_type_id ? {
           id: booking.room_type_id._id,
           name: booking.room_type_id.name
@@ -444,7 +457,19 @@ const checkinService = {
   },
 
   async createWalkInBooking(body) {
-    const { roomTypeId, roomCount, checkInDate, checkOutDate, guestCount, adultCount, childCount, specialRequest } = body;
+    const {
+      roomTypeId,
+      roomCount,
+      checkInDate,
+      checkOutDate,
+      guestCount,
+      adultCount,
+      childCount,
+      specialRequest,
+      paymentMethod,
+      selectedRoomIds,
+      guestInfo
+    } = body;
 
     const roomType = await RoomType.findById(roomTypeId);
     if (!roomType) {
@@ -464,11 +489,28 @@ const checkinService = {
     const totalAmount = (roomType.base_price || 0) * nights * roomCount;
 
     const now = new Date();
+
+    // Look up existing customer if guestInfo is provided
+    let customerId = null;
+    if (guestInfo && (guestInfo.idCardNumber || guestInfo.phone)) {
+      const queryCond = [];
+      if (guestInfo.idCardNumber) queryCond.push({ id_card_number: guestInfo.idCardNumber.trim() });
+      if (guestInfo.phone) queryCond.push({ phone_number: guestInfo.phone.trim() });
+      const existingUser = await User.findOne({ $or: queryCond });
+      if (existingUser) {
+        customerId = existingUser._id;
+      }
+    }
+
+    const firstSelectedRoomId = (Array.isArray(selectedRoomIds) && selectedRoomIds.length === 1 && mongoose.Types.ObjectId.isValid(selectedRoomIds[0]))
+      ? selectedRoomIds[0]
+      : null;
+
     const booking = new Booking({
       booking_code: generateWalkInCode(),
-      customer_id: null,
+      customer_id: customerId,
       room_type_id: roomTypeId,
-      room_id: null,
+      room_id: firstSelectedRoomId,
       check_in_date: new Date(checkInDate),
       check_out_date: new Date(checkOutDate),
       guest_count: guestCount || 1,
@@ -487,14 +529,29 @@ const checkinService = {
 
     await booking.save();
 
+    // Fetch pre-selected room documents if provided
+    let roomDocsMap = {};
+    if (Array.isArray(selectedRoomIds) && selectedRoomIds.length > 0) {
+      const validRoomIds = selectedRoomIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+      if (validRoomIds.length > 0) {
+        const roomDocs = await Room.find({ _id: { $in: validRoomIds } });
+        roomDocs.forEach(r => {
+          roomDocsMap[r._id.toString()] = r;
+        });
+      }
+    }
+
     // Create BookingRoom records
     const newRooms = [];
     for (let i = 0; i < roomCount; i++) {
+      const selectedId = (Array.isArray(selectedRoomIds) && selectedRoomIds[i]) ? selectedRoomIds[i] : null;
+      const roomDoc = selectedId ? roomDocsMap[selectedId] : null;
+
       newRooms.push({
         booking_id: booking._id,
-        room_id: null,
+        room_id: roomDoc ? roomDoc._id : null,
         room_type_id: roomTypeId,
-        room_number: '',
+        room_number: roomDoc ? roomDoc.roomName : '',
         status: 'Pending',
         check_in_date: booking.check_in_date,
         check_out_date: booking.check_out_date
@@ -503,12 +560,37 @@ const checkinService = {
 
     const rooms = await BookingRoom.insertMany(newRooms);
 
+    // Create Payment record
+    const db = mongoose.connection.db;
+    const paymentMethodVal = ['Cash', 'BankTransfer'].includes(paymentMethod) ? paymentMethod : 'Cash';
+    const payment = {
+      _id: new mongoose.Types.ObjectId(),
+      reservation_id: booking._id,
+      payment_method: paymentMethodVal,
+      amount: totalAmount,
+      transaction_id: `WALKIN-${Date.now().toString(36).toUpperCase()}`,
+      status: 'Completed',
+      paid_at: now,
+      created_at: now
+    };
+    await db.collection('payments').insertOne(payment);
+
     return {
       booking,
       rooms: rooms.map(r => ({
         id: r._id.toString(),
+        roomId: r.room_id ? r.room_id.toString() : null,
+        roomNumber: r.room_number || '',
         status: r.status
-      }))
+      })),
+      payment: {
+        id: payment._id.toString(),
+        amount: payment.amount,
+        paymentMethod: payment.payment_method,
+        transactionId: payment.transaction_id,
+        status: payment.status,
+        paidAt: payment.paid_at
+      }
     };
   },
 
@@ -540,6 +622,133 @@ const checkinService = {
 
   async getRoomTypes() {
     return RoomType.find({ is_active: true }).sort({ display_order: 1 });
+  },
+
+  async confirmWalkInBooking(bookingId, body) {
+    const { guestName, guestPhone, paymentMethod, selectedRoomIds } = body;
+
+    const db = mongoose.connection.db;
+    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+      throw createHttpError('Invalid booking ID format', 400);
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      throw createHttpError('Booking not found', 404);
+    }
+
+    const now = new Date();
+    const cleanName = guestName ? guestName.trim() : '';
+    const cleanPhone = guestPhone ? guestPhone.trim() : '';
+
+    let customerId = booking.customer_id;
+
+    if (cleanPhone || cleanName) {
+      let user = null;
+      if (cleanPhone) {
+        user = await User.findOne({ phone_number: cleanPhone });
+      }
+
+      if (user) {
+        customerId = user._id;
+        if (cleanName && (!user.full_name || user.full_name === 'Walk-in Guest' || user.full_name === 'Front Desk Receptionist')) {
+          user.full_name = cleanName;
+          await user.save();
+        }
+      } else {
+        const Role = require('../../../models/role.model');
+        const customerRole = await Role.findOne({ name: /customer/i });
+        const roleId = customerRole ? customerRole._id : booking.customer_id;
+
+        if (cleanName || cleanPhone) {
+          const generatedEmail = `walkin_${Date.now()}@guest.hotelify.com`;
+          user = new User({
+            role_id: roleId,
+            email: generatedEmail,
+            password_hash: 'walkin_no_password',
+            full_name: cleanName || 'Walk-in Guest',
+            phone_number: cleanPhone,
+            status: 'active'
+          });
+          await user.save();
+          customerId = user._id;
+        }
+      }
+    }
+
+    booking.guest_name = cleanName;
+    booking.guest_phone = cleanPhone;
+    booking.customer_id = customerId;
+    booking.booking_status = 'Confirmed';
+    booking.payment_status = 'Paid';
+    booking.deposit_amount = booking.total_amount;
+    booking.source = 'Walk-in';
+    booking.updated_at = now;
+
+    // If selectedRoomIds provided and valid
+    if (Array.isArray(selectedRoomIds) && selectedRoomIds.length > 0) {
+      const validRoomIds = selectedRoomIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+      if (validRoomIds.length > 0) {
+        booking.room_id = validRoomIds[0];
+        const roomDocs = await Room.find({ _id: { $in: validRoomIds } });
+        const roomMap = {};
+        roomDocs.forEach(r => { roomMap[r._id.toString()] = r; });
+
+        let bookingRooms = await BookingRoom.find({ booking_id: booking._id });
+        if (bookingRooms.length === 0) {
+          const newRooms = [];
+          for (let i = 0; i < booking.room_quantity; i++) {
+            newRooms.push({
+              booking_id: booking._id,
+              room_id: null,
+              room_type_id: booking.room_type_id,
+              room_number: '',
+              status: 'Pending',
+              check_in_date: booking.check_in_date,
+              check_out_date: booking.check_out_date
+            });
+          }
+          bookingRooms = await BookingRoom.insertMany(newRooms);
+        }
+
+        for (let i = 0; i < bookingRooms.length; i++) {
+          const selId = validRoomIds[i];
+          if (selId && roomMap[selId]) {
+            bookingRooms[i].room_id = roomMap[selId]._id;
+            bookingRooms[i].room_number = roomMap[selId].roomName;
+            await bookingRooms[i].save();
+          }
+        }
+      }
+    }
+
+    await booking.save();
+
+    // Record Payment
+    const paymentMethodVal = ['Cash', 'BankTransfer'].includes(paymentMethod) ? paymentMethod : 'Cash';
+    const payment = {
+      _id: new mongoose.Types.ObjectId(),
+      reservation_id: booking._id,
+      payment_method: paymentMethodVal,
+      amount: booking.total_amount,
+      transaction_id: `WALKIN-${Date.now().toString(36).toUpperCase()}`,
+      status: 'Completed',
+      paid_at: now,
+      created_at: now
+    };
+    await db.collection('payments').insertOne(payment);
+
+    return {
+      booking,
+      payment: {
+        id: payment._id.toString(),
+        amount: payment.amount,
+        paymentMethod: payment.payment_method,
+        transactionId: payment.transaction_id,
+        status: payment.status,
+        paidAt: payment.paid_at
+      }
+    };
   },
 
   async getDashboardStats() {
@@ -603,17 +812,21 @@ const checkinService = {
         maintenance: maintenanceRooms,
         outOfService: outOfServiceRooms
       },
-      recentBookings: recentBookings.map(b => ({
-        id: b._id.toString(),
-        bookingCode: b.booking_code,
-        customerName: b.customer_id ? b.customer_id.full_name : 'Walk-in Guest',
-        roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
-        roomName: b.room_id ? b.room_id.roomName : 'Chưa gán',
-        checkInDate: b.check_in_date,
-        checkOutDate: b.check_out_date,
-        paymentStatus: b.payment_status,
-        bookingStatus: b.booking_status
-      })),
+      recentBookings: recentBookings.map(b => {
+        const isReceptionistAccount = b.customer_id && (b.customer_id.full_name === 'Front Desk Receptionist' || b.customer_id.role === 'receptionist');
+        const customerName = b.guest_name || (!isReceptionistAccount && b.customer_id ? b.customer_id.full_name : 'Walk-in Guest');
+        return {
+          id: b._id.toString(),
+          bookingCode: b.booking_code,
+          customerName,
+          roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
+          roomName: b.room_id ? b.room_id.roomName : 'Chưa gán',
+          checkInDate: b.check_in_date,
+          checkOutDate: b.check_out_date,
+          paymentStatus: b.payment_status,
+          bookingStatus: b.booking_status
+        };
+      }),
       serviceRequests: activeRequests.map(req => ({
         serviceName: req.service_name,
         roomNumber: req.room_number,

@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText } from 'lucide-react';
+import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText, Grid } from 'lucide-react';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
   { icon: Inbox, label: 'Hộp thư' },
   { icon: Calendar, label: 'Lịch' },
   { icon: Megaphone, label: 'Chiến dịch', hasSub: true },
-  { icon: BedDouble, label: 'Phòng', hasSub: true, matchPath: '/manager/rooms' },
-  { icon: BrushCleaning, label: 'Housekeeping', to: '/manager/housekeeping/tasks' },
+  { icon: BedDouble, label: 'Loại phòng', hasSub: true, matchPath: '/manager/rooms' },
+  { icon: Grid, label: 'Quản lý phòng', hasSub: true, matchPath: '/manager/physical-rooms' },
+  { icon: BrushCleaning, label: 'Housekeeping', to: '/manager/housekeeping' },
   { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-task' },
   { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar' },
   { icon: FileText, label: 'Chính sách', to: '/manager/policies' },
@@ -25,7 +26,12 @@ const housekeepingSidebarItems = [
 
 const ManagerSidebar = () => {
   const location = useLocation();
-  const [roomsOpen, setRoomsOpen] = useState(() => location.pathname.startsWith('/manager/rooms'));
+  const [roomsOpen, setRoomsOpen] = useState(() => 
+    location.pathname.startsWith('/manager/rooms') || location.pathname.startsWith('/manager/room-types')
+  );
+  const [physicalRoomsOpen, setPhysicalRoomsOpen] = useState(() => 
+    location.pathname.startsWith('/manager/physical-rooms') || location.pathname === '/manager/rooms/add' || /\/manager\/rooms\/.*\/edit/.test(location.pathname)
+  );
 
   const storedUser = (() => {
     try {
@@ -40,7 +46,12 @@ const ManagerSidebar = () => {
 
   const isActive = (item) => {
     if (item.to) return location.pathname === item.to;
-    if (item.matchPath) return location.pathname.startsWith(item.matchPath);
+    if (item.matchPath) {
+      if (item.matchPath === '/manager/rooms') {
+        return location.pathname.startsWith('/manager/rooms') && !location.pathname.startsWith('/manager/rooms/add') && !/\/manager\/rooms\/.*\/edit/.test(location.pathname);
+      }
+      return location.pathname.startsWith(item.matchPath);
+    }
     return false;
   };
 
@@ -54,7 +65,8 @@ const ManagerSidebar = () => {
         {visibleSidebarItems.map((item) => {
           const { icon: Icon, label, to, hasSub, badge, matchPath } = item;
           const active = isActive(item);
-          const isRooms = label === 'Phòng';
+          const isRooms = label === 'Loại phòng';
+          const isPhysicalRooms = label === 'Quản lý phòng';
 
           const content = (
             <>
@@ -78,7 +90,27 @@ const ManagerSidebar = () => {
                 </button>
                 {roomsOpen && (
                   <ul className="rm-submenu">
-                    <li><Link to="/manager/rooms" className={`rm-submenu-item${location.pathname === '/manager/rooms' ? ' is-active' : ''}`}>Phòng</Link></li>
+                    <li><Link to="/manager/rooms" className={`rm-submenu-item${location.pathname === '/manager/rooms' ? ' is-active' : ''}`}>Danh mục loại phòng</Link></li>
+                    <li><Link to="/manager/room-types/add" className={`rm-submenu-item${location.pathname === '/manager/room-types/add' ? ' is-active' : ''}`}>Thêm loại phòng mới</Link></li>
+                  </ul>
+                )}
+              </div>
+            );
+          }
+
+          if (isPhysicalRooms) {
+            return (
+              <div key={label}>
+                <button
+                  type="button"
+                  onClick={() => setPhysicalRoomsOpen(o => !o)}
+                  className={`rm-sidebar-item${active ? ' is-active' : ''}`}
+                >
+                  {content}
+                </button>
+                {physicalRoomsOpen && (
+                  <ul className="rm-submenu">
+                    <li><Link to="/manager/physical-rooms" className={`rm-submenu-item${location.pathname === '/manager/physical-rooms' ? ' is-active' : ''}`}>Danh sách phòng</Link></li>
                     <li><Link to="/manager/rooms/add" className={`rm-submenu-item${location.pathname === '/manager/rooms/add' ? ' is-active' : ''}`}>Thêm phòng mới</Link></li>
                   </ul>
                 )}
@@ -101,14 +133,6 @@ const ManagerSidebar = () => {
           );
         })}
       </nav>
-      {!isHousekeepingStaff ? (
-        <div className="rm-promo">
-          <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=420&q=80" alt="Hotel lobby" />
-          <h2>Quản lý thông minh, phục vụ tốt hơn</h2>
-          <p>Tự động hóa thủ tục, giám sát hiệu suất và phòng trống.</p>
-          <button type="button">Nâng cấp bản Pro</button>
-        </div>
-      ) : null}
     </aside>
   );
 };

@@ -195,15 +195,21 @@ const LoginPage = () => {
             </label>
           </div>
 
-          <label className="remember-option">
-            <input
-              type="checkbox"
-              name="remember"
-              checked={formData.remember}
-              onChange={handleChange}
-            />
-            <span>Remember Me</span>
-          </label>
+          <div className="login-options">
+            <label className="remember-option">
+              <input
+                type="checkbox"
+                name="remember"
+                checked={formData.remember}
+                onChange={handleChange}
+              />
+              <span>Remember Me</span>
+            </label>
+
+            <Link className="forgot-password-link" to="/forgot-password">
+              Forgot Password?
+            </Link>
+          </div>
 
           <div className="login-divider">
             <span>or</span>

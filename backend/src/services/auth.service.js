@@ -6,6 +6,7 @@ const User = require('../models/user.model');
 const SecurityLog = require('../models/security-log.model');
 const asyncHandler = require('../utils/async-handler');
 const { verifyGoogleIdToken } = require('../utils/google-auth');
+const { sendPasswordResetEmail } = require('../utils/mail.utils');
 const { signAuthToken } = require('../utils/token');
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
@@ -16,8 +17,48 @@ const isValidEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-const isStrongEnoughPassword = (password) => {
-  return typeof password === 'string' && password.length >= 8;
+const getAuthProviders = (user) => {
+  const providers = Array.isArray(user?.auth_providers) && user.auth_providers.length > 0
+    ? user.auth_providers
+    : [user?.auth_provider || 'local'];
+
+  return [...new Set(providers.filter(Boolean))];
+};
+
+const hasLocalPassword = (user) => {
+  const passwordHash = String(user?.password_hash || '');
+
+  return getAuthProviders(user).includes('local') && !passwordHash.startsWith('google:');
+};
+
+const getPasswordValidationErrors = (password) => {
+  const value = typeof password === 'string' ? password : '';
+  const errors = [];
+
+  if (value.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+  if (!/[A-Z]/.test(value)) {
+    errors.push('Password must contain at least 1 uppercase letter');
+  }
+  if (!/[a-z]/.test(value)) {
+    errors.push('Password must contain at least 1 lowercase letter');
+  }
+  if (!/\d/.test(value)) {
+    errors.push('Password must contain at least 1 number');
+  }
+  if (!/[^A-Za-z0-9]/.test(value)) {
+    errors.push('Password must contain at least 1 special character');
+  }
+
+  return errors;
+};
+
+const sendPasswordValidationError = (res, errors, message = 'Password does not meet security requirements') => {
+  return res.status(400).send({
+    message,
+    errors
+  });
 };
 
 const isValidLoginAccount = (value) => {
@@ -28,6 +69,13 @@ const isTermsAccepted = (value) => {
   return value === true || value === 'true' || value === 'on' || value === 1 || value === '1';
 };
 
+const PASSWORD_RESET_EXPIRES_IN_MINUTES = Number(process.env.PASSWORD_RESET_EXPIRES_IN_MINUTES || 30);
+const PASSWORD_RESET_SUCCESS_MESSAGE =
+  'Password reset email has been sent. Please check your inbox.';
+
+const hashResetToken = (token) => {
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
 const getClientIp = (req) => {
   let ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || 'Unknown IP';
   if (ip === '::1') return '127.0.0.1';
@@ -114,8 +162,9 @@ const register = asyncHandler(async (req, res) => {
     });
   }
 
-  if (!isStrongEnoughPassword(password)) {
-    return res.status(400).send({ message: 'Password must be at least 8 characters long' });
+  const passwordErrors = getPasswordValidationErrors(password);
+  if (passwordErrors.length > 0) {
+    return sendPasswordValidationError(res, passwordErrors);
   }
 
   if (confirmPassword !== undefined && password !== confirmPassword) {
@@ -126,13 +175,23 @@ const register = asyncHandler(async (req, res) => {
     return res.status(400).send({ message: 'You must agree to the terms and conditions' });
   }
 
-  const existingUser = await User.findOne({
+  const existingUsers = await User.find({
     $or: [{ email }, { login_account: loginAccount }]
-  });
+  }).select('email login_account');
 
-  if (existingUser) {
-    const duplicatedField = existingUser.email === email ? 'Email address' : 'Login account';
-    return res.status(409).send({ message: `${duplicatedField} is already registered` });
+  const duplicateErrors = [];
+  if (existingUsers.some((user) => user.email === email)) {
+    duplicateErrors.push('Email address is already registered');
+  }
+  if (existingUsers.some((user) => user.login_account === loginAccount)) {
+    duplicateErrors.push('Login account is already registered');
+  }
+
+  if (duplicateErrors.length > 0) {
+    return res.status(409).send({
+      message: duplicateErrors[0],
+      errors: duplicateErrors
+    });
   }
 
   const customerRole = await getCustomerRole();
@@ -147,6 +206,7 @@ const register = asyncHandler(async (req, res) => {
     phone_number: phoneNumber,
     status: 'active',
     auth_provider: 'local',
+    auth_providers: ['local'],
     email_verified: false,
     accepted_terms_at: new Date()
   });
@@ -229,19 +289,35 @@ const googleLogin = asyncHandler(async (req, res) => {
   }
 
   const customerRole = await getCustomerRole();
-  let user = await User.findOne({
-    $or: [{ email }, { google_id: payload.sub }]
-  }).populate('role_id');
+  let user = await User.findOne({ google_id: payload.sub }).populate('role_id');
+
+  if (!user) {
+    user = await User.findOne({ email }).populate('role_id');
+  }
 
   if (user) {
     if (user.status !== 'active') {
       return res.status(403).send({ message: 'This account is not active' });
     }
 
-    user.google_id = user.google_id || payload.sub;
-    user.auth_provider = user.auth_provider === 'local' ? 'local' : 'google';
+    if (user.google_id && user.google_id !== payload.sub) {
+      return res.status(409).send({
+        message: 'This email address is already linked to another Google account'
+      });
+    }
+
+    const providers = new Set(getAuthProviders(user));
+    providers.add('google');
+    if (hasLocalPassword(user)) {
+      providers.add('local');
+    }
+
+    user.google_id = payload.sub;
+    user.auth_provider = providers.has('local') ? 'local' : 'google';
+    user.auth_providers = Array.from(providers);
     user.email_verified = true;
     user.avatar = user.avatar || payload.picture || '';
+    user.full_name = user.full_name || fullName || email;
     await user.save();
   } else {
     const loginAccount = await buildUniqueGoogleLoginAccount(email);
@@ -255,6 +331,7 @@ const googleLogin = asyncHandler(async (req, res) => {
       avatar: payload.picture || '',
       status: 'active',
       auth_provider: 'google',
+      auth_providers: ['google'],
       google_id: payload.sub,
       email_verified: true,
       accepted_terms_at: new Date()
@@ -269,7 +346,6 @@ const googleLogin = asyncHandler(async (req, res) => {
 
   const sessionId = crypto.randomUUID();
 
-  // Log successful google login
   await SecurityLog.create({
     event_type: 'SUCCESSFUL_LOGIN',
     ip_address: getClientIp(req),
@@ -280,7 +356,6 @@ const googleLogin = asyncHandler(async (req, res) => {
 
   sendAuthResponse(res, 200, user, role, 'Login with Google successfully', sessionId);
 });
-
 const changePassword = asyncHandler(async (req, res) => {
   const currentPassword = req.body.current_password || req.body.currentPassword;
   const newPassword = req.body.new_password || req.body.newPassword;
@@ -290,8 +365,9 @@ const changePassword = asyncHandler(async (req, res) => {
     return res.status(400).send({ message: 'Current password, new password, and confirmation are required' });
   }
 
-  if (!isStrongEnoughPassword(newPassword)) {
-    return res.status(400).send({ message: 'New password must be at least 8 characters long' });
+  const passwordErrors = getPasswordValidationErrors(newPassword);
+  if (passwordErrors.length > 0) {
+    return sendPasswordValidationError(res, passwordErrors, 'New password does not meet security requirements');
   }
 
   if (newPassword !== confirmPassword) {
@@ -307,7 +383,7 @@ const changePassword = asyncHandler(async (req, res) => {
     return res.status(404).send({ message: 'Account not found' });
   }
 
-  if (user.auth_provider === 'google' || String(user.password_hash || '').startsWith('google:')) {
+  if (!hasLocalPassword(user)) {
     return res.status(400).send({ message: 'This account uses Google sign-in and does not have a local password' });
   }
 
@@ -320,6 +396,94 @@ const changePassword = asyncHandler(async (req, res) => {
   await user.save();
 
   res.send({ message: 'Password changed successfully' });
+});
+
+const requestPasswordReset = asyncHandler(async (req, res) => {
+  const identifier = normalizeLoginAccount(
+    req.body.identifier || req.body.login_account || req.body.loginAccount || req.body.username || req.body.email
+  );
+
+  if (!identifier) {
+    return res.status(400).send({ message: 'Email or login account is required' });
+  }
+
+  const user = await User.findOne({
+    $or: [{ login_account: identifier }, { email: identifier }]
+  });
+
+  if (!user) {
+    return res.status(404).send({ message: 'No account found with this email or login account' });
+  }
+
+  if (user.status !== 'active') {
+    return res.status(403).send({ message: 'This account is not active' });
+  }
+
+  if (!hasLocalPassword(user)) {
+    return res.status(400).send({ message: 'This account uses Google sign-in and does not have a local password to reset' });
+  }
+
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+
+  user.password_reset_token_hash = hashResetToken(resetToken);
+  user.password_reset_expires_at = new Date(Date.now() + PASSWORD_RESET_EXPIRES_IN_MINUTES * 60 * 1000);
+  await user.save();
+
+  try {
+    await sendPasswordResetEmail({
+      to: user.email,
+      fullName: user.full_name,
+      resetUrl,
+      expiresInMinutes: PASSWORD_RESET_EXPIRES_IN_MINUTES
+    });
+  } catch (error) {
+    user.password_reset_token_hash = '';
+    user.password_reset_expires_at = null;
+    await user.save();
+    throw error;
+  }
+
+  res.send({ message: PASSWORD_RESET_SUCCESS_MESSAGE });
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const token = normalizeText(req.body.token || req.query.token);
+  const newPassword = req.body.password || req.body.new_password || req.body.newPassword;
+  const confirmPassword = req.body.confirm_password || req.body.confirmPassword;
+
+  if (!token) {
+    return res.status(400).send({ message: 'Reset token is required' });
+  }
+
+  const passwordErrors = getPasswordValidationErrors(newPassword);
+  if (passwordErrors.length > 0) {
+    return sendPasswordValidationError(res, passwordErrors);
+  }
+
+  if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+    return res.status(400).send({ message: 'Password confirmation does not match' });
+  }
+
+  const user = await User.findOne({
+    password_reset_token_hash: hashResetToken(token),
+    password_reset_expires_at: { $gt: new Date() }
+  });
+
+  if (!user) {
+    return res.status(400).send({ message: 'Reset link is invalid or expired' });
+  }
+
+  if (user.status !== 'active') {
+    return res.status(403).send({ message: 'This account is not active' });
+  }
+
+  user.password_hash = await bcrypt.hash(newPassword, 10);
+  user.password_reset_token_hash = '';
+  user.password_reset_expires_at = null;
+  await user.save();
+
+  res.send({ message: 'Password reset successfully' });
 });
 
 const me = asyncHandler(async (req, res) => {
@@ -373,6 +537,9 @@ module.exports = {
   logout,
   me,
   recentSessions,
+  requestPasswordReset,
+  resetPassword,
   revokeSession,
   register
 };
+

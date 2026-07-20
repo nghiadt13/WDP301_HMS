@@ -45,7 +45,7 @@
 .receptionist-profile { gap: 12px; border-left: 1px solid #e5e7eb; padding-left: 16px; }
 .receptionist-profile img { width: 42px; height: 42px; border-radius: 999px; object-fit: cover; }
 .receptionist-profile strong, .receptionist-profile small { display: block; }
-.receptionist-content { display: flex; gap: 24px; padding: 32px; max-height: calc(100vh - 80px); overflow-y: auto; }
+.receptionist-content { display: flex; gap: 24px; padding: 0; }
 .receptionist-main-column { flex: 1; min-width: 760px; display: grid; gap: 24px; }
 .receptionist-side-column { width: 340px; flex: 0 0 340px; display: grid; align-content: start; gap: 24px; }
 .receptionist-grid { display: grid; gap: 16px; }

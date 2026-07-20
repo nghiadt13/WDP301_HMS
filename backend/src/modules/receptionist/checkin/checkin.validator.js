@@ -24,6 +24,14 @@ const validateWalkIn = (req, res, next) => {
     errors.push('checkOutDate must be after checkInDate');
   }
 
+  if (req.body.paymentMethod && !['Cash', 'BankTransfer'].includes(req.body.paymentMethod)) {
+    errors.push('paymentMethod must be either Cash or BankTransfer');
+  }
+
+  if (req.body.selectedRoomIds !== undefined && !Array.isArray(req.body.selectedRoomIds)) {
+    errors.push('selectedRoomIds must be an array');
+  }
+
   if (errors.length > 0) {
     return res.status(400).json({ success: false, message: 'Validation failed', errors });
   }

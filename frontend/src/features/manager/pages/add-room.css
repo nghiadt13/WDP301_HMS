@@ -464,3 +464,53 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ─── Quantity Controls ───────────────────────────────────────────────── */
+.ar-counter-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.ar-counter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  color: #374151;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.ar-counter-btn:hover:not(:disabled) {
+  border-color: #a3e635;
+  background: #f9fafb;
+}
+
+.ar-counter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ar-counter-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  min-width: 24px;
+  text-align: center;
+}
+
+.ar-row-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}

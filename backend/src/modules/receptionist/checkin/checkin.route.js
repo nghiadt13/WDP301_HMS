@@ -13,6 +13,7 @@ router.get('/bookings', checkinController.getBookings);
 router.get('/bookings/:id', checkinController.getBookingById);
 router.post('/bookings/:id/checkin', validateCheckIn, checkinController.processCheckIn);
 router.post('/bookings/walkin', validateWalkIn, checkinController.createWalkInBooking);
+router.post('/bookings/:id/walkin-confirm', checkinController.confirmWalkInBooking);
 router.get('/rooms/available', checkinController.getAvailableRooms);
 router.get('/room-types', checkinController.getRoomTypes);
 router.get('/dashboard-stats', checkinController.getDashboardStats);
