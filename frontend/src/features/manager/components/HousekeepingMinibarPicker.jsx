@@ -1,6 +1,14 @@
 import { useMemo } from 'react';
 
-const HousekeepingMinibarPicker = ({ items = [], value = [], onChange, disabled = false }) => {
+const HousekeepingMinibarPicker = ({
+  items = [],
+  value = [],
+  onChange,
+  disabled = false,
+  isLoading = false,
+  loadError = '',
+  onRetry,
+}) => {
   const normalizedItems = useMemo(() => items.map((item) => {
     const minibarItem = item?.item_id || {};
     const itemId = String(minibarItem?._id || item?._id || item?.id || '').trim();
@@ -43,6 +51,29 @@ const HousekeepingMinibarPicker = ({ items = [], value = [], onChange, disabled 
 
     onChange([...value, nextEntry]);
   };
+
+  if (isLoading) {
+    return (
+      <section className="housekeeping-task-detail-section">
+        <h4>Minibar inspection</h4>
+        <p>Loading minibar items...</p>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section className="housekeeping-task-detail-section">
+        <h4>Minibar inspection</h4>
+        <p>Cannot load minibar items: {loadError}</p>
+        {onRetry ? (
+          <button type="button" className="housekeeping-outline-btn" onClick={onRetry}>
+            Retry
+          </button>
+        ) : null}
+      </section>
+    );
+  }
 
   if (!normalizedItems.length) {
     return (

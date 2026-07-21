@@ -5,7 +5,6 @@ import { toast } from 'react-hot-toast';
 import HousekeepingMinibarPicker from '../components/HousekeepingMinibarPicker.jsx';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
 import { useHousekeepingDashboard, useHousekeepingMaintenance, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
-import { managerApi } from '../services/manager-api.js';
 import { housekeepingApi } from '../services/housekeeping-api.js';
 import '../styles/housekeeping.css';
 
@@ -77,8 +76,8 @@ const HousekeepingTasksPage = () => {
   const dashboardQuery = useHousekeepingDashboard();
   const maintenanceQuery = useHousekeepingMaintenance();
   const minibarCatalogQuery = useQuery({
-    queryKey: ['minibar-catalog'],
-    queryFn: () => managerApi.getMinibarItems({ is_active: 'true' }),
+    queryKey: ['housekeeping-minibar-catalog'],
+    queryFn: () => housekeepingApi.getMinibarItems({ is_active: 'true' }),
     retry: 1,
     staleTime: 60_000,
   });
@@ -318,10 +317,10 @@ const HousekeepingTasksPage = () => {
     return rows
       .map((entry) => ({
         _id: entry?._id || entry?.id || null,
-        name: entry?.name || 'Minibar item',
+        name: entry?.name || entry?.item_name || 'Minibar item',
         category: entry?.category || '-',
-        price: Number(entry?.price ?? 0),
-        availableQty: Number(entry?.quantity ?? 0),
+        price: Number(entry?.price ?? entry?.unit_price ?? 0),
+        availableQty: Number(entry?.quantity ?? entry?.stock_quantity ?? 0),
       }))
       .filter((entry) => entry._id);
   }, [minibarCatalogQuery.data]);
@@ -677,6 +676,9 @@ const HousekeepingTasksPage = () => {
                   value={minibarSelection}
                   onChange={setMinibarSelection}
                   disabled={handoverMutation.isPending || minibarCatalogQuery.isLoading}
+                  isLoading={minibarCatalogQuery.isLoading || minibarCatalogQuery.isFetching}
+                  loadError={minibarCatalogQuery.isError ? getMutationErrorMessage(minibarCatalogQuery.error) : ''}
+                  onRetry={() => minibarCatalogQuery.refetch()}
                 />
               ) : null}
 

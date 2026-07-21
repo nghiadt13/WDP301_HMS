@@ -18,6 +18,15 @@ const housekeepingController = {
     }
   },
 
+  async getMinibarItems(req, res) {
+    try {
+      const data = await housekeepingService.getMinibarItems(req.query, req.user);
+      res.status(200).json({ success: true, data });
+    } catch (err) {
+      sendError(res, err);
+    }
+  },
+
   async confirmCheckout(req, res) {
     try {
       const data = await housekeepingService.confirmCheckout(req.body, req.user);

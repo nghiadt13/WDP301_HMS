@@ -337,6 +337,18 @@ const housekeepingService = {
     return managerRoomService.getAll(query);
   },
 
+  async getMinibarItems(query = {}, user) {
+    ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist']);
+
+    const filter = {};
+    if (query.stock_status) filter.stock_status = query.stock_status;
+    if (query.is_active !== undefined) {
+      filter.is_active = String(query.is_active).toLowerCase() === 'true';
+    }
+
+    return MinibarItem.find(filter).sort({ createdAt: -1 }).lean();
+  },
+
   async confirmCheckout(body = {}, user) {
     ensureWorkflowRole(user, ['manager', 'receptionist']);
     const roomNumber = String(body.room_number || '').trim();
