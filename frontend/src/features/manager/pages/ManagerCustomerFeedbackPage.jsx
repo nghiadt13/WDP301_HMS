@@ -13,6 +13,8 @@ const getErrorMessage = (error) => error?.response?.data?.message || error.messa
 const formatDate = (value) => (value ? new Intl.DateTimeFormat('vi-VN').format(new Date(value)) : '-');
 const normalizeStatus = (status) => String(status || '').toLowerCase();
 const getCustomerKey = (feedback) => feedback.customer_email || feedback.customer_id || feedback.customer_name || feedback._id;
+const FEEDBACK_SEEN_STORAGE_KEY = 'hotelify_manager_seen_feedback_ids';
+const FEEDBACK_SEEN_EVENT = 'hotelify-manager-feedback-seen';
 const renderStars = (rating) => {
   const value = Math.max(0, Math.min(5, Number(rating || 0)));
   return `${'★'.repeat(value)}${'☆'.repeat(5 - value)}`;
@@ -41,6 +43,11 @@ const ManagerCustomerFeedbackPage = () => {
   const loadFeedbacks = async (nextId = selectedId) => {
     const data = await managerApi.getCustomerFeedbacks();
     setFeedbacks(data);
+    const feedbackIds = (Array.isArray(data) ? data : [])
+      .map((feedback) => feedback._id || feedback.id)
+      .filter(Boolean);
+    localStorage.setItem(FEEDBACK_SEEN_STORAGE_KEY, JSON.stringify(feedbackIds));
+    window.dispatchEvent(new Event(FEEDBACK_SEEN_EVENT));
     if (nextId) {
       const nextFeedback = data.find((feedback) => feedback._id === nextId);
       if (nextFeedback) setSelectedId(nextFeedback._id);

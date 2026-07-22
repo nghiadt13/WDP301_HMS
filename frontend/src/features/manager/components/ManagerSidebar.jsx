@@ -4,6 +4,7 @@ import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet,
 import { managerApi } from '../services/manager-api.js';
 
 const FEEDBACK_SEEN_STORAGE_KEY = 'hotelify_manager_seen_feedback_ids';
+const FEEDBACK_SEEN_EVENT = 'hotelify-manager-feedback-seen';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
@@ -68,6 +69,24 @@ const ManagerSidebar = () => {
       .catch(() => setFeedbackIds([]));
   }, [isHousekeepingStaff]);
 
+  useEffect(() => {
+    const syncSeenFeedbackIds = () => {
+      try {
+        setSeenFeedbackIds(JSON.parse(localStorage.getItem(FEEDBACK_SEEN_STORAGE_KEY) || '[]'));
+      } catch {
+        setSeenFeedbackIds([]);
+      }
+    };
+
+    window.addEventListener(FEEDBACK_SEEN_EVENT, syncSeenFeedbackIds);
+    window.addEventListener('storage', syncSeenFeedbackIds);
+
+    return () => {
+      window.removeEventListener(FEEDBACK_SEEN_EVENT, syncSeenFeedbackIds);
+      window.removeEventListener('storage', syncSeenFeedbackIds);
+    };
+  }, []);
+
   const unreadFeedbackCount = useMemo(() => {
     const seen = new Set(seenFeedbackIds);
     return feedbackIds.filter((id) => !seen.has(id)).length;
@@ -76,6 +95,7 @@ const ManagerSidebar = () => {
   const markFeedbackAsSeen = () => {
     localStorage.setItem(FEEDBACK_SEEN_STORAGE_KEY, JSON.stringify(feedbackIds));
     setSeenFeedbackIds(feedbackIds);
+    window.dispatchEvent(new Event(FEEDBACK_SEEN_EVENT));
   };
 
   const isActive = (item) => {
