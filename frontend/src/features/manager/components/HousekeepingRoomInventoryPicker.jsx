@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-const HousekeepingMinibarPicker = ({
+const HousekeepingRoomInventoryPicker = ({
   items = [],
   value = [],
   onChange,
@@ -10,13 +10,13 @@ const HousekeepingMinibarPicker = ({
   onRetry,
 }) => {
   const normalizedItems = useMemo(() => items.map((item) => {
-    const minibarItem = item?.item_id || {};
-    const itemId = String(minibarItem?._id || item?._id || item?.id || '').trim();
+    const inventoryItem = item?.item_id || {};
+    const itemId = String(inventoryItem?._id || item?._id || item?.id || '').trim();
     return {
       itemId,
-      name: minibarItem?.name || item?.name || item?.item || 'Minibar item',
-      category: minibarItem?.category || item?.category || '-',
-      unitPrice: Number(minibarItem?.price ?? item?.price ?? 0),
+      name: inventoryItem?.name || item?.name || item?.item || 'Room inventory item',
+      category: inventoryItem?.category || item?.category || '-',
+      unitPrice: Number(inventoryItem?.price ?? item?.price ?? 0),
       availableQty: Number(item?.availableQty ?? item?.quantity ?? item?.availableQuantity ?? 0),
     };
   }).filter((item) => item.itemId), [items]);
@@ -29,7 +29,8 @@ const HousekeepingMinibarPicker = ({
   );
 
   const updateSelection = (item, nextQty) => {
-    const qty = Math.max(0, Number(nextQty || 0));
+    const parsedQty = Number(nextQty || 0);
+    const qty = Number.isFinite(parsedQty) ? Math.max(0, Math.trunc(parsedQty)) : 0;
     const existing = value.find((entry) => String(entry.item_id) === String(item.itemId));
 
     if (qty <= 0) {
@@ -55,8 +56,8 @@ const HousekeepingMinibarPicker = ({
   if (isLoading) {
     return (
       <section className="housekeeping-task-detail-section">
-        <h4>Minibar inspection</h4>
-        <p>Loading minibar items...</p>
+        <h4>Room inventory inspection</h4>
+        <p>Loading room inventory items...</p>
       </section>
     );
   }
@@ -64,8 +65,8 @@ const HousekeepingMinibarPicker = ({
   if (loadError) {
     return (
       <section className="housekeeping-task-detail-section">
-        <h4>Minibar inspection</h4>
-        <p>Cannot load minibar items: {loadError}</p>
+        <h4>Room inventory inspection</h4>
+        <p>Cannot load room inventory items: {loadError}</p>
         {onRetry ? (
           <button type="button" className="housekeeping-outline-btn" onClick={onRetry}>
             Retry
@@ -78,8 +79,8 @@ const HousekeepingMinibarPicker = ({
   if (!normalizedItems.length) {
     return (
       <section className="housekeeping-task-detail-section">
-        <h4>Minibar inspection</h4>
-        <p>No minibar items are configured for this hotel.</p>
+        <h4>Room inventory inspection</h4>
+        <p>No room inventory items are configured for this hotel.</p>
       </section>
     );
   }
@@ -87,11 +88,11 @@ const HousekeepingMinibarPicker = ({
   return (
     <section className="housekeeping-task-detail-section">
       <div className="housekeeping-task-checklist-head">
-        <h4>Minibar inspection</h4>
+        <h4>Room inventory inspection</h4>
         <span>Total: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedTotal)}</span>
       </div>
       <p style={{ marginTop: 0, color: '#64748b' }}>
-        Housekeeping enters only the consumed quantity. Item name and unit price are loaded from the hotel minibar catalog.
+        Housekeeping enters only the consumed quantity. Item name and unit price are loaded from the hotel room inventory catalog.
       </p>
       <div style={{ display: 'grid', gap: '12px' }}>
         {normalizedItems.map((item) => {
@@ -103,7 +104,7 @@ const HousekeepingMinibarPicker = ({
               key={item.itemId}
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(0, 2fr) 120px 120px 140px 120px',
+                gridTemplateColumns: 'minmax(0, 2fr) 120px 120px 140px',
                 alignItems: 'center',
                 gap: '12px',
                 padding: '12px 14px',
@@ -145,4 +146,4 @@ const HousekeepingMinibarPicker = ({
   );
 };
 
-export default HousekeepingMinibarPicker;
+export default HousekeepingRoomInventoryPicker;

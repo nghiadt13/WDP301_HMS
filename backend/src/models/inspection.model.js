@@ -25,7 +25,7 @@ const inspectionSchema = new mongoose.Schema(
         amenities: { type: Boolean, default: false },
         damage: { type: Boolean, default: false },
         lostItem: { type: Boolean, default: false },
-        minibar: { type: Boolean, default: false },
+        room_inventory: { type: Boolean, default: false },
         photo: { type: Boolean, default: false },
       },
       default: {},
@@ -38,10 +38,10 @@ const inspectionSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    minibar: {
+    room_inventory: {
       type: [
         {
-          item_id: { type: mongoose.Schema.Types.ObjectId, ref: 'MinibarItem', default: null },
+          item_id: { type: mongoose.Schema.Types.ObjectId, ref: 'RoomInventoryItem', default: null },
           item: { type: String, trim: true, required: true },
           qty: { type: Number, default: 1 },
           price: { type: Number, default: 0 },
@@ -50,7 +50,7 @@ const inspectionSchema = new mongoose.Schema(
       ],
       default: [],
     },
-    minibar_total: {
+    room_inventory_total: {
       type: Number,
       default: 0,
     },
@@ -83,7 +83,7 @@ const inspectionSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
-    minibar_used: {
+    room_inventory_used: {
       type: Boolean,
       default: false,
     },

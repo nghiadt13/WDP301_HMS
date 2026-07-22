@@ -9,7 +9,7 @@ const uploadRoutes = require('./upload.route');
 
 // Manager sub-modules
 const managerStaffTaskRoutes = require('../modules/manager/staff-task/staff-task.route');
-const managerMinibarRoutes = require('../modules/manager/minibar/minibar.route');
+const managerRoomInventoryRoutes = require('../modules/manager/room-inventory/room-inventory.route');
 const managerCustomerFeedbackRoutes = require('../modules/manager/customer-feedback/customer-feedback.route');
 const managerDashboardRoutes = require('../modules/manager/dashboard/dashboard.route');
 const managerPolicyRoutes = require('../modules/manager/policy/policy.route');
@@ -59,7 +59,7 @@ router.use('/upload', uploadRoutes);
 
 // Manager operation sub-routes (mounted on /manager)
 router.use('/manager', managerStaffTaskRoutes);
-router.use('/manager', managerMinibarRoutes);
+router.use('/manager', managerRoomInventoryRoutes);
 router.use('/manager', managerCustomerFeedbackRoutes);
 router.use('/manager', managerPolicyRoutes);
 router.use('/housekeeping', managerHousekeepingRoutes);

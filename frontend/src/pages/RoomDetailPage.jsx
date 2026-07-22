@@ -210,7 +210,7 @@ const RoomDetailPage = () => {
           <p>{room.description}</p>
 
           <div className="room-detail-features">
-            {(room.facilities.length > 0 ? room.facilities : ['Wi-Fi', 'Điều hòa', 'Dọn phòng', 'Minibar']).map((item) => (
+            {(room.facilities.length > 0 ? room.facilities : ['Wi-Fi', 'Điều hòa', 'Dọn phòng', 'Vật tư phòng']).map((item) => (
               <span key={item}>
                 <CheckCircle2 size={17} />
                 {item}

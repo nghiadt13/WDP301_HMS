@@ -16,6 +16,13 @@ const normalizeTask = (task) => ({
   assignedTo: task?.assigned_to || 'Housekeeping Team',
   assignedBy: task?.assignedBy || '',
   dueTime: task?.deadline || null,
+  workDate: task?.work_date || null,
+  startTime: task?.start_time || '',
+  endTime: task?.end_time || '',
+  durationMinutes: Number(task?.duration_minutes || 0),
+  taskOrigin: task?.task_origin || 'other',
+  roomType: task?.room_type || '',
+  completionNote: task?.completion_note || '',
 });
 
 const normalizeRoom = (room) => ({
@@ -27,6 +34,19 @@ const normalizeRoom = (room) => ({
   floor: room?.floor || '',
   building: room?.building || '',
   notes: room?.description || '',
+  roomInventory: Array.isArray(room?.room_inventory)
+    ? room.room_inventory.map((entry) => {
+      const item = entry?.item_id || {};
+      return {
+        _id: item?._id || entry?.item_id || '',
+        name: item?.name || entry?.item || 'Room inventory item',
+        category: item?.category || '-',
+        price: Number(item?.price ?? entry?.price ?? 0),
+        quantity: Number(entry?.quantity || 0),
+        isActive: item?.is_active !== false,
+      };
+    }).filter((entry) => entry._id && entry.isActive)
+    : [],
 });
 
 const normalizeMaintenance = (item) => ({
@@ -54,8 +74,8 @@ const normalizeInspection = (inspection) => ({
   remarks: inspection?.remarks || '',
   status: inspection?.status || '',
   taskId: inspection?.task_id || null,
-  minibarUsed: Boolean(inspection?.minibar_used),
-  minibar: Array.isArray(inspection?.minibar) ? inspection.minibar : [],
+  roomInventoryUsed: Boolean(inspection?.room_inventory_used),
+  roomInventory: Array.isArray(inspection?.room_inventory) ? inspection.room_inventory : [],
   damage: Array.isArray(inspection?.damage) ? inspection.damage : [],
   lostItem: Array.isArray(inspection?.lostItem) ? inspection.lostItem : [],
   missingItems: Array.isArray(inspection?.missing_items) ? inspection.missing_items : [],
@@ -87,8 +107,8 @@ const normalizeServiceRequest = (request) => ({
 });
 
 export const housekeepingApi = {
-  async getMinibarItems(params = {}) {
-    const response = await axiosClient.get('/housekeeping/minibar-items', { params });
+  async getRoomInventoryItems(params = {}) {
+    const response = await axiosClient.get('/housekeeping/room-inventory-items', { params });
     const payload = unwrap(response);
     if (Array.isArray(payload)) return payload;
     if (Array.isArray(payload?.items)) return payload.items;
@@ -187,8 +207,8 @@ export const housekeepingApi = {
     return normalizeTask(unwrap(response));
   },
 
-  async completeTask(id) {
-    const response = await axiosClient.patch(`/housekeeping/tasks/${id}/complete`);
+  async completeTask(id, payload = {}) {
+    const response = await axiosClient.patch(`/housekeeping/tasks/${id}/complete`, payload);
     return normalizeTask(unwrap(response));
   },
 

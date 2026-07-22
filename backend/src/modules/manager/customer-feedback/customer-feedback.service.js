@@ -20,6 +20,16 @@ const customerFeedbackService = {
       throw createHttpError('Vui long nhap noi dung phan hoi.');
     }
 
+    const currentFeedback = await CustomerFeedback.findById(id);
+    if (!currentFeedback) throw createHttpError('Khong tim thay gop y.', 404);
+    if (
+      String(currentFeedback.status || '').toLowerCase() === 'responded'
+      || currentFeedback.response_text
+      || currentFeedback.manager_responses?.length
+    ) {
+      throw createHttpError('Gop y nay da duoc phan hoi.');
+    }
+
     const response = {
       responseText: cleanResponse,
       responderId: user?._id || null,
@@ -28,19 +38,18 @@ const customerFeedbackService = {
     };
 
     const feedback = await CustomerFeedback.findByIdAndUpdate(
-      id,
+      currentFeedback._id,
       {
         $set: {
           response_text: cleanResponse,
           status: 'responded',
           responded_at: response.respondedAt,
+          manager_responses: [response],
         },
-        $push: { manager_responses: response },
       },
       { new: true, runValidators: true }
     );
 
-    if (!feedback) throw createHttpError('Khong tim thay gop y.', 404);
     return feedback;
   },
 };

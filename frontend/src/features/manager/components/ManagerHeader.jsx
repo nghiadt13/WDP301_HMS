@@ -12,7 +12,7 @@ const getPageTitle = (pathname) => {
   if (pathname === '/manager/housekeeping/schedule') return 'Maintenance Report';
   if (pathname === '/manager/housekeeping/staff') return 'Housekeeping Staff';
   if (pathname === '/manager/staff-task' || pathname === '/manager/staff-tasks') return 'Nhiệm vụ nhân viên';
-  if (pathname === '/manager/minibar' || pathname === '/manager/minibar-items') return 'Quản lý Minibar';
+  if (pathname === '/manager/room-inventory' || pathname === '/manager/room-inventory-items') return 'Quản lý vật tư phòng';
   if (pathname === '/manager/feedback') return 'Ý kiến khách hàng';
   if (pathname === '/manager/policies') return 'Quản lý chính sách';
   return 'Bảng điều khiển';

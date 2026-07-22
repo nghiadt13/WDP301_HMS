@@ -3,7 +3,7 @@ import { Search, Pencil, PackageCheck, PackageX, Plus, X } from 'lucide-react';
 import { managerApi } from '../services/manager-api.js';
 import './manager-operations.css';
 
-const categories = ['Đồ uống', 'Đồ ăn nhẹ', 'Đồ cá nhân', 'Khác'];
+const categories = ['Đồ uống', 'Đồ ăn nhẹ', 'Đồ dùng phòng tắm', 'Tiện ích phòng', 'Đồ cá nhân', 'Khác'];
 const emptyForm = { name: '', category: categories[0], price: 0, quantity: 0, stock_status: 'in_stock', image_url: '', description: '' };
 const stockLabels = { in_stock: 'Còn hàng', low_stock: 'Sắp hết', out_of_stock: 'Hết hàng' };
 const stockTone = { in_stock: 'is-good', low_stock: 'is-warning', out_of_stock: 'is-danger' };
@@ -26,7 +26,7 @@ const getQuantityPercent = (quantity = 0) => {
   return Math.min(100, Math.max(10, value));
 };
 
-const ManagerMinibarItemsPage = () => {
+const ManagerRoomInventoryPage = () => {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [selectedId, setSelectedId] = useState('');
@@ -41,7 +41,7 @@ const ManagerMinibarItemsPage = () => {
   const isModalOpen = isCreating || isEditing;
 
   const loadItems = async (nextId = selectedId) => {
-    const data = await managerApi.getMinibarItems();
+    const data = await managerApi.getRoomInventoryItems();
     setItems(data);
     if (nextId) {
       const nextItem = data.find((item) => item._id === nextId);
@@ -106,9 +106,9 @@ const ManagerMinibarItemsPage = () => {
     try {
       const payload = { ...form, price: Number(form.price), quantity: Number(form.quantity) };
       const saved = isEditing
-        ? await managerApi.updateMinibarItem(selectedItem._id, payload)
-        : await managerApi.createMinibarItem(payload);
-      setMessage(isEditing ? 'Lưu thay đổi món minibar thành công.' : 'Tạo món minibar thành công.');
+        ? await managerApi.updateRoomInventoryItem(selectedItem._id, payload)
+        : await managerApi.createRoomInventoryItem(payload);
+      setMessage(isEditing ? 'Lưu thay đổi vật tư phòng thành công.' : 'Tạo vật tư phòng thành công.');
       await loadItems(saved._id);
       closeModal();
     } catch (error) {
@@ -118,16 +118,16 @@ const ManagerMinibarItemsPage = () => {
 
   const handleDeactivate = async () => {
     if (!selectedItem) return;
-    const item = await managerApi.deactivateMinibarItem(selectedItem._id);
-    setMessage('Ngừng sử dụng món minibar thành công.');
+    const item = await managerApi.deactivateRoomInventoryItem(selectedItem._id);
+    setMessage('Ngừng sử dụng vật tư phòng thành công.');
     await loadItems(item._id);
     closeModal();
   };
 
   const handleActivate = async () => {
     if (!selectedItem) return;
-    const item = await managerApi.activateMinibarItem(selectedItem._id);
-    setMessage('Kích hoạt lại món minibar thành công.');
+    const item = await managerApi.activateRoomInventoryItem(selectedItem._id);
+    setMessage('Kích hoạt lại vật tư phòng thành công.');
     await loadItems(item._id);
     closeModal();
   };
@@ -138,11 +138,11 @@ const ManagerMinibarItemsPage = () => {
 
       <section className="inventory-overview-grid">
         <article className="figma-card inventory-kpi-card">
-          <span className="figma-eyebrow">Kho minibar</span>
-          <h2>{items.length} món đang quản lý</h2>
-          <p>{activeCount} món đang sử dụng, tổng số lượng hiện có là {totalQuantity} sản phẩm.</p>
-          <p>{lowOrOutCount} món cần kiểm tra tồn kho.</p>
-          <button className="manager-ops-button" onClick={openCreateModal} type="button"><Plus size={16} /> Thêm món</button>
+          <span className="figma-eyebrow">Kho vật tư phòng</span>
+          <h2>{items.length} vật tư đang quản lý</h2>
+          <p>{activeCount} vật tư đang sử dụng, tổng số lượng hiện có là {totalQuantity} sản phẩm.</p>
+          <p>{lowOrOutCount} vật tư cần kiểm tra tồn kho.</p>
+          <button className="manager-ops-button" onClick={openCreateModal} type="button"><Plus size={16} /> Thêm vật tư</button>
         </article>
 
         <article className="figma-card stock-category-card">
@@ -150,7 +150,7 @@ const ManagerMinibarItemsPage = () => {
             <h2>Danh mục tồn kho</h2>
             <span>...</span>
           </div>
-          <div className="stock-category-bar" aria-label="Tỷ lệ danh mục minibar">
+          <div className="stock-category-bar" aria-label="Tỷ lệ danh mục vật tư phòng">
             {categoryStats.map((stat, index) => (
               <span key={stat.category} className={`stock-segment stock-segment-${index}`} style={{ flexGrow: Math.max(stat.count, 1) }} />
             ))}
@@ -159,7 +159,7 @@ const ManagerMinibarItemsPage = () => {
             {categoryStats.map((stat, index) => (
               <div key={stat.category}>
                 <span><i className={`stock-dot stock-segment-${index}`} />{stat.category}</span>
-                <strong>{stat.percent}% ({stat.count} món)</strong>
+                <strong>{stat.percent}% ({stat.count} vật tư)</strong>
               </div>
             ))}
           </div>
@@ -170,7 +170,7 @@ const ManagerMinibarItemsPage = () => {
         <div className="inventory-toolbar">
           <label className="figma-search-box">
             <Search size={17} />
-            <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Tìm món, danh mục, mô tả..." />
+            <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Tìm vật tư, danh mục, mô tả..." />
           </label>
           <select value={stockFilter} onChange={(event) => setStockFilter(event.target.value)}>
             <option value="">Tất cả tồn kho</option>
@@ -185,7 +185,7 @@ const ManagerMinibarItemsPage = () => {
             <thead>
               <tr>
                 <th>Ảnh</th>
-                <th>Món</th>
+                <th>Vật tư</th>
                 <th>Danh mục</th>
                 <th>Số lượng</th>
                 <th>Tồn kho</th>
@@ -209,7 +209,7 @@ const ManagerMinibarItemsPage = () => {
                   <td>{formatCurrency(item.price)} VND</td>
                   <td><button className="icon-action-button" type="button" onClick={(event) => { event.stopPropagation(); openEditModal(item); }}><Pencil size={16} /></button></td>
                 </tr>
-              )) : <tr><td className="manager-ops-empty" colSpan="8">Không tìm thấy món minibar phù hợp.</td></tr>}
+              )) : <tr><td className="manager-ops-empty" colSpan="8">Không tìm thấy vật tư phòng phù hợp.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -217,27 +217,27 @@ const ManagerMinibarItemsPage = () => {
 
       {isModalOpen && (
         <div className="manager-modal-backdrop" role="presentation" onMouseDown={closeModal}>
-          <section className="manager-modal-card minibar-modal-card" role="dialog" aria-modal="true" aria-labelledby="minibar-modal-title" onMouseDown={(event) => event.stopPropagation()}>
+          <section className="manager-modal-card room-inventory-modal-card" role="dialog" aria-modal="true" aria-labelledby="room-inventory-modal-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="manager-modal-heading">
               <div>
-                <span className="figma-eyebrow">{isCreating ? 'Thêm món mới' : 'Chi tiết món minibar'}</span>
-                <h2 id="minibar-modal-title">{isCreating ? 'Thêm món minibar' : selectedItem?.name}</h2>
-                <p>{isEditing ? `${selectedItem.category} - ${formatCurrency(selectedItem.price)} VND` : 'Nhập thông tin món minibar mới.'}</p>
+                <span className="figma-eyebrow">{isCreating ? 'Thêm vật tư mới' : 'Chi tiết vật tư phòng'}</span>
+                <h2 id="room-inventory-modal-title">{isCreating ? 'Thêm vật tư phòng' : selectedItem?.name}</h2>
+                <p>{isEditing ? `${selectedItem.category} - ${formatCurrency(selectedItem.price)} VND` : 'Nhập thông tin vật tư phòng mới.'}</p>
               </div>
               <button className="icon-action-button" type="button" onClick={closeModal}><X size={18} /></button>
             </div>
 
             <form className="manager-ops-form" onSubmit={handleSubmit}>
-              <label>Tên món<input name="name" onChange={handleChange} required value={form.name} /></label>
+              <label>Tên vật tư<input name="name" onChange={handleChange} required value={form.name} /></label>
               <label>Danh mục<select name="category" onChange={handleChange} value={form.category}>{categories.map((category) => <option key={category}>{category}</option>)}</select></label>
               <label>Giá<input min="0" name="price" onChange={handleChange} required type="number" value={form.price} /></label>
               <label>Số lượng<input min="0" name="quantity" onChange={handleChange} required step="1" type="number" value={form.quantity} /></label>
               <label>Tồn kho<select name="stock_status" onChange={handleChange} value={form.stock_status}><option value="in_stock">Còn hàng</option><option value="low_stock">Sắp hết</option><option value="out_of_stock">Hết hàng</option></select></label>
-              <label className="manager-ops-wide">URL ảnh món<input name="image_url" onChange={handleChange} placeholder="https://example.com/minibar-item.jpg" type="url" value={form.image_url} /></label>
-              {form.image_url && <div className="manager-ops-preview manager-ops-wide"><img alt={form.name || 'Minibar'} src={form.image_url} /></div>}
+              <label className="manager-ops-wide">URL ảnh vật tư<input name="image_url" onChange={handleChange} placeholder="https://example.com/room-inventory-item.jpg" type="url" value={form.image_url} /></label>
+              {form.image_url && <div className="manager-ops-preview manager-ops-wide"><img alt={form.name || 'Vật tư phòng'} src={form.image_url} /></div>}
               <label className="manager-ops-wide">Mô tả<input name="description" onChange={handleChange} value={form.description} /></label>
               <div className="manager-ops-actions">
-                <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo món'}</button>
+                <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo vật tư'}</button>
                 {isEditing && selectedItem?.is_active && <button className="manager-ops-danger" onClick={handleDeactivate} type="button"><PackageX size={15} /> Ngừng sử dụng</button>}
                 {isEditing && !selectedItem?.is_active && <button className="manager-ops-secondary" onClick={handleActivate} type="button"><PackageCheck size={15} /> Kích hoạt lại</button>}
                 <button className="manager-ops-secondary" onClick={closeModal} type="button">Đóng</button>
@@ -250,4 +250,4 @@ const ManagerMinibarItemsPage = () => {
   );
 };
 
-export default ManagerMinibarItemsPage;
+export default ManagerRoomInventoryPage;

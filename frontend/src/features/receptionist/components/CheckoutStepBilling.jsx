@@ -3,35 +3,55 @@ import { useCompleteCheckout } from '../hooks/use-checkout';
 import { FileText, CreditCard, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
+const buildHousekeepingInventoryCharges = (summary) => {
+  const existingInventoryKeys = new Set(
+    (summary.charges || [])
+      .filter((charge) => String(charge.charge_type || '').toLowerCase() === 'room_inventory')
+      .map((charge) => `${charge.description}|${Number(charge.amount || 0)}`)
+  );
+
+  return (summary?.inspectionState?.rooms || []).flatMap((room) => (
+    (room.roomInventoryReport?.items || []).map((item, index) => {
+      const quantity = Number(item.quantity || 0);
+      const unitPrice = Number(item.unit_price || 0);
+      const amount = Number(item.total || (quantity * unitPrice));
+      const description = `${item.name || 'Vật tư phòng'} x${quantity}${room.roomNumber ? ` (${room.roomNumber})` : ''}`;
+      const key = `${description}|${amount}`;
+
+      if (quantity <= 0 || amount <= 0 || existingInventoryKeys.has(key)) return null;
+      return {
+        _id: `housekeeping-inventory-${room.roomNumber || 'room'}-${item.item_id || index}`,
+        description,
+        amount,
+        charge_type: 'room_inventory',
+        quantity,
+      };
+    }).filter(Boolean)
+  ));
+};
+
 const CheckoutStepBilling = ({ bookingId, summary, onComplete }) => {
   const { mutate: completeCheckout, isPending: isCompleting } = useCompleteCheckout(bookingId);
 
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const isCheckoutCompleted = summary?.booking?.status === 'CheckedOut';
 
-  const approvedMinibarRooms = summary?.inspectionState?.rooms || [];
-  const approvedMinibarTotal = approvedMinibarRooms.reduce(
-    (roomTotal, room) => roomTotal + (room.minibarReport?.items || []).reduce((sum, item) => sum + Number(item.total || (Number(item.quantity || 0) * Number(item.unit_price || 0))), 0),
-    0
-  );
-
   const manualChargesTotal = useMemo(
-    () => (summary.charges || [])
-      .filter((charge) => String(charge.charge_type || '').toLowerCase() !== 'minibar')
+    () => [...(summary.charges || []), ...buildHousekeepingInventoryCharges(summary)]
       .reduce((sum, charge) => sum + Number(charge.amount || 0), 0),
-    [summary.charges]
+    [summary]
   );
 
   const roomCharge = Number(summary.booking?.totalAmount || 0);
   const depositDeducted = Number(summary.booking?.depositAmount || 0);
-  const subtotal = roomCharge + manualChargesTotal + approvedMinibarTotal;
+  const subtotal = roomCharge + manualChargesTotal;
   const finalTotal = Math.max(0, subtotal - depositDeducted);
   const invoice = {
     ...(summary.invoice || {}),
     invoice_code: summary.invoice?.invoice_code || 'DRAFT',
     status: summary.invoice?.status || 'Unpaid',
     room_charge: roomCharge,
-    extra_charges: manualChargesTotal + approvedMinibarTotal,
+    extra_charges: manualChargesTotal,
     subtotal,
     deposit_deducted: depositDeducted,
     final_total: finalTotal,
@@ -80,10 +100,6 @@ const CheckoutStepBilling = ({ bookingId, summary, onComplete }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--muted)' }}>Phụ phí khác:</span>
               <span style={{ fontWeight: '500' }}>{formatCurrency(manualChargesTotal)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--muted)' }}>Minibar charge đã duyệt:</span>
-              <span style={{ fontWeight: '500' }}>{formatCurrency(approvedMinibarTotal)}</span>
             </div>
             <div style={{ borderTop: '1px dashed var(--line)', margin: '8px 0' }}></div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

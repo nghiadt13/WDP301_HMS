@@ -27,11 +27,11 @@ export const managerApi = {
   closeStaffTask: (id) => axiosClient.patch(`/manager/staff-tasks/${id}/close`).then(unwrap),
   cancelStaffTask: (id) => axiosClient.patch(`/manager/staff-tasks/${id}/cancel`).then(unwrap),
 
-  getMinibarItems: (params) => axiosClient.get('/manager/minibar-items', { params }).then(unwrap),
-  createMinibarItem: (data) => axiosClient.post('/manager/minibar-items', data).then(unwrap),
-  updateMinibarItem: (id, data) => axiosClient.put(`/manager/minibar-items/${id}`, data).then(unwrap),
-  activateMinibarItem: (id) => axiosClient.patch(`/manager/minibar-items/${id}/activate`).then(unwrap),
-  deactivateMinibarItem: (id) => axiosClient.patch(`/manager/minibar-items/${id}/deactivate`).then(unwrap),
+  getRoomInventoryItems: (params) => axiosClient.get('/manager/room-inventory-items', { params }).then(unwrap),
+  createRoomInventoryItem: (data) => axiosClient.post('/manager/room-inventory-items', data).then(unwrap),
+  updateRoomInventoryItem: (id, data) => axiosClient.put(`/manager/room-inventory-items/${id}`, data).then(unwrap),
+  activateRoomInventoryItem: (id) => axiosClient.patch(`/manager/room-inventory-items/${id}/activate`).then(unwrap),
+  deactivateRoomInventoryItem: (id) => axiosClient.patch(`/manager/room-inventory-items/${id}/deactivate`).then(unwrap),
 
   getCustomerFeedbacks: (params) => axiosClient.get('/manager/customer-feedbacks', { params }).then(unwrap),
   respondCustomerFeedback: (id, responseText) => axiosClient.patch(`/manager/customer-feedbacks/${id}/respond`, { responseText }).then(unwrap),

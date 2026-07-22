@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText, Grid, ClipboardCheck } from 'lucide-react';
+import { managerApi } from '../services/manager-api.js';
+
+const FEEDBACK_SEEN_STORAGE_KEY = 'hotelify_manager_seen_feedback_ids';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
@@ -11,10 +14,10 @@ const sidebarItems = [
   { icon: Grid, label: 'Quản lý phòng', hasSub: true, matchPath: '/manager/physical-rooms' },
   { icon: BrushCleaning, label: 'Maintenance', to: '/manager/housekeeping/schedule' },
   { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-task' },
-  { icon: Package, label: 'Đồ dùng Minibar', to: '/manager/minibar' },
+  { icon: Package, label: 'Vật tư phòng', to: '/manager/room-inventory' },
   { icon: FileText, label: 'Chính sách', to: '/manager/policies' },
   { icon: Wallet, label: 'Tài chính', hasSub: true },
-  { icon: Star, label: 'Ý kiến khách hàng', to: '/manager/feedback', badge: 5 },
+  { icon: Star, label: 'Ý kiến khách hàng', to: '/manager/feedback', notificationKey: 'feedback' },
   { icon: LogIn, label: 'Đăng ký & Đăng nhập' },
 ];
 
@@ -43,6 +46,37 @@ const ManagerSidebar = () => {
   const roleName = String(storedUser?.role?.name || '').toLowerCase();
   const isHousekeepingStaff = roleName.includes('housekeeping');
   const visibleSidebarItems = isHousekeepingStaff ? housekeepingSidebarItems : sidebarItems;
+  const [feedbackIds, setFeedbackIds] = useState([]);
+  const [seenFeedbackIds, setSeenFeedbackIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(FEEDBACK_SEEN_STORAGE_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    if (isHousekeepingStaff) return;
+
+    managerApi.getCustomerFeedbacks()
+      .then((feedbacks) => {
+        const ids = (Array.isArray(feedbacks) ? feedbacks : [])
+          .map((feedback) => feedback._id || feedback.id)
+          .filter(Boolean);
+        setFeedbackIds(ids);
+      })
+      .catch(() => setFeedbackIds([]));
+  }, [isHousekeepingStaff]);
+
+  const unreadFeedbackCount = useMemo(() => {
+    const seen = new Set(seenFeedbackIds);
+    return feedbackIds.filter((id) => !seen.has(id)).length;
+  }, [feedbackIds, seenFeedbackIds]);
+
+  const markFeedbackAsSeen = () => {
+    localStorage.setItem(FEEDBACK_SEEN_STORAGE_KEY, JSON.stringify(feedbackIds));
+    setSeenFeedbackIds(feedbackIds);
+  };
 
   const isActive = (item) => {
     if (item.to) return location.pathname === item.to;
@@ -63,10 +97,11 @@ const ManagerSidebar = () => {
       </div>
       <nav className="rm-nav">
         {visibleSidebarItems.map((item) => {
-          const { icon: Icon, label, to, hasSub, badge, matchPath } = item;
+          const { icon: Icon, label, to, hasSub, matchPath, notificationKey } = item;
           const active = isActive(item);
           const isRooms = label === 'Loại phòng' || label === 'Phòng';
           const isPhysicalRooms = label === 'Quản lý phòng';
+          const badge = notificationKey === 'feedback' && unreadFeedbackCount > 0 ? unreadFeedbackCount : null;
 
           const content = (
             <>
@@ -120,7 +155,7 @@ const ManagerSidebar = () => {
 
           if (to) {
             return (
-              <Link key={label} to={to} className={`rm-sidebar-item${active ? ' is-active' : ''}`}>
+              <Link key={label} to={to} className={`rm-sidebar-item${active ? ' is-active' : ''}`} onClick={notificationKey === 'feedback' ? markFeedbackAsSeen : undefined}>
                 {content}
               </Link>
             );

@@ -33,6 +33,7 @@ const ReceptionistBookingDetailPage = () => {
     rooms = [], 
     stayGuests = [], 
     payments = [], 
+    billing = null,
     canCheckin = false, 
     blockingReasons = [] 
   } = data?.data || {};
@@ -59,6 +60,12 @@ const ReceptionistBookingDetailPage = () => {
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
   };
+
+  const billingSummary = billing || {};
+  const displayTotal = Number(billingSummary.subtotal ?? booking.totalAmount ?? 0);
+  const displayExtraCharges = Number(billingSummary.extraCharges ?? 0);
+  const displayDeposit = Number(billingSummary.depositDeducted ?? booking.depositAmount ?? 0);
+  const displayFinalTotal = Number(billingSummary.finalTotal ?? Math.max(0, displayTotal - displayDeposit));
 
   const getStatusLabel = (status) => {
     switch (status) {
@@ -242,12 +249,24 @@ const ReceptionistBookingDetailPage = () => {
             </div>
             <div className="info-row">
               <span className="info-label">Tổng số tiền:</span>
-              <span className="info-value" style={{ color: 'var(--blue-dark)' }}>{formatCurrency(booking.totalAmount)}</span>
+              <span className="info-value" style={{ color: 'var(--blue-dark)' }}>{formatCurrency(displayTotal)}</span>
             </div>
+            {displayExtraCharges > 0 && (
+              <div className="info-row">
+                <span className="info-label">Phụ phí phát sinh:</span>
+                <span className="info-value" style={{ color: 'var(--red)' }}>{formatCurrency(displayExtraCharges)}</span>
+              </div>
+            )}
             <div className="info-row">
               <span className="info-label">Đã đặt cọc:</span>
-              <span className="info-value" style={{ color: 'var(--green)' }}>{formatCurrency(booking.depositAmount)}</span>
+              <span className="info-value" style={{ color: 'var(--green)' }}>{formatCurrency(displayDeposit)}</span>
             </div>
+            {displayExtraCharges > 0 && (
+              <div className="info-row">
+                <span className="info-label">Còn phải thu:</span>
+                <span className="info-value" style={{ color: displayFinalTotal > 0 ? 'var(--red)' : 'var(--green)' }}>{formatCurrency(displayFinalTotal)}</span>
+              </div>
+            )}
             <div className="info-row">
               <span className="info-label">Trạng thái:</span>
               <span className={`receptionist-status ${booking.paymentStatus === 'Paid' ? 'checked-in' : booking.paymentStatus === 'DepositPaid' ? 'pending' : 'check-out'}`}>

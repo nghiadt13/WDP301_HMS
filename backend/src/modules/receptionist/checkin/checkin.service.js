@@ -7,6 +7,8 @@ const RoomType = require('../../../models/room-type.model');
 const Room = require('../../../models/room.model');
 const BookingRoom = require('../../../models/booking-room.model');
 const StayGuest = require('../../../models/stay-guest.model');
+const BookingCharge = require('../../../models/booking-charge.model');
+const Invoice = require('../../../models/invoice.model');
 
 const generateWalkInCode = () => {
   const suffix = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -158,6 +160,15 @@ const checkinService = {
 
     // Related payment info
     const payments = await db.collection('payments').find({ reservation_id: booking._id }).toArray();
+    const [charges, invoice] = await Promise.all([
+      BookingCharge.find({ booking_id: booking._id }).lean(),
+      Invoice.findOne({ booking_id: booking._id }).lean(),
+    ]);
+    const extraCharges = charges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
+    const roomCharge = Number(booking.total_amount || 0);
+    const depositDeducted = Number(booking.deposit_amount || 0);
+    const subtotal = Number(invoice?.subtotal ?? (roomCharge + extraCharges));
+    const finalTotal = Number(invoice?.final_total ?? Math.max(0, subtotal - depositDeducted));
 
     // Compute canCheckin and blocking reasons
     const blockingReasons = [];
@@ -256,6 +267,17 @@ const checkinService = {
         status: p.status,
         paidAt: p.paid_at || p.created_at
       })),
+      billing: {
+        invoiceCode: invoice?.invoice_code || null,
+        roomCharge,
+        extraCharges: Number(invoice?.extra_charges ?? extraCharges),
+        subtotal,
+        depositDeducted,
+        finalTotal,
+        status: invoice?.status || booking.payment_status,
+        paymentMethod: invoice?.payment_method || null,
+        paymentDate: invoice?.payment_date || null,
+      },
       canCheckin,
       blockingReasons
     };

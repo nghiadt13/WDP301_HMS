@@ -16,16 +16,17 @@ const generateInvoiceCode = () => {
   return `INV-${suffix}`;
 };
 
-const sumMinibarTotal = (inspection) => {
+const sumRoomInventoryTotal = (inspection) => {
   if (!inspection) return 0;
-  if (typeof inspection.minibar_total === 'number') {
-    return inspection.minibar_total;
+  const savedTotal = Number(inspection.room_inventory_total || 0);
+  if (savedTotal > 0) {
+    return savedTotal;
   }
 
   const sourceItems = Array.isArray(inspection.invoice_items) && inspection.invoice_items.length > 0
     ? inspection.invoice_items
-    : Array.isArray(inspection.minibar)
-      ? inspection.minibar
+    : Array.isArray(inspection.room_inventory)
+      ? inspection.room_inventory
       : [];
 
   return sourceItems.reduce((total, item) => {
@@ -38,14 +39,14 @@ const sumMinibarTotal = (inspection) => {
   }, 0);
 };
 
-const buildApprovedMinibarState = (inspectionState) => {
+const buildApprovedRoomInventoryState = (inspectionState) => {
   const rooms = (inspectionState?.rooms || []).map((room) => {
-    const items = room?.minibarReport?.items || [];
+    const items = room?.roomInventoryReport?.items || [];
     const total = items.reduce((sum, item) => sum + Number(item.total || (Number(item.quantity || 0) * Number(item.unit_price || 0))), 0);
 
     return {
       ...room,
-      minibarReport: {
+      roomInventoryReport: {
         items,
         total,
       },
@@ -54,66 +55,119 @@ const buildApprovedMinibarState = (inspectionState) => {
 
   return {
     rooms,
-    total: rooms.reduce((sum, room) => sum + Number(room?.minibarReport?.total || 0), 0),
+    total: rooms.reduce((sum, room) => sum + Number(room?.roomInventoryReport?.total || 0), 0),
   };
 };
 
 const buildInspectionState = async (bookingId) => {
   const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
-  const roomNames = rooms
-    .map((room) => (room.room_id ? room.room_id.roomName : room.room_number))
-    .filter(Boolean);
+  const roomEntries = rooms
+    .map((room) => ({
+      roomId: room.room_id ? room.room_id._id : null,
+      roomNumber: room.room_id ? room.room_id.roomName : room.room_number,
+    }))
+    .filter((room) => room.roomNumber);
+  const roomNames = roomEntries.map((room) => room.roomNumber);
 
   const requestedTasks = await StaffTask.find({
+    booking_id: bookingId,
     room_number: { $in: roomNames },
     cleaningType: 'Inspection Review',
   })
     .sort({ createdAt: -1 })
     .lean();
 
-  const inspections = await Inspection.find({ room_number: { $in: roomNames } })
+  const taskIds = requestedTasks.map((task) => task._id).filter(Boolean);
+  const inspections = taskIds.length ? await Inspection.find({ task_id: { $in: taskIds } })
     .sort({ createdAt: -1 })
-    .lean();
+    .lean() : [];
 
-  const latestTaskByRoom = new Map();
+  const tasksByRoom = new Map();
   requestedTasks.forEach((task) => {
-    if (!latestTaskByRoom.has(task.room_number)) {
-      latestTaskByRoom.set(task.room_number, task);
-    }
+    const roomTasks = tasksByRoom.get(task.room_number) || [];
+    roomTasks.push(task);
+    tasksByRoom.set(task.room_number, roomTasks);
   });
 
-  const latestInspectionByRoom = new Map();
+  const latestInspectionByTask = new Map();
   inspections.forEach((inspection) => {
-    if (!latestInspectionByRoom.has(inspection.room_number)) {
-      latestInspectionByRoom.set(inspection.room_number, inspection);
+    const taskId = inspection.task_id ? String(inspection.task_id) : '';
+    if (taskId && !latestInspectionByTask.has(taskId)) {
+      latestInspectionByTask.set(taskId, inspection);
     }
   });
 
-  const roomsState = roomNames.map((roomNumber) => {
-    const task = latestTaskByRoom.get(roomNumber) || null;
-    const inspection = latestInspectionByRoom.get(roomNumber) || null;
-    const requestedAt = task?.createdAt ? new Date(task.createdAt).getTime() : null;
-    const inspectedAt = inspection?.createdAt ? new Date(inspection.createdAt).getTime() : null;
-    const inspectionConfirmed = Boolean(task && inspection && inspectedAt !== null && requestedAt !== null && inspectedAt >= requestedAt);
-    const minibarItems = Array.isArray(inspection?.invoice_items)
-      ? inspection.invoice_items.map((item) => ({
-        name: item.name || 'Minibar item',
-        quantity: Number(item.quantity || 1),
-        unit_price: Number(item.unit_price || 0),
-        total: Number(item.total || 0),
-        note: item.note || 'Minibar usage recorded during inspection',
-      }))
+  const roomsState = roomEntries.map(({ roomId, roomNumber }) => {
+    const roomTasks = tasksByRoom.get(roomNumber) || [];
+    const latestTask = roomTasks[0] || null;
+    const latestTaskRequestedAt = latestTask?.createdAt ? new Date(latestTask.createdAt).getTime() : null;
+    const confirmedReports = roomTasks
+      .map((candidateTask) => {
+        const candidateTaskId = candidateTask?._id ? String(candidateTask._id) : '';
+        const candidateInspection = candidateTaskId ? latestInspectionByTask.get(candidateTaskId) || null : null;
+        const candidateRequestedAt = candidateTask?.createdAt ? new Date(candidateTask.createdAt).getTime() : null;
+        const candidateInspectedAt = candidateInspection?.createdAt ? new Date(candidateInspection.createdAt).getTime() : null;
+        const candidateTaskStatus = String(candidateTask?.status || '').trim().toLowerCase();
+        const candidateInspectionStatus = String(candidateInspection?.status || '').trim().toLowerCase();
+        const candidateInspectionTaskId = candidateInspection?.task_id ? String(candidateInspection.task_id) : '';
+        const inspectionMatchesTask = Boolean(candidateTaskId && candidateInspectionTaskId && candidateInspectionTaskId === candidateTaskId);
+        const isConfirmed = Boolean(
+          candidateTask
+          && candidateInspection
+          && candidateTaskStatus === 'completed'
+          && ['submitted', 'completed'].includes(candidateInspectionStatus)
+          && inspectionMatchesTask
+          && candidateInspectedAt !== null
+          && candidateRequestedAt !== null
+          && candidateInspectedAt >= candidateRequestedAt
+          && (latestTaskRequestedAt === null || candidateInspectedAt >= latestTaskRequestedAt)
+        );
+
+        return {
+          task: candidateTask,
+          inspection: candidateInspection,
+          inspectedAt: candidateInspectedAt || 0,
+          isConfirmed,
+        };
+      })
+      .filter((entry) => entry.isConfirmed)
+      .sort((first, second) => second.inspectedAt - first.inspectedAt);
+
+    const confirmedReport = confirmedReports[0] || null;
+    const task = confirmedReport?.task || latestTask;
+    const taskId = task?._id ? String(task._id) : '';
+    const inspection = confirmedReport?.inspection || (taskId ? latestInspectionByTask.get(taskId) || null : null);
+    const inspectionConfirmed = Boolean(confirmedReport);
+    const inspectionInventoryItems = Array.isArray(inspection?.room_inventory) ? inspection.room_inventory : [];
+    const invoiceItems = Array.isArray(inspection?.invoice_items) ? inspection.invoice_items : [];
+    const sourceInventoryItems = inspectionInventoryItems.length > 0 ? inspectionInventoryItems : invoiceItems;
+    const roomInventoryItems = sourceInventoryItems.length > 0
+      ? sourceInventoryItems.map((item, index) => {
+        const invoiceItem = invoiceItems[index] || {};
+        const quantity = Number(item.qty ?? item.quantity ?? invoiceItem.quantity ?? 1);
+        const unitPrice = Number(item.price ?? item.unit_price ?? invoiceItem.unit_price ?? 0);
+        const total = Number(item.total ?? invoiceItem.total ?? (quantity * unitPrice));
+        return {
+          item_id: item.item_id || invoiceItem.item_id || null,
+          name: item.item || item.name || invoiceItem.name || 'Room inventory item',
+          quantity,
+          unit_price: unitPrice,
+          total,
+          note: item.note || invoiceItem.note || 'Room inventory usage recorded during inspection',
+        };
+      })
       : [];
-    const minibarTotal = sumMinibarTotal(inspection);
+    const roomInventoryTotal = sumRoomInventoryTotal(inspection);
 
     return {
       roomNumber,
+      roomId,
       task,
       inspection,
       inspectionConfirmed,
-      minibarReport: {
-        items: minibarItems,
-        total: minibarTotal,
+      roomInventoryReport: {
+        items: roomInventoryItems,
+        total: roomInventoryTotal,
       },
     };
   });
@@ -122,15 +176,16 @@ const buildInspectionState = async (bookingId) => {
     rooms: roomsState,
     tasks: roomsState
       .filter((entry) => entry.task)
-      .map(({ roomNumber, task, inspection, inspectionConfirmed, minibarReport }) => ({
+      .map(({ roomNumber, roomId, task, inspection, inspectionConfirmed, roomInventoryReport }) => ({
         ...task,
         room_number: roomNumber,
+        room_id: roomId,
         inspectionConfirmed,
         inspectionId: inspection?._id || null,
         inspectionStatus: inspection?.status || null,
         confirmedAt: inspection?.createdAt || null,
         inspectionNote: inspection?.note || inspection?.remarks || '',
-        minibarReport,
+        roomInventoryReport,
       })),
     allRoomsConfirmed: roomsState.length > 0 && roomsState.every((entry) => entry.inspectionConfirmed),
     pendingRooms: roomsState
@@ -139,17 +194,92 @@ const buildInspectionState = async (bookingId) => {
   };
 };
 
+const syncRoomInventoryChargesFromInspection = async (bookingId, inspectionState) => {
+  const approvedRoomInventory = buildApprovedRoomInventoryState(inspectionState);
+  const confirmedRooms = approvedRoomInventory.rooms.filter((room) => room.inspectionConfirmed);
+
+  for (const room of confirmedRooms) {
+    const roomInventoryItems = room?.roomInventoryReport?.items || [];
+    for (const item of roomInventoryItems) {
+      const quantity = Number(item.quantity || 0);
+      const unitPrice = Number(item.unit_price || 0);
+      const amount = Number(item.total || (quantity * unitPrice));
+      if (quantity <= 0 || unitPrice <= 0 || amount <= 0) continue;
+
+      const roomInventoryItemId = item.item_id || null;
+      const description = `${item.name || 'Room inventory item'} x${quantity}${room.roomNumber ? ` (${room.roomNumber})` : ''}`;
+      const chargeFilter = {
+        booking_id: bookingId,
+        room_id: room.roomId || null,
+        charge_type: 'room_inventory',
+        description,
+      };
+
+      if (roomInventoryItemId) {
+        chargeFilter.room_inventory_item_id = roomInventoryItemId;
+      }
+
+      await BookingCharge.findOneAndUpdate(
+        chargeFilter,
+        {
+          $set: {
+            booking_id: bookingId,
+            room_id: room.roomId || null,
+            room_inventory_item_id: roomInventoryItemId,
+            quantity,
+            unit_price: unitPrice,
+            description,
+            amount,
+            charge_type: 'room_inventory',
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+  }
+};
+
+const mapRoomInventoryForCheckout = (room) => {
+  if (!room || !Array.isArray(room.room_inventory)) return [];
+  return room.room_inventory
+    .map((entry) => {
+      const item = entry.item_id;
+      if (!item) return null;
+      return {
+        item_id: item._id || item,
+        name: item.name || 'Vật tư phòng',
+        category: item.category || '',
+        price: Number(item.price || 0),
+        quantity: Number(entry.quantity || 0),
+        is_active: item.is_active !== false,
+      };
+    })
+    .filter((entry) => entry && entry.is_active);
+};
+
 const checkoutService = {
   getCheckoutSummary: async (bookingId) => {
     const booking = await Booking.findById(bookingId).populate('customer_id', 'full_name email phone_number');
-    if (!booking) throw createHttpError(404, 'Booking not found');
+    if (!booking) throw createHttpError('Booking not found', 404);
 
-    const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
+    const rooms = await BookingRoom.find({ booking_id: bookingId })
+      .populate({
+        path: 'room_id',
+        select: 'roomName room_inventory',
+        populate: {
+          path: 'room_inventory.item_id',
+          select: 'name category price is_active'
+        }
+    });
     const stayGuests = await StayGuest.find({ booking_id: bookingId });
-    const charges = await BookingCharge.find({ booking_id: bookingId });
-    const invoices = await Invoice.find({ booking_id: bookingId });
+    let charges = await BookingCharge.find({ booking_id: bookingId });
 
     const inspectionState = await buildInspectionState(bookingId);
+    if (inspectionState.allRoomsConfirmed) {
+      await syncRoomInventoryChargesFromInspection(bookingId, inspectionState);
+      charges = await BookingCharge.find({ booking_id: bookingId });
+    }
+    const invoices = await Invoice.find({ booking_id: bookingId });
 
     return {
       booking: {
@@ -165,7 +295,8 @@ const checkoutService = {
         id: r._id,
         roomId: r.room_id ? r.room_id._id : null,
         roomName: r.room_id ? r.room_id.roomName : r.room_number,
-        status: r.status
+        status: r.status,
+        roomInventory: mapRoomInventoryForCheckout(r.room_id)
       })),
       stayGuests,
       charges,
@@ -176,16 +307,18 @@ const checkoutService = {
 
   createInspectionRequest: async (bookingId, taskData, user) => {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw createHttpError(404, 'Booking not found');
+    if (!booking) throw createHttpError('Booking not found', 404);
 
     const task = new StaffTask({
       title: `Kiểm tra phòng ${taskData.room_number} (Check-out)`,
       description: taskData.description || `Kiểm tra tình trạng phòng ${taskData.room_number} sau khi khách trả phòng.`,
       staff_type: 'housekeeping',
       room_number: taskData.room_number,
+      booking_id: booking._id,
       priority: taskData.priority || 'medium',
       status: 'Assigned',
       cleaningType: 'Inspection Review',
+      task_origin: 'inspection',
       deadline: new Date(Date.now() + 2 * 60 * 60 * 1000) // 2 hours from now
     });
     
@@ -199,14 +332,65 @@ const checkoutService = {
 
   addCharge: async (bookingId, chargeData) => {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw createHttpError(404, 'Booking not found');
+    if (!booking) throw createHttpError('Booking not found', 404);
 
-    const charge = new BookingCharge({
+    const chargeType = chargeData.charge_type || 'other';
+    let chargePayload = {
       booking_id: bookingId,
       room_id: chargeData.room_id || null,
       description: chargeData.description,
       amount: chargeData.amount,
-      charge_type: chargeData.charge_type
+      charge_type: chargeType
+    };
+
+    if (chargeType === 'room_inventory') {
+      const roomInventoryItemId = String(chargeData.room_inventory_item_id || '').trim();
+      const quantity = Number(chargeData.quantity || 0);
+      if (!Number.isInteger(quantity) || quantity <= 0) {
+        throw createHttpError('Room inventory quantity must be a positive integer', 400);
+      }
+
+      const bookingRoom = await BookingRoom.findOne({
+        booking_id: bookingId,
+        room_id: chargeData.room_id
+      });
+      if (!bookingRoom) throw createHttpError('Selected room does not belong to this booking', 400);
+
+      const room = await Room.findById(chargeData.room_id).populate('room_inventory.item_id', 'name category price is_active');
+      if (!room) throw createHttpError('Room not found', 404);
+
+      const inventoryEntry = (room.room_inventory || []).find((entry) => String(entry.item_id?._id || entry.item_id) === roomInventoryItemId);
+      if (!inventoryEntry || inventoryEntry.item_id?.is_active === false) {
+        throw createHttpError('Room inventory item not found in selected room', 404);
+      }
+
+      const availableQty = Number(inventoryEntry.quantity || 0);
+      if (quantity > availableQty) {
+        throw createHttpError(`Số lượng vật tư trong phòng không đủ. Hiện còn ${availableQty}.`, 400);
+      }
+
+      const unitPrice = Number(inventoryEntry.item_id?.price || 0);
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        throw createHttpError('Room inventory item does not have a valid price', 400);
+      }
+      const itemName = inventoryEntry.item_id?.name || 'Vật tư phòng';
+      inventoryEntry.quantity = availableQty - quantity;
+      await room.save();
+
+      chargePayload = {
+        booking_id: bookingId,
+        room_id: chargeData.room_id,
+        room_inventory_item_id: roomInventoryItemId,
+        quantity,
+        unit_price: unitPrice,
+        description: chargeData.description || `${itemName} x${quantity}`,
+        amount: unitPrice * quantity,
+        charge_type: 'room_inventory'
+      };
+    }
+
+    const charge = new BookingCharge({
+      ...chargePayload
     });
 
     await charge.save();
@@ -219,28 +403,45 @@ const checkoutService = {
 
   removeCharge: async (bookingId, chargeId) => {
     const charge = await BookingCharge.findOneAndDelete({ _id: chargeId, booking_id: bookingId });
-    if (!charge) throw createHttpError(404, 'Charge not found');
+    if (!charge) throw createHttpError('Charge not found', 404);
+
+    if (String(charge.charge_type || '').toLowerCase() === 'room_inventory' && charge.room_id && charge.room_inventory_item_id && Number(charge.quantity || 0) > 0) {
+      const room = await Room.findById(charge.room_id);
+      if (room) {
+        const itemId = String(charge.room_inventory_item_id);
+        const existingEntry = (room.room_inventory || []).find((entry) => String(entry.item_id) === itemId);
+        if (existingEntry) {
+          existingEntry.quantity = Number(existingEntry.quantity || 0) + Number(charge.quantity || 0);
+        } else {
+          room.room_inventory.push({
+            item_id: charge.room_inventory_item_id,
+            quantity: Number(charge.quantity || 0)
+          });
+        }
+        await room.save();
+      }
+    }
     
     await Invoice.findOneAndDelete({ booking_id: bookingId, status: 'Unpaid' });
   },
 
   generateInvoice: async (bookingId) => {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw createHttpError(404, 'Booking not found');
+    if (!booking) throw createHttpError('Booking not found', 404);
 
     // Check if a paid invoice already exists
     const existingPaid = await Invoice.findOne({ booking_id: bookingId, status: 'Paid' });
     if (existingPaid) return existingPaid;
 
     const inspectionState = await buildInspectionState(bookingId);
-    const approvedMinibarState = buildApprovedMinibarState(inspectionState);
-    const minibarChargesTotal = approvedMinibarState.total;
+    if (inspectionState.allRoomsConfirmed) {
+      await syncRoomInventoryChargesFromInspection(bookingId, inspectionState);
+    }
 
     const charges = await BookingCharge.find({ booking_id: bookingId });
     const manualChargesTotal = charges
-      .filter((charge) => String(charge.charge_type || '').toLowerCase() !== 'minibar')
       .reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
-    const extraChargesTotal = manualChargesTotal + minibarChargesTotal;
+    const extraChargesTotal = manualChargesTotal;
 
     const roomCharge = booking.total_amount;
     const subtotal = roomCharge + extraChargesTotal;
@@ -270,10 +471,10 @@ const checkoutService = {
   completeCheckout: async (bookingId, paymentMethod) => {
     try {
       const booking = await Booking.findById(bookingId);
-      if (!booking) throw createHttpError(404, 'Booking not found');
+      if (!booking) throw createHttpError('Booking not found', 404);
 
       if (booking.booking_status !== 'CheckedIn') {
-        throw createHttpError(400, 'Booking is not in CheckedIn state');
+        throw createHttpError('Booking is not in CheckedIn state', 400);
       }
 
       const inspectionState = await buildInspectionState(bookingId);
@@ -281,8 +482,7 @@ const checkoutService = {
         const pendingRoomsLabel = inspectionState.pendingRooms.join(', ');
         throw createHttpError(`Housekeeping must confirm inspection before checkout can continue${pendingRoomsLabel ? ` for room(s): ${pendingRoomsLabel}` : ''}`, 409);
       }
-
-      const approvedMinibarState = buildApprovedMinibarState(inspectionState);
+      await syncRoomInventoryChargesFromInspection(bookingId, inspectionState);
 
       const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
       const roomNames = rooms.map(r => r.room_id ? r.room_id.roomName : r.room_number).filter(Boolean);
@@ -295,16 +495,14 @@ const checkoutService = {
 
       const charges = await BookingCharge.find({ booking_id: bookingId });
       const manualChargesTotal = charges
-        .filter((charge) => String(charge.charge_type || '').toLowerCase() !== 'minibar')
         .reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
-      const minibarChargesTotal = approvedMinibarState.total;
       const roomCharge = booking.total_amount;
-      const subtotal = roomCharge + manualChargesTotal + minibarChargesTotal;
+      const subtotal = roomCharge + manualChargesTotal;
       const depositDeducted = booking.deposit_amount || 0;
       const finalTotal = Math.max(0, subtotal - depositDeducted);
 
       invoice.room_charge = roomCharge;
-      invoice.extra_charges = manualChargesTotal + minibarChargesTotal;
+      invoice.extra_charges = manualChargesTotal;
       invoice.subtotal = subtotal;
       invoice.deposit_deducted = depositDeducted;
       invoice.final_total = finalTotal;
@@ -324,16 +522,33 @@ const checkoutService = {
         { status: 'CheckedOut' }
       );
 
-      // Mark actual rooms as dirty and create housekeeping cleaning tasks immediately.
-      const bookingRooms = await BookingRoom.find({ booking_id: bookingId });
-      const roomIds = bookingRooms.map(br => br.room_id).filter(Boolean);
-      await Room.updateMany(
-        { _id: { $in: roomIds } },
-        { status: 'Dirty' }
+      const maintenanceRooms = new Set(
+        (inspectionState.rooms || [])
+          .filter((entry) => entry?.inspection?.maintenance_required
+            || (entry?.inspection?.damaged_items || []).length
+            || (entry?.inspection?.damage || []).length)
+          .map((entry) => entry.roomNumber)
       );
 
+      // Mark actual rooms and create post checkout cleaning tasks only for rooms that are not under maintenance.
+      const bookingRooms = await BookingRoom.find({ booking_id: bookingId });
+      const roomIds = bookingRooms.map(br => br.room_id).filter(Boolean);
+      if (roomIds.length) {
+        await Promise.all(bookingRooms.map(async (bookingRoom) => {
+          if (!bookingRoom.room_id) return;
+          const roomNumber = roomNames.find((name) => name === String(bookingRoom.room_number || ''));
+          const room = await Room.findById(bookingRoom.room_id);
+          if (!room) return;
+          const resolvedRoomNumber = room.roomName || roomNumber;
+          room.status = maintenanceRooms.has(resolvedRoomNumber) ? 'Maintenance' : 'Dirty';
+          await room.save();
+        }));
+      }
+
       await Promise.all(
-        roomNames.map((roomNumber) => housekeepingService.confirmCheckout({
+        roomNames
+          .filter((roomNumber) => !maintenanceRooms.has(roomNumber))
+          .map((roomNumber) => housekeepingService.confirmCheckout({
           room_number: roomNumber,
           priority: 'high',
           receptionistNote: 'Checkout confirmed by receptionist. Room needs cleaning before next arrival.',

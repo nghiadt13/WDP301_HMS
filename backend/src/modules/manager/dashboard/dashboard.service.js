@@ -46,9 +46,9 @@ const getDashboardStats = async (filter = 'week') => {
     { $group: { _id: "$charge_type", total: { $sum: "$amount" } } }
   ]);
   
-  let minibarRevenue = 0, serviceRevenue = 0, otherRevenue = 0;
+  let roomInventoryRevenue = 0, serviceRevenue = 0, otherRevenue = 0;
   chargesAgg.forEach(c => {
-    if (c._id === 'minibar') minibarRevenue += c.total;
+    if (c._id === 'room_inventory') roomInventoryRevenue += c.total;
     else if (c._id === 'service') serviceRevenue += c.total;
     else otherRevenue += c.total;
   });
@@ -177,7 +177,7 @@ const getDashboardStats = async (filter = 'week') => {
       totalRevenue,
       roomRevenue,
       extraRevenue,
-      minibarRevenue,
+      roomInventoryRevenue,
       serviceRevenue,
       otherRevenue,
       newBookings,

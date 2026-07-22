@@ -122,6 +122,7 @@ const AppHeader = () => {
         <Link to="/">Trang chủ</Link>
         <Link to="/listRoom">Danh sách phòng</Link>
         <Link to="/booking">Đặt phòng</Link>
+        <Link to="/policies">Chính sách</Link>
         {isCustomer ? (
           <>
             <Link to="/customer/policies">Chính sách</Link>

@@ -790,7 +790,7 @@
   width: min(920px, 100%);
 }
 
-.minibar-modal-card {
+.room-inventory-modal-card {
   width: min(980px, 100%);
 }
 
@@ -1023,6 +1023,11 @@
   font-weight: 700;
 }
 
+.staff-schedule-meta .staff-schedule-time {
+  color: #2563eb;
+  font-size: 13px;
+}
+
 .staff-schedule-item p {
   color: #475569;
   font-size: 13px;
@@ -1032,6 +1037,12 @@
 
 .staff-schedule-item p.is-muted {
   color: #98a2b3;
+}
+
+.staff-schedule-item p.staff-completion-note {
+  border-top: 1px solid #e2e8f0;
+  color: #15803d;
+  padding-top: 8px;
 }
 
 .staff-day-empty {

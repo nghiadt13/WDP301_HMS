@@ -6,7 +6,7 @@ import CheckoutStepCharges from './CheckoutStepCharges';
 import CheckoutStepBilling from './CheckoutStepBilling';
 
 const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
-  const { data, isLoading, error } = useCheckoutSummary(bookingId);
+  const { data, isLoading, error, refetch, isFetching } = useCheckoutSummary(bookingId);
   const [currentStep, setCurrentStep] = useState(1);
   const [isInspectionConfirmed, setIsInspectionConfirmed] = useState(false);
 
@@ -41,12 +41,13 @@ const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
     );
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1 && !isInspectionConfirmed) {
       return;
     }
 
     if (currentStep < 3) {
+      await refetch();
       setCurrentStep(currentStep + 1);
     }
   };
@@ -134,7 +135,7 @@ const CheckoutWizard = ({ bookingId, onClose, onComplete }) => {
              <button
                 type="button"
                 className="wizard-btn-next"
-               disabled={currentStep === 1 && !isInspectionConfirmed}
+               disabled={isFetching || (currentStep === 1 && !isInspectionConfirmed)}
                title={currentStep === 1 && !isInspectionConfirmed ? 'Housekeeping must confirm inspection before continuing' : undefined}
                 onClick={handleNext}
              >

@@ -10,6 +10,13 @@ import '../styles/housekeeping.css';
 const normalizeStatus = (value) => String(value || '').toLowerCase().replace(/\s+/g, '');
 const isCompletedTask = (task) => ['completed', 'cancelled', 'canceled'].includes(normalizeStatus(task?.status));
 const TASKS_PER_PAGE = 6;
+const isBeforeScheduledStart = (task) => {
+  if (!task?.workDate || !task?.startTime) return false;
+  const [hours, minutes] = task.startTime.split(':').map(Number);
+  const start = new Date(task.workDate);
+  start.setHours(hours, minutes, 0, 0);
+  return !Number.isNaN(start.getTime()) && new Date() < start;
+};
 
 const getStageClass = (status) => {
   const normalized = normalizeStatus(status);
@@ -54,20 +61,6 @@ const formatDateTime = (value) => {
   return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 };
 
-const toChecklistLabel = (key) => {
-  const labels = {
-    bed: 'Bed',
-    bathroom: 'Bathroom',
-    furniture: 'Furniture',
-    amenities: 'Amenities',
-    damage: 'Damage check',
-    lostItem: 'Lost item check',
-    minibar: 'Minibar check',
-    photo: 'Photo evidence',
-  };
-  return labels[key] || key;
-};
-
 const HousekeepingDailyTasksPage = () => {
   const queryClient = useQueryClient();
   const tasksQuery = useQuery({
@@ -81,10 +74,10 @@ const HousekeepingDailyTasksPage = () => {
   const maintenanceQuery = useHousekeepingMaintenance();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [taskTab, setTaskTab] = useState('active');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTaskId, setSelectedTaskId] = useState('');
+  const [completionNote, setCompletionNote] = useState('');
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isIssueSubmitting, setIsIssueSubmitting] = useState(false);
   const [issueForm, setIssueForm] = useState({
@@ -105,7 +98,9 @@ const HousekeepingDailyTasksPage = () => {
       }
       if (action === 'accept') return housekeepingApi.acceptTask(task.id);
       if (action === 'start') return housekeepingApi.startTask(task.id);
-      if (action === 'complete') return housekeepingApi.completeTask(task.id);
+      if (action === 'complete') return housekeepingApi.completeTask(task.id, {
+        completion_note: completionNote.trim(),
+      });
       return null;
     },
     onSuccess: async () => {
@@ -210,13 +205,15 @@ const HousekeepingDailyTasksPage = () => {
   const baseTasks = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     return (tasksQuery.data || []).filter((task) => {
-      const matchKeyword = !keyword || [task.roomNumber, task.cleaningType, task.receptionistNote, task.assignedBy]
+      const matchKeyword = !keyword || [task.roomNumber, task.cleaningType, task.description, task.receptionistNote, task.assignedBy]
         .some((item) => String(item || '').toLowerCase().includes(keyword));
       const matchFilter = filter === 'all' || normalizeStatus(task.status) === filter;
-      const matchPriority = priorityFilter === 'all' || String(task.priority || '').toLowerCase() === priorityFilter;
-      return matchKeyword && matchFilter && matchPriority;
+      return matchKeyword && matchFilter;
+    }).sort((first, second) => {
+      const dateOrder = new Date(first.workDate || first.dueTime) - new Date(second.workDate || second.dueTime);
+      return dateOrder || String(first.startTime || '').localeCompare(String(second.startTime || ''));
     });
-  }, [tasksQuery.data, search, filter, priorityFilter]);
+  }, [tasksQuery.data, search, filter]);
 
   const taskTabCounts = useMemo(() => ({
     active: baseTasks.filter((task) => !isCompletedTask(task)).length,
@@ -261,6 +258,10 @@ const HousekeepingDailyTasksPage = () => {
     }
   }, [paginatedTasks, selectedTaskId]);
 
+  useEffect(() => {
+    setCompletionNote('');
+  }, [selectedTaskId]);
+
   const selectedTask = useMemo(
     () => paginatedTasks.find((task) => task.id === selectedTaskId) || null,
     [paginatedTasks, selectedTaskId]
@@ -272,22 +273,7 @@ const HousekeepingDailyTasksPage = () => {
 
   const selectedRoom = selectedTask ? roomsByNumber[selectedTask.roomNumber] || null : null;
   const selectedTaskHasActiveMaintenance = hasActiveMaintenanceRequest(maintenanceQuery.data, selectedTask?.roomNumber);
-
-  const inspectionQuery = useQuery({
-    queryKey: ['housekeeping-room-inspection', selectedTask?.roomNumber],
-    queryFn: () => housekeepingApi.getInspectionByRoom(selectedTask.roomNumber),
-    enabled: Boolean(selectedTask?.roomNumber),
-    retry: 1,
-    staleTime: 5_000,
-  });
-
-  const checklistEntries = useMemo(() => {
-    const checklist = inspectionQuery.data?.checklist || {};
-    return Object.entries(checklist);
-  }, [inspectionQuery.data?.checklist]);
-
-  const checklistDone = checklistEntries.filter(([, done]) => Boolean(done)).length;
-  const checklistProgress = checklistEntries.length ? Math.round((checklistDone / checklistEntries.length) * 100) : 0;
+  const selectedTaskIsBeforeStart = isBeforeScheduledStart(selectedTask);
 
   const summary = useMemo(() => {
     const all = tasksQuery.data || [];
@@ -364,12 +350,6 @@ const HousekeepingDailyTasksPage = () => {
             <option value="waitingmaintenance">Waiting Maintenance</option>
             <option value="completed">Completed</option>
           </select>
-          <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}>
-            <option value="all">All priorities</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
           <button className="housekeeping-outline-btn" type="button" onClick={() => tasksQuery.refetch()}><RefreshCw size={14} /> Refresh</button>
         </div>
 
@@ -426,11 +406,10 @@ const HousekeepingDailyTasksPage = () => {
                 </div>
                 <div className="housekeeping-task-list-item-meta">
                   <span>{task.cleaningType || 'Daily Task'}</span>
-                  <HousekeepingStatusBadge value={task.priority} variant="priority" />
                 </div>
-                <p>{task.receptionistNote || 'No note provided.'}</p>
+                <p>{task.description || task.receptionistNote || 'No note provided.'}</p>
                 <small>
-                  Checkout: {formatDateTime(task.checkoutTime)} | Due: {formatDateTime(task.dueTime)}
+                  Work date: {formatDateTime(task.workDate || task.dueTime).split(' ')[0]} | {task.startTime || '--:--'} - {task.endTime || '--:--'}
                 </small>
               </button>
             ))}
@@ -499,19 +478,18 @@ const HousekeepingDailyTasksPage = () => {
               </section>
 
               <section className="housekeeping-task-detail-section">
-                <h4>Task information</h4>
+                <h4>Work schedule</h4>
                 <div className="housekeeping-task-kv-grid">
                   <span>Task type</span><b>{selectedTask.cleaningType || 'Daily Task'}</b>
-                  <span>Priority</span><b>{selectedTask.priority || '-'}</b>
                   <span>Assigned by</span><b>{selectedTask.assignedBy || '-'}</b>
-                  <span>Checkout time</span><b>{formatDateTime(selectedTask.checkoutTime)}</b>
-                  <span>Due time</span><b>{formatDateTime(selectedTask.dueTime)}</b>
+                  <span>Work date</span><b>{formatDateTime(selectedTask.workDate || selectedTask.dueTime).split(' ')[0]}</b>
+                  <span>Working time</span><b>{selectedTask.startTime || '--:--'} - {selectedTask.endTime || '--:--'}</b>
                 </div>
               </section>
 
               <section className="housekeeping-task-detail-section">
                 <h4>Notes</h4>
-                <p>{selectedTask.receptionistNote || 'No note provided.'}</p>
+                <p>{selectedTask.description || selectedTask.receptionistNote || 'No note provided.'}</p>
                 {selectedTask.guestRequest ? (
                   <p><strong>Guest request:</strong> {selectedTask.guestRequest}</p>
                 ) : null}
@@ -522,50 +500,26 @@ const HousekeepingDailyTasksPage = () => {
                 <p>{selectedTask.assignedTo || 'Housekeeping Team'}</p>
               </section>
 
-              <section className="housekeeping-task-detail-section">
-                <div className="housekeeping-task-checklist-head">
-                  <h4>Cleaning checklist</h4>
-                  <span>{checklistDone}/{checklistEntries.length} done</span>
-                </div>
-                <div className="housekeeping-task-progress">
-                  <span style={{ width: `${checklistProgress}%` }} />
-                </div>
-                {inspectionQuery.isLoading ? (
-                  <p>Loading checklist...</p>
-                ) : checklistEntries.length ? (
-                  <ul className="housekeeping-task-checklist">
-                    {checklistEntries.map(([key, done]) => (
-                      <li key={key}>
-                        <span>{toChecklistLabel(key)}</span>
-                        <strong>{done ? 'Done' : 'Pending'}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No inspection checklist found for this room yet.</p>
-                )}
-              </section>
+              {normalizeStatus(selectedTask.status) === 'cleaning' ? (
+                <section className="housekeeping-task-detail-section">
+                  <h4>Completion note</h4>
+                  <textarea
+                    className="housekeeping-maintenance-textarea"
+                    maxLength="1000"
+                    onChange={(event) => setCompletionNote(event.target.value)}
+                    placeholder="Optional note for the manager"
+                    rows="3"
+                    value={completionNote}
+                  />
+                </section>
+              ) : null}
 
-              <section className="housekeeping-task-detail-section">
-                <h4>Condition photos</h4>
-                {inspectionQuery.data?.photos?.length ? (
-                  <div className="housekeeping-task-photo-grid">
-                    {inspectionQuery.data.photos.map((photo) => (
-                      <img key={photo} src={photo} alt={`Room ${selectedTask.roomNumber} condition`} />
-                    ))}
-                  </div>
-                ) : (
-                  <p>No condition photos uploaded.</p>
-                )}
-              </section>
-
-              <section className="housekeeping-task-detail-section">
-                <h4>Inspection notes</h4>
-                <p>{inspectionQuery.data?.note || 'No inspection note.'}</p>
-                {inspectionQuery.data?.remarks ? (
-                  <p><strong>Remarks:</strong> {inspectionQuery.data.remarks}</p>
-                ) : null}
-              </section>
+              {selectedTask.completionNote ? (
+                <section className="housekeeping-task-detail-section">
+                  <h4>Completion note</h4>
+                  <p>{selectedTask.completionNote}</p>
+                </section>
+              ) : null}
 
               <section className="housekeeping-task-detail-actions">
                 <button
@@ -580,8 +534,8 @@ const HousekeepingDailyTasksPage = () => {
                 <button
                   className="housekeeping-outline-btn"
                   type="button"
-                  disabled={!isActionAllowed('start', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
-                  title={selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
+                  disabled={selectedTaskIsBeforeStart || !isActionAllowed('start', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
+                  title={selectedTaskIsBeforeStart ? 'This work can only start at its scheduled time' : selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
                   onClick={() => onTaskAction('start', selectedTask)}
                 >
                   Start Cleaning

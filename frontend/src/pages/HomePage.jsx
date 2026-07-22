@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BedDouble, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { BedDouble, ChevronLeft, ChevronRight, ShieldCheck, Users } from 'lucide-react';
 
 import axiosClient from '../api/axiosClient';
 import DateRangePicker from '../components/DateRangePicker.jsx';
@@ -44,6 +44,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [bookingError, setBookingError] = useState('');
+  const [policies, setPolicies] = useState([]);
   const [bookingDates, setBookingDates] = useState({
     checkIn: '',
     checkOut: ''
@@ -61,13 +62,17 @@ const HomePage = () => {
   useEffect(() => {
     const loadHomePage = async () => {
       try {
-        const response = await axiosClient.get('/home');
+        const [response, policyResponse] = await Promise.all([
+          axiosClient.get('/home'),
+          axiosClient.get('/policies').catch(() => ({ data: { data: [] } }))
+        ]);
         setHomeData({
           banners: response.data.banners || [],
           lobby: response.data.lobby || { eyebrow: '', title: '', description: '', images: [] },
           roomIntro: response.data.roomIntro || null,
           rooms: response.data.rooms || []
         });
+        setPolicies(policyResponse.data.data || policyResponse.data.policies || []);
       } catch {
         setErrorMessage('Cannot load homepage content. Please check that the backend is running.');
       } finally {
@@ -131,6 +136,12 @@ const HomePage = () => {
   const goToRoomSlide = (index) => {
     setActiveRoomIndex(normalizeIndex(index, roomTypes.length));
   };
+
+  const policyPreview = useMemo(() => {
+    return [...policies]
+      .sort((first, second) => Number(first.display_order ?? first.displayOrder ?? 0) - Number(second.display_order ?? second.displayOrder ?? 0))
+      .slice(0, 6);
+  }, [policies]);
 
   const handleAvailabilitySubmit = (event) => {
     event.preventDefault();
@@ -437,6 +448,35 @@ const HomePage = () => {
         ) : (
           <div className="home-empty-state">Chưa có dữ liệu phòng trong database.</div>
         )}
+      </section>
+
+      <section className="home-policy-section" id="hotel-policies" aria-label="Chính sách khách sạn">
+        <div className="home-policy-heading">
+          <span>Chính sách Hotelify</span>
+          <h2>Thông tin cần biết trước khi lưu trú</h2>
+          <p>Khách hàng có thể xem nhanh các quy định về đặt phòng, thanh toán, nhận phòng, trả phòng và lưu trú ngay từ trang chủ.</p>
+        </div>
+
+        {policyPreview.length > 0 ? (
+          <div className="home-policy-grid">
+            {policyPreview.map((policy) => (
+              <article className="home-policy-card" key={policy._id || policy.id || policy.title}>
+                <div className="home-policy-icon">
+                  <ShieldCheck size={20} />
+                </div>
+                <span>{policy.category || 'Chính sách'}</span>
+                <h3>{policy.title}</h3>
+                <p>{policy.content}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="home-empty-state">Chưa có chính sách khách sạn đang áp dụng.</div>
+        )}
+
+        <button type="button" className="home-policy-button" onClick={() => navigate('/policies')}>
+          Xem toàn bộ chính sách
+        </button>
       </section>
     </section>
   );

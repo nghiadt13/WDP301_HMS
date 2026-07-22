@@ -63,10 +63,6 @@ const CustomerFeedbackPage = () => {
   const existingFeedback = feedbacks[0];
   const isFeedbackLocked = Boolean(existingFeedback);
   const selectedRoom = feedbackRooms.find((room) => room.reservationId === formData.reservationId);
-  const averageRating = feedbacks.length
-    ? (feedbacks.reduce((total, feedback) => total + Number(feedback.rating || 0), 0) / feedbacks.length).toFixed(1)
-    : '0.0';
-  const hasManagerResponse = feedbacks.some((feedback) => feedback.responseText);
   const canSubmitFeedback = feedbackRooms.length > 0;
 
   const handleAuthError = (error) => {
@@ -177,30 +173,24 @@ const CustomerFeedbackPage = () => {
         <div>
           <span className="customer-chip">Góp ý khách hàng</span>
           <h1>Đánh giá kỳ lưu trú</h1>
-          <p>Sau khi lễ tân hoàn tất check-out, bạn có thể đánh giá đúng phòng vừa lưu trú và theo dõi phản hồi từ quản lý khách sạn.</p>
         </div>
         <div className="customer-feedback-hero-score">
           <span>{renderStars(existingFeedback?.rating || 0)}</span>
-          <strong>{existingFeedback ? `${existingFeedback.rating}/5` : 'Chưa đánh giá'}</strong>
+          {existingFeedback ? (
+            <strong className="customer-feedback-score-value">
+              <b>{existingFeedback.rating}</b>
+              <em>/</em>
+              <b>5</b>
+            </strong>
+          ) : (
+            <strong>Chưa đánh giá</strong>
+          )}
           <small>{existingFeedback ? getRatingLabel(existingFeedback.rating) : 'Hãy gửi góp ý đầu tiên của bạn'}</small>
         </div>
       </div>
 
       {errorMessage ? <div className="customer-alert error">{errorMessage}</div> : null}
       {successMessage ? <div className="customer-alert success">{successMessage}</div> : null}
-
-      <div className="customer-feedback-stats">
-        <div className="feedback-stat-card rating">
-          <span>Điểm đánh giá của tôi</span>
-          <strong>{averageRating}</strong>
-          <small>{existingFeedback ? getRatingLabel(existingFeedback.rating) : 'Chưa có điểm'}</small>
-        </div>
-        <div className="feedback-stat-card response">
-          <span>Phản hồi quản lý</span>
-          <strong>{hasManagerResponse ? 'Có' : 'Chưa'}</strong>
-          <small>Theo dõi câu trả lời sau khi gửi góp ý</small>
-        </div>
-      </div>
 
       <div className="customer-feedback-board enhanced">
         <div className="customer-form-card feedback-compose-card">

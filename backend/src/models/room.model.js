@@ -39,12 +39,12 @@ const roomSchema = new mongoose.Schema(
       enum: ['Pending', 'Completed', 'Skipped'],
       default: 'Pending',
     },
-    minibar: {
+    room_inventory: {
       type: [
         {
           item_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'MinibarItem',
+            ref: 'RoomInventoryItem',
             required: true
           },
           quantity: {

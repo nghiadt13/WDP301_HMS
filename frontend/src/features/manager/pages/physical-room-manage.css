@@ -268,7 +268,7 @@
   border-radius: 10px;
 }
 
-/* ─── Minibar Table Styles ────────────────────────────────────────── */
+/* Room Inventory Table Styles */
 .rm-refresh-btn {
   display: flex;
   align-items: center;
@@ -296,20 +296,20 @@
   to { transform: rotate(360deg); }
 }
 
-.rm-minibar-table-wrap {
+.rm-room-inventory-table-wrap {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.rm-minibar-table {
+.rm-room-inventory-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
 }
 
-.rm-minibar-table th {
+.rm-room-inventory-table th {
   background: #f9fafb;
   padding: 8px 12px;
   font-weight: 600;
@@ -318,17 +318,17 @@
   color: #4b5563;
 }
 
-.rm-minibar-table td {
+.rm-room-inventory-table td {
   padding: 10px 12px;
   border-bottom: 1px solid #f3f4f6;
   vertical-align: middle;
 }
 
-.rm-minibar-table tr:last-child td {
+.rm-room-inventory-table tr:last-child td {
   border-bottom: 0;
 }
 
-.rm-minibar-cat-badge {
+.rm-room-inventory-cat-badge {
   background: #f3f4f6;
   color: #374151;
   padding: 2px 6px;

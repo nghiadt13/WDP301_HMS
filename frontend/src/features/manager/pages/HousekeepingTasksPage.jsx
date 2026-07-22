@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import HousekeepingMinibarPicker from '../components/HousekeepingMinibarPicker.jsx';
+import HousekeepingRoomInventoryPicker from '../components/HousekeepingRoomInventoryPicker.jsx';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
 import { useHousekeepingDashboard, useHousekeepingMaintenance, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
 import { housekeepingApi } from '../services/housekeeping-api.js';
@@ -10,6 +10,17 @@ import '../styles/housekeeping.css';
 
 const normalizeStatus = (value) => String(value || '').toLowerCase().replace(/\s+/g, '');
 const isInspectionReviewTask = (task) => String(task?.cleaningType || '').trim().toLowerCase() === 'inspection review';
+const isManagerScheduleTask = (task) => (
+  String(task?.taskOrigin || '').toLowerCase() === 'manager_schedule'
+  || String(task?.cleaningType || '').trim().toLowerCase() === 'housekeeping schedule'
+);
+const isBeforeScheduledStart = (task) => {
+  if (!isManagerScheduleTask(task) || !task?.workDate || !task?.startTime) return false;
+  const [hours, minutes] = task.startTime.split(':').map(Number);
+  const start = new Date(task.workDate);
+  start.setHours(hours, minutes, 0, 0);
+  return !Number.isNaN(start.getTime()) && new Date() < start;
+};
 const isCompletedTask = (task) => ['completed', 'cancelled', 'canceled'].includes(normalizeStatus(task?.status));
 const TASKS_PER_PAGE = 6;
 
@@ -64,7 +75,7 @@ const toChecklistLabel = (key) => {
     amenities: 'Amenities',
     damage: 'Damage check',
     lostItem: 'Lost item check',
-    minibar: 'Minibar check',
+    room_inventory: 'Kiểm tra vật tư phòng',
     photo: 'Photo evidence',
   };
   return labels[key] || key;
@@ -75,9 +86,9 @@ const HousekeepingTasksPage = () => {
   const { data, isLoading, isError, refetch } = useHousekeepingTasks();
   const dashboardQuery = useHousekeepingDashboard();
   const maintenanceQuery = useHousekeepingMaintenance();
-  const minibarCatalogQuery = useQuery({
-    queryKey: ['housekeeping-minibar-catalog'],
-    queryFn: () => housekeepingApi.getMinibarItems({ is_active: 'true' }),
+  const roomInventoryCatalogQuery = useQuery({
+    queryKey: ['housekeeping-room-inventory-catalog'],
+    queryFn: () => housekeepingApi.getRoomInventoryItems({ is_active: 'true' }),
     retry: 1,
     staleTime: 60_000,
   });
@@ -87,9 +98,10 @@ const HousekeepingTasksPage = () => {
   const [taskTab, setTaskTab] = useState('active');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTaskId, setSelectedTaskId] = useState('');
+  const [completionNote, setCompletionNote] = useState('');
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isIssueSubmitting, setIsIssueSubmitting] = useState(false);
-  const [minibarSelection, setMinibarSelection] = useState([]);
+  const [roomInventorySelection, setRoomInventorySelection] = useState([]);
   const [issueForm, setIssueForm] = useState({
     task_id: '',
     room_number: '',
@@ -108,7 +120,9 @@ const HousekeepingTasksPage = () => {
       }
       if (action === 'accept') return housekeepingApi.acceptTask(task.id);
       if (action === 'start') return housekeepingApi.startTask(task.id);
-      if (action === 'complete') return housekeepingApi.completeTask(task.id);
+      if (action === 'complete') return housekeepingApi.completeTask(task.id, {
+        completion_note: isManagerScheduleTask(task) ? completionNote.trim() : '',
+      });
       return null;
     },
     onSuccess: async () => {
@@ -126,24 +140,38 @@ const HousekeepingTasksPage = () => {
   });
 
   const handoverMutation = useMutation({
-    mutationFn: async ({ task, inspection, roomStatus }) => housekeepingApi.createInspection({
-      task_id: task.id,
-      room_number: task.roomNumber,
-      room: task.roomNumber,
-      checklist: inspection?.checklist || {},
-      damage: inspection?.damage || [],
-      lostItem: inspection?.lostItem || [],
-      minibar: inspection?.minibar || [],
-      photos: inspection?.photos || [],
-      note: inspection?.note || `Room ${task.roomNumber} is ready for receptionist checkout review.`,
-      remarks: inspection?.remarks || 'Ready for checkout',
-      minibar_used: inspection?.minibarUsed || false,
-      missing_items: inspection?.missingItems || [],
-      damaged_items: inspection?.damagedItems || [],
-      maintenance_required: inspection?.maintenanceRequired || false,
-      room_status_before: roomStatus || '',
-      room_status_after: 'Dirty',
-    }),
+    mutationFn: async ({ task, inspection, roomStatus }) => {
+      const selectedRoomInventory = Array.isArray(inspection?.room_inventory)
+        ? inspection.room_inventory
+        : Array.isArray(inspection?.roomInventory)
+          ? inspection.roomInventory
+          : [];
+      const selectedMissingItems = Array.isArray(inspection?.missing_items)
+        ? inspection.missing_items
+        : inspection?.missingItems || [];
+      const selectedDamagedItems = Array.isArray(inspection?.damaged_items)
+        ? inspection.damaged_items
+        : inspection?.damagedItems || [];
+
+      return housekeepingApi.createInspection({
+        task_id: task.id,
+        room_number: task.roomNumber,
+        room: task.roomNumber,
+        checklist: inspection?.checklist || {},
+        damage: inspection?.damage || [],
+        lostItem: inspection?.lostItem || [],
+        room_inventory: selectedRoomInventory,
+        photos: inspection?.photos || [],
+        note: inspection?.note || `Room ${task.roomNumber} is ready for receptionist checkout review.`,
+        remarks: inspection?.remarks || 'Ready for checkout',
+        room_inventory_used: Boolean(inspection?.room_inventory_used ?? inspection?.roomInventoryUsed ?? selectedRoomInventory.length > 0),
+        missing_items: selectedMissingItems,
+        damaged_items: selectedDamagedItems,
+        maintenance_required: Boolean(inspection?.maintenance_required ?? inspection?.maintenanceRequired ?? false),
+        room_status_before: roomStatus || '',
+        room_status_after: 'Dirty',
+      });
+    },
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
@@ -297,6 +325,10 @@ const HousekeepingTasksPage = () => {
     }
   }, [paginatedTasks, selectedTaskId]);
 
+  useEffect(() => {
+    setCompletionNote('');
+  }, [selectedTaskId]);
+
   const selectedTask = useMemo(
     () => paginatedTasks.find((task) => task.id === selectedTaskId) || null,
     [paginatedTasks, selectedTaskId]
@@ -306,8 +338,8 @@ const HousekeepingTasksPage = () => {
     return Object.fromEntries((dashboardQuery.data?.rooms || []).map((room) => [room.roomNumber, room]));
   }, [dashboardQuery.data?.rooms]);
 
-  const minibarItems = useMemo(() => {
-    const payload = minibarCatalogQuery.data;
+  const roomInventoryItems = useMemo(() => {
+    const payload = roomInventoryCatalogQuery.data;
     const rows = Array.isArray(payload)
       ? payload
       : Array.isArray(payload?.data)
@@ -317,22 +349,28 @@ const HousekeepingTasksPage = () => {
     return rows
       .map((entry) => ({
         _id: entry?._id || entry?.id || null,
-        name: entry?.name || entry?.item_name || 'Minibar item',
+        name: entry?.name || entry?.item_name || 'Room inventory item',
         category: entry?.category || '-',
         price: Number(entry?.price ?? entry?.unit_price ?? 0),
         availableQty: Number(entry?.quantity ?? entry?.stock_quantity ?? 0),
       }))
       .filter((entry) => entry._id);
-  }, [minibarCatalogQuery.data]);
+  }, [roomInventoryCatalogQuery.data]);
 
   const selectedRoom = selectedTask ? roomsByNumber[selectedTask.roomNumber] || null : null;
   const selectedTaskHasActiveMaintenance = hasActiveMaintenanceRequest(maintenanceQuery.data, selectedTask?.roomNumber);
   const selectedTaskIsInspectionReview = isInspectionReviewTask(selectedTask);
+  const selectedTaskIsManagerSchedule = isManagerScheduleTask(selectedTask);
+  const selectedTaskIsBeforeStart = isBeforeScheduledStart(selectedTask);
+  const selectedRoomInventoryItems = useMemo(() => {
+    if (!selectedTaskIsInspectionReview) return roomInventoryItems;
+    return roomInventoryItems.filter((entry) => entry.availableQty > 0);
+  }, [roomInventoryItems, selectedTaskIsInspectionReview]);
 
   const inspectionQuery = useQuery({
     queryKey: ['housekeeping-room-inspection', selectedTask?.roomNumber],
     queryFn: () => housekeepingApi.getInspectionByRoom(selectedTask.roomNumber),
-    enabled: Boolean(selectedTask?.roomNumber),
+    enabled: Boolean(selectedTask?.roomNumber) && !selectedTaskIsManagerSchedule,
     retry: 1,
     staleTime: 5_000,
   });
@@ -347,36 +385,35 @@ const HousekeepingTasksPage = () => {
 
   useEffect(() => {
     if (!selectedTaskIsInspectionReview) {
-      setMinibarSelection([]);
+      setRoomInventorySelection([]);
       return;
     }
 
-    const existingSelection = Array.isArray(inspectionQuery.data?.minibar) ? inspectionQuery.data.minibar : [];
+    const existingSelection = Array.isArray(inspectionQuery.data?.room_inventory)
+      ? inspectionQuery.data.room_inventory
+      : [];
 
-    if (!existingSelection.length) {
-      setMinibarSelection([]);
-      return;
-    }
+    if (!existingSelection.length) return;
 
     const nextSelection = existingSelection
       .map((entry) => {
         const entryId = String(entry.item_id || entry.itemId || '').trim();
         const entryName = String(entry.item || entry.name || '').trim().toLowerCase();
-        const matchedItem = minibarItems.find((item) => String(item._id) === entryId)
-          || minibarItems.find((item) => String(item.name || '').trim().toLowerCase() === entryName)
+        const matchedItem = selectedRoomInventoryItems.find((item) => String(item._id) === entryId)
+          || selectedRoomInventoryItems.find((item) => String(item.name || '').trim().toLowerCase() === entryName)
           || null;
 
         return {
           item_id: matchedItem?._id || entry.item_id || entry.itemId || null,
-          item: matchedItem?.name || entry.item || entry.name || 'Minibar item',
-          qty: Number(entry.qty || entry.quantity || 1),
+          item: matchedItem?.name || entry.item || entry.name || 'Room inventory item',
+          qty: Math.min(Number(matchedItem?.availableQty ?? entry.qty ?? entry.quantity ?? 1), Number(entry.qty || entry.quantity || 1)),
           price: Number(matchedItem?.price ?? entry.price ?? 0),
         };
       })
-      .filter((entry) => entry.item_id);
+      .filter((entry) => entry.item_id && Number(entry.qty || 0) > 0);
 
-    setMinibarSelection(nextSelection);
-  }, [inspectionQuery.data?.minibar, minibarItems, selectedTaskIsInspectionReview]);
+    setRoomInventorySelection(nextSelection);
+  }, [inspectionQuery.data?.room_inventory, selectedRoomInventoryItems, selectedTaskIsInspectionReview]);
 
   const summary = useMemo(() => {
     const all = data || [];
@@ -409,8 +446,8 @@ const HousekeepingTasksPage = () => {
       task: selectedTask,
       inspection: {
         ...inspectionQuery.data,
-        minibar: minibarSelection,
-        minibar_used: minibarSelection.length > 0,
+        room_inventory: roomInventorySelection,
+        room_inventory_used: roomInventorySelection.length > 0,
       },
       roomStatus: selectedRoom?.status || '',
     });
@@ -445,7 +482,7 @@ const HousekeepingTasksPage = () => {
       <div className="housekeeping-page-header">
         <div>
           <h2>Cleaning Tasks</h2>
-          <p>Receptionist-assigned rooms from MongoDB with real-time housekeeping progress.</p>
+          <p>Rooms assigned by the receptionist or manager with real-time housekeeping progress.</p>
         </div>
         <div className="housekeeping-task-actions">
           <button className="housekeeping-outline-btn" type="button" onClick={() => refetch()}><RefreshCw size={14} /> Refresh</button>
@@ -529,11 +566,13 @@ const HousekeepingTasksPage = () => {
                 </div>
                 <div className="housekeeping-task-list-item-meta">
                   <span>{task.cleaningType || 'Checkout Cleaning'}</span>
-                  <HousekeepingStatusBadge value={task.priority} variant="priority" />
+                  {!isManagerScheduleTask(task) ? <HousekeepingStatusBadge value={task.priority} variant="priority" /> : null}
                 </div>
-                <p>{task.receptionistNote || 'No receptionist note provided.'}</p>
+                <p>{task.description || task.receptionistNote || 'No task note provided.'}</p>
                 <small>
-                  Checkout: {formatDateTime(task.checkoutTime)} | Due: {formatDateTime(task.dueTime)}
+                  {isManagerScheduleTask(task)
+                    ? `Schedule: ${formatDateTime(task.workDate || task.dueTime).split(' ')[0]} | ${task.startTime} - ${task.endTime}`
+                    : `Checkout: ${formatDateTime(task.checkoutTime)} | Due: ${formatDateTime(task.dueTime)}`}
                 </small>
               </button>
             ))}
@@ -602,19 +641,28 @@ const HousekeepingTasksPage = () => {
               </section>
 
               <section className="housekeeping-task-detail-section">
-                <h4>Task information</h4>
+                <h4>{selectedTaskIsManagerSchedule ? 'Work schedule' : 'Task information'}</h4>
                 <div className="housekeeping-task-kv-grid">
                   <span>Task type</span><b>{selectedTask.cleaningType || 'Checkout Cleaning'}</b>
-                  <span>Priority</span><b>{selectedTask.priority || '-'}</b>
                   <span>Assigned by</span><b>{selectedTask.assignedBy || '-'}</b>
-                  <span>Checkout time</span><b>{formatDateTime(selectedTask.checkoutTime)}</b>
-                  <span>Due time</span><b>{formatDateTime(selectedTask.dueTime)}</b>
+                  {selectedTaskIsManagerSchedule ? (
+                    <>
+                      <span>Work date</span><b>{formatDateTime(selectedTask.workDate || selectedTask.dueTime).split(' ')[0]}</b>
+                      <span>Working time</span><b>{selectedTask.startTime} - {selectedTask.endTime}</b>
+                    </>
+                  ) : (
+                    <>
+                      <span>Priority</span><b>{selectedTask.priority || '-'}</b>
+                      <span>Checkout time</span><b>{formatDateTime(selectedTask.checkoutTime)}</b>
+                      <span>Due time</span><b>{formatDateTime(selectedTask.dueTime)}</b>
+                    </>
+                  )}
                 </div>
               </section>
 
               <section className="housekeeping-task-detail-section">
-                <h4>Receptionist notes</h4>
-                <p>{selectedTask.receptionistNote || 'No receptionist note provided.'}</p>
+                <h4>{selectedTaskIsManagerSchedule ? 'Work notes' : 'Receptionist notes'}</h4>
+                <p>{selectedTask.description || selectedTask.receptionistNote || 'No note provided.'}</p>
                 {selectedTask.guestRequest ? (
                   <p><strong>Guest request:</strong> {selectedTask.guestRequest}</p>
                 ) : null}
@@ -625,7 +673,28 @@ const HousekeepingTasksPage = () => {
                 <p>{selectedTask.assignedTo || 'Housekeeping Team'}</p>
               </section>
 
-              <section className="housekeeping-task-detail-section">
+              {selectedTaskIsManagerSchedule && normalizeStatus(selectedTask.status) === 'cleaning' ? (
+                <section className="housekeeping-task-detail-section">
+                  <h4>Completion note</h4>
+                  <textarea
+                    className="housekeeping-maintenance-textarea"
+                    maxLength="1000"
+                    onChange={(event) => setCompletionNote(event.target.value)}
+                    placeholder="Optional note for the manager"
+                    rows="3"
+                    value={completionNote}
+                  />
+                </section>
+              ) : null}
+
+              {selectedTaskIsManagerSchedule && selectedTask.completionNote ? (
+                <section className="housekeeping-task-detail-section">
+                  <h4>Completion note</h4>
+                  <p>{selectedTask.completionNote}</p>
+                </section>
+              ) : null}
+
+              {!selectedTaskIsManagerSchedule ? <><section className="housekeeping-task-detail-section">
                 <div className="housekeeping-task-checklist-head">
                   <h4>Cleaning checklist</h4>
                   <span>{checklistDone}/{checklistEntries.length} done</span>
@@ -668,17 +737,17 @@ const HousekeepingTasksPage = () => {
                 {inspectionQuery.data?.remarks ? (
                   <p><strong>Remarks:</strong> {inspectionQuery.data.remarks}</p>
                 ) : null}
-              </section>
+              </section></> : null}
 
               {selectedTaskIsInspectionReview ? (
-                <HousekeepingMinibarPicker
-                  items={minibarItems}
-                  value={minibarSelection}
-                  onChange={setMinibarSelection}
-                  disabled={handoverMutation.isPending || minibarCatalogQuery.isLoading}
-                  isLoading={minibarCatalogQuery.isLoading || minibarCatalogQuery.isFetching}
-                  loadError={minibarCatalogQuery.isError ? getMutationErrorMessage(minibarCatalogQuery.error) : ''}
-                  onRetry={() => minibarCatalogQuery.refetch()}
+                <HousekeepingRoomInventoryPicker
+                  items={selectedRoomInventoryItems}
+                  value={roomInventorySelection}
+                  onChange={setRoomInventorySelection}
+                  disabled={handoverMutation.isPending || roomInventoryCatalogQuery.isLoading}
+                  isLoading={roomInventoryCatalogQuery.isLoading || roomInventoryCatalogQuery.isFetching}
+                  loadError={roomInventoryCatalogQuery.isError ? getMutationErrorMessage(roomInventoryCatalogQuery.error) : ''}
+                  onRetry={() => roomInventoryCatalogQuery.refetch()}
                 />
               ) : null}
 
@@ -699,26 +768,30 @@ const HousekeepingTasksPage = () => {
                     disabled={normalizeStatus(selectedTask.status) !== 'accepted' || handoverMutation.isPending}
                     onClick={onReadyForCheckout}
                   >
-                    {handoverMutation.isPending ? 'Handing Over...' : 'Ready for Checkout'}
+                    {handoverMutation.isPending ? 'Completing...' : 'Complete Cleaning'}
                   </button>
                 ) : null}
-                <button
-                  className="housekeeping-outline-btn"
-                  type="button"
-                  disabled={selectedTaskIsInspectionReview || !isActionAllowed('start', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
-                  title={selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
-                  onClick={() => onTaskAction('start', selectedTask)}
-                >
-                  Start Cleaning
-                </button>
-                <button
-                  className="housekeeping-btn"
-                  type="button"
-                  disabled={selectedTaskIsInspectionReview || !isActionAllowed('complete', selectedTask.status) || taskActionMutation.isPending}
-                  onClick={() => onTaskAction('complete', selectedTask)}
-                >
-                  Complete Cleaning
-                </button>
+                {!selectedTaskIsInspectionReview ? (
+                  <>
+                    <button
+                      className="housekeeping-outline-btn"
+                      type="button"
+                      disabled={selectedTaskIsBeforeStart || !isActionAllowed('start', selectedTask.status) || selectedTaskHasActiveMaintenance || taskActionMutation.isPending}
+                      title={selectedTaskIsBeforeStart ? 'This work can only start at its scheduled time' : selectedTaskHasActiveMaintenance ? 'Maintenance is still in progress for this room' : undefined}
+                      onClick={() => onTaskAction('start', selectedTask)}
+                    >
+                      Start Cleaning
+                    </button>
+                    <button
+                      className="housekeeping-btn"
+                      type="button"
+                      disabled={!isActionAllowed('complete', selectedTask.status) || taskActionMutation.isPending}
+                      onClick={() => onTaskAction('complete', selectedTask)}
+                    >
+                      Complete Cleaning
+                    </button>
+                  </>
+                ) : null}
                 <button
                   className="housekeeping-outline-btn"
                   type="button"
@@ -731,11 +804,6 @@ const HousekeepingTasksPage = () => {
               {selectedTaskHasActiveMaintenance ? (
                 <p className="housekeeping-task-warning">
                   This room already has an active maintenance request, so cleaning cannot be accepted or started yet.
-                </p>
-              ) : null}
-              {selectedTaskIsInspectionReview ? (
-                <p className="housekeeping-task-warning">
-                  Accept the inspection task, then use Ready for Checkout to hand the room back to receptionist with minibar consumption recorded in the inspection result.
                 </p>
               ) : null}
             </div>

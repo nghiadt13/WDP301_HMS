@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/rooms', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getRooms);
-router.get('/minibar-items', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getMinibarItems);
+router.get('/room-inventory-items', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getRoomInventoryItems);
 router.get('/dashboard', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getDashboard);
 router.post('/checkout/confirm', authorize('manager', 'receptionist'), housekeepingController.confirmCheckout);
 router.get('/tasks', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getTasks);

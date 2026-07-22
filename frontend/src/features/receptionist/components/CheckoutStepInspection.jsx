@@ -4,7 +4,7 @@ import { ClipboardCheck, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const CheckoutStepInspection = ({ bookingId, summary, onValidationChange }) => {
-  const { data: inspectionData, isLoading: isLoadingResults } = useInspectionResults(bookingId);
+  const { data: inspectionData, isLoading: isLoadingResults, isFetching: isFetchingResults } = useInspectionResults(bookingId);
   const { mutateAsync: requestInspectionAsync, mutate: requestInspection, isPending } = useCreateInspection(bookingId);
   const [isRequestingAll, setIsRequestingAll] = useState(false);
 
@@ -12,7 +12,7 @@ const CheckoutStepInspection = ({ bookingId, summary, onValidationChange }) => {
   const inspectionState = inspectionData?.data || {};
   const tasks = inspectionState.tasks || [];
   const pendingRooms = inspectionState.pendingRooms || [];
-  const allRoomsConfirmed = Boolean(inspectionState.allRoomsConfirmed);
+  const allRoomsConfirmed = !isLoadingResults && !isFetchingResults && Boolean(inspectionState.allRoomsConfirmed);
 
   useEffect(() => {
     onValidationChange?.(allRoomsConfirmed);
@@ -30,6 +30,7 @@ const CheckoutStepInspection = ({ bookingId, summary, onValidationChange }) => {
       description: `Yêu cầu kiểm tra phòng ${selectedRoom} ngay cho khách trả phòng.`
     }, {
       onSuccess: () => {
+        onValidationChange?.(false);
         toast.success(`Đã gửi yêu cầu kiểm tra phòng ${selectedRoom}`);
       },
       onError: (err) => {
@@ -57,6 +58,7 @@ const CheckoutStepInspection = ({ bookingId, summary, onValidationChange }) => {
           description: `Yêu cầu kiểm tra phòng ${room.roomName} ngay cho khách trả phòng.`
         })
       ));
+      onValidationChange?.(false);
       toast.success(`Đã gửi yêu cầu kiểm tra cho ${roomsToRequest.length} phòng.`);
     } catch (err) {
       toast.error('Có lỗi xảy ra khi gửi yêu cầu kiểm tra.');
@@ -75,7 +77,7 @@ const CheckoutStepInspection = ({ bookingId, summary, onValidationChange }) => {
           Yêu cầu & Kết quả kiểm tra
         </h3>
         <p style={{ color: '#64748b', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-          Trước khi khách trả phòng, vui lòng gửi yêu cầu để bộ phận Buồng phòng tiến hành kiểm tra tài sản và minibar.
+          Trước khi khách trả phòng, vui lòng gửi yêu cầu để bộ phận Buồng phòng tiến hành kiểm tra tài sản và vật tư phòng.
         </p>
       </div>
 

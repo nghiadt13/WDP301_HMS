@@ -8,7 +8,10 @@ export const useCheckoutSummary = (bookingId) => {
       const { data } = await axiosClient.get(`/receptionist/checkout/${bookingId}/summary`);
       return data;
     },
-    enabled: !!bookingId
+    enabled: !!bookingId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true
   });
 };
 
@@ -20,6 +23,7 @@ export const useCreateInspection = (bookingId) => {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checkoutSummary', bookingId] });
       queryClient.invalidateQueries({ queryKey: ['inspectionResults', bookingId] });
     }
   });
@@ -32,7 +36,11 @@ export const useInspectionResults = (bookingId) => {
       const { data } = await axiosClient.get(`/receptionist/checkout/${bookingId}/inspection`);
       return data;
     },
-    enabled: !!bookingId
+    enabled: !!bookingId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchInterval: (query) => (query.state.data?.data?.allRoomsConfirmed ? false : 5000),
+    refetchOnWindowFocus: true
   });
 };
 
@@ -45,6 +53,9 @@ export const useAddCharge = (bookingId) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checkoutSummary', bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['receptionist-booking', bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] });
     }
   });
 };
@@ -58,6 +69,9 @@ export const useRemoveCharge = (bookingId) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checkoutSummary', bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['receptionist-booking', bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] });
     }
   });
 };

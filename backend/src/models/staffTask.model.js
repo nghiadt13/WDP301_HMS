@@ -6,11 +6,13 @@ const staffTaskSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Task title is required'],
       trim: true,
+      maxlength: [120, 'Task title cannot exceed 120 characters'],
     },
     description: {
       type: String,
       trim: true,
       default: '',
+      maxlength: [1000, 'Task description cannot exceed 1000 characters'],
     },
     staff_type: {
       type: String,
@@ -31,6 +33,11 @@ const staffTaskSchema = new mongoose.Schema(
       trim: true,
       required: [true, 'Room number is required'],
     },
+    booking_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Booking',
+      default: null,
+    },
     room_type: {
       type: String,
       trim: true,
@@ -50,6 +57,33 @@ const staffTaskSchema = new mongoose.Schema(
       type: Date,
       required: [true, 'Deadline is required'],
     },
+    work_date: {
+      type: Date,
+      default: null,
+    },
+    start_time: {
+      type: String,
+      trim: true,
+      default: '',
+      match: [/^([01]\d|2[0-3]):[0-5]\d$/, 'Start time must use HH:mm format'],
+    },
+    end_time: {
+      type: String,
+      trim: true,
+      default: '',
+      match: [/^([01]\d|2[0-3]):[0-5]\d$/, 'End time must use HH:mm format'],
+    },
+    duration_minutes: {
+      type: Number,
+      min: 1,
+      max: 480,
+      default: null,
+    },
+    task_origin: {
+      type: String,
+      enum: ['manager_schedule', 'checkout', 'inspection', 'maintenance', 'other'],
+      default: 'other',
+    },
     assignedBy: {
       type: String,
       trim: true,
@@ -66,6 +100,12 @@ const staffTaskSchema = new mongoose.Schema(
     completedAt: {
       type: Date,
       default: null,
+    },
+    completion_note: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Completion note cannot exceed 1000 characters'],
+      default: '',
     },
     cleaningType: {
       type: String,
@@ -95,5 +135,8 @@ const staffTaskSchema = new mongoose.Schema(
 
 staffTaskSchema.index({ staff_type: 1, status: 1 });
 staffTaskSchema.index({ deadline: 1 });
+staffTaskSchema.index({ assigned_staff_id: 1, work_date: 1 });
+staffTaskSchema.index({ room_number: 1, work_date: 1 });
+staffTaskSchema.index({ booking_id: 1, cleaningType: 1 });
 
 module.exports = mongoose.model('StaffTask', staffTaskSchema);

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { BedDouble, Plus, Search, Trash2, Pencil, Users, User, ArrowRight, Layers, SlidersHorizontal, Check, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useRooms, useDeleteRoom, useRoomTypes, useUpdateRoom } from '../hooks/use-rooms';
-import { managerApi } from '../services/manager-api';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import './room-manage.css';
 import './physical-room-manage.css';
@@ -46,7 +45,7 @@ const PhysicalRoomManagePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [updatingMinibarId, setUpdatingMinibarId] = useState(null);
+  const [updatingInventoryItemId, setUpdatingInventoryItemId] = useState(null);
 
   // Delete modal state
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -87,7 +86,12 @@ const PhysicalRoomManagePage = () => {
     });
   };
 
-  const getMinibarItemId = (itemId) => {
+  const getRoomInventory = (room) => {
+    if (Array.isArray(room?.room_inventory)) return room.room_inventory;
+    return [];
+  };
+
+  const getRoomInventoryItemId = (itemId) => {
     if (!itemId) return '';
     if (typeof itemId === 'object') return itemId._id || itemId.id || '';
     return String(itemId);
@@ -103,8 +107,8 @@ const PhysicalRoomManagePage = () => {
       isActive: targetRoom.isActive,
       status: newStatus,
       currentGuest: newStatus !== 'Occupied' ? '' : targetRoom.currentGuest,
-      minibar: (targetRoom.minibar || []).map(m => ({
-        item_id: getMinibarItemId(m.item_id),
+      room_inventory: getRoomInventory(targetRoom).map(m => ({
+        item_id: getRoomInventoryItemId(m.item_id),
         quantity: m.quantity || 0
       }))
     };
@@ -129,8 +133,8 @@ const PhysicalRoomManagePage = () => {
       isActive: targetRoom.isActive,
       status: targetRoom.status,
       currentGuest: name,
-      minibar: (targetRoom.minibar || []).map(m => ({
-        item_id: getMinibarItemId(m.item_id),
+      room_inventory: getRoomInventory(targetRoom).map(m => ({
+        item_id: getRoomInventoryItemId(m.item_id),
         quantity: m.quantity || 0
       }))
     };
@@ -145,13 +149,13 @@ const PhysicalRoomManagePage = () => {
     });
   };
 
-  const handleMinibarQtyChange = (item, newQty) => {
+  const handleRoomInventoryQtyChange = (item, newQty) => {
     if (newQty < 0) return;
-    setUpdatingMinibarId(item._id);
+    setUpdatingInventoryItemId(item._id);
     try {
-      const updatedMinibar = (selectedRoom.minibar || []).map(m => {
-        const mId = getMinibarItemId(m.item_id);
-        const targetId = getMinibarItemId(item);
+      const updatedRoomInventory = getRoomInventory(selectedRoom).map(m => {
+        const mId = getRoomInventoryItemId(m.item_id);
+        const targetId = getRoomInventoryItemId(item);
         if (mId && targetId && mId === targetId) {
           return { item_id: mId, quantity: newQty };
         }
@@ -165,7 +169,7 @@ const PhysicalRoomManagePage = () => {
         isActive: selectedRoom.isActive,
         status: selectedRoom.status,
         currentGuest: selectedRoom.currentGuest,
-        minibar: updatedMinibar
+        room_inventory: updatedRoomInventory
       };
 
       updateRoomMutation.mutate({ id: selectedRoom._id, data: payload }, {
@@ -177,12 +181,12 @@ const PhysicalRoomManagePage = () => {
           toast.error(msg);
         },
         onSettled: () => {
-          setUpdatingMinibarId(null);
+          setUpdatingInventoryItemId(null);
         }
       });
     } catch (err) {
-      console.error('Error updating room minibar item quantity:', err);
-      setUpdatingMinibarId(null);
+      console.error('Error updating room inventory item quantity:', err);
+      setUpdatingInventoryItemId(null);
     }
   };
 
@@ -202,6 +206,8 @@ const PhysicalRoomManagePage = () => {
       </div>
     );
   }
+
+  const selectedRoomInventory = getRoomInventory(selectedRoom);
 
   return (
     <>
@@ -296,7 +302,7 @@ const PhysicalRoomManagePage = () => {
           </div>
         </div>
 
-        {/* Right: Room Detail & Minibar Management */}
+        {/* Right: Room Detail & Inventory Management */}
         <div className="rm-detail-panel">
           {selectedRoom ? (
             <div className="rm-detail">
@@ -367,20 +373,20 @@ const PhysicalRoomManagePage = () => {
                 )}
               </div>
 
-              {/* Minibar Stock Section */}
+              {/* Room Inventory Stock Section */}
               <div className="rm-detail-section">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <h3 style={{ margin: 0 }}>Kho đồ dùng Minibar trong phòng</h3>
+                  <h3 style={{ margin: 0 }}>Kho vật tư phòng</h3>
                   <button type="button" onClick={refetchRooms} className="rm-refresh-btn">
                     <RefreshCw size={12} /> Làm mới
                   </button>
                 </div>
                 
-                {!selectedRoom.minibar || selectedRoom.minibar.length === 0 ? (
-                  <p style={{ color: '#6b7280', fontStyle: 'italic', fontSize: '13px' }}>Chưa cấu hình đồ dùng minibar nào.</p>
+                {selectedRoomInventory.length === 0 ? (
+                  <p style={{ color: '#6b7280', fontStyle: 'italic', fontSize: '13px' }}>Chưa cấu hình vật tư phòng nào.</p>
                 ) : (
-                  <div className="rm-minibar-table-wrap">
-                    <table className="rm-minibar-table">
+                  <div className="rm-room-inventory-table-wrap">
+                    <table className="rm-room-inventory-table">
                       <thead>
                         <tr>
                           <th>Vật phẩm</th>
@@ -390,10 +396,10 @@ const PhysicalRoomManagePage = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedRoom.minibar.map((entry) => {
+                        {selectedRoomInventory.map((entry) => {
                           const item = entry.item_id;
                           if (!item) return null;
-                          const isUpdating = updatingMinibarId === item._id;
+                          const isUpdating = updatingInventoryItemId === item._id;
                           const qty = entry.quantity || 0;
                           return (
                             <tr key={item._id}>
@@ -401,13 +407,13 @@ const PhysicalRoomManagePage = () => {
                                 <strong style={{ color: '#1f2937' }}>{item.name}</strong>
                                 {item.description && <span style={{ display: 'block', fontSize: '11px', color: '#6b7280', fontWeight: '400' }}>{item.description}</span>}
                               </td>
-                              <td><span className="rm-minibar-cat-badge">{item.category}</span></td>
+                              <td><span className="rm-room-inventory-cat-badge">{item.category}</span></td>
                               <td><span style={{ fontWeight: '600', color: '#0f172a' }}>{fmtPrice(item.price)}đ</span></td>
                               <td>
                                 <div className="rm-qty-editor">
                                   <button
                                     type="button"
-                                    onClick={() => handleMinibarQtyChange(item, qty - 1)}
+                                    onClick={() => handleRoomInventoryQtyChange(item, qty - 1)}
                                     disabled={isUpdating || qty <= 0}
                                     className="rm-qty-btn"
                                   >
@@ -418,7 +424,7 @@ const PhysicalRoomManagePage = () => {
                                   </span>
                                   <button
                                     type="button"
-                                    onClick={() => handleMinibarQtyChange(item, qty + 1)}
+                                    onClick={() => handleRoomInventoryQtyChange(item, qty + 1)}
                                     disabled={isUpdating}
                                     className="rm-qty-btn"
                                   >
@@ -441,7 +447,7 @@ const PhysicalRoomManagePage = () => {
               </div>
             </div>
           ) : (
-            <div className="rm-detail-empty">Chọn một phòng để xem chi tiết & cập nhật minibar</div>
+            <div className="rm-detail-empty">Chọn một phòng để xem chi tiết & cập nhật vật tư phòng</div>
           )}
         </div>
       </div>

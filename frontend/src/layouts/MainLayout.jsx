@@ -6,7 +6,7 @@ const MainLayout = () => {
   const location = useLocation();
   const hiddenPrefixes = ['/login', '/register', '/forgot-password', '/reset-password', '/manager', '/receptionist', '/admin'];
   const shouldShowHeader = !hiddenPrefixes.some((prefix) => location.pathname.startsWith(prefix));
-  const footerHiddenPrefixes = ['/login', '/register', '/manager', '/receptionist', '/admin'];
+  const footerHiddenPrefixes = ['/login', '/register', '/manager', '/receptionist', '/admin', '/customer'];
   const shouldShowFooter = !footerHiddenPrefixes.some((prefix) => location.pathname.startsWith(prefix));
 
   return (

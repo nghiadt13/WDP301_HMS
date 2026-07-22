@@ -1,13 +1,13 @@
 const Room = require('../../../models/room.model');
 require('../../../models/room-type.model');
-const MinibarItem = require('../../../models/minibarItem.model');
+const RoomInventoryItem = require('../../../models/roomInventoryItem.model');
 const fs = require('fs');
 const path = require('path');
 
 // ========== Constants ==========
 const POPULATE_OPTS = [
   { path: 'room_type_id', select: 'name description bed_type capacity base_price images features facilities' },
-  { path: 'minibar.item_id', select: 'name category price stock_status description is_active' }
+  { path: 'room_inventory.item_id', select: 'name category price stock_status description is_active' }
 ];
 
 const BOOKING_ROOM_ORDER = [
@@ -44,26 +44,35 @@ const sortManagerRooms = (rooms) => {
   });
 };
 
-const fillRoomMinibarData = (room, activeMinibarItems) => {
-  if (!room) return room;
-  const minibarMap = new Map();
-  
-  if (room.minibar && Array.isArray(room.minibar)) {
-    room.minibar.forEach(entry => {
-      const idStr = entry.item_id?._id?.toString() || entry.item_id?.toString();
-      if (idStr) {
-        minibarMap.set(idStr, {
-          item_id: entry.item_id,
-          quantity: entry.quantity ?? 0
-        });
-      }
-    });
-  }
+const normalizeRoomInventoryPayload = (items = []) => {
+  if (!Array.isArray(items)) return [];
+  return items.map(item => ({
+    item_id: item.item_id?._id || item.item_id,
+    quantity: Number(item.quantity ?? 0)
+  }));
+};
 
-  const completeMinibar = activeMinibarItems.map(item => {
+const fillRoomInventoryData = (room, activeRoomInventoryItems) => {
+  if (!room) return room;
+  const inventoryMap = new Map();
+  const roomInventory = Array.isArray(room.room_inventory)
+    ? room.room_inventory
+    : [];
+  
+  roomInventory.forEach(entry => {
+    const idStr = entry.item_id?._id?.toString() || entry.item_id?.toString();
+    if (idStr) {
+      inventoryMap.set(idStr, {
+        item_id: entry.item_id,
+        quantity: entry.quantity ?? 0
+      });
+    }
+  });
+
+  const completeRoomInventory = activeRoomInventoryItems.map(item => {
     const idStr = item._id.toString();
-    if (minibarMap.has(idStr)) {
-      const existing = minibarMap.get(idStr);
+    if (inventoryMap.has(idStr)) {
+      const existing = inventoryMap.get(idStr);
       return {
         item_id: existing.item_id || item,
         quantity: existing.quantity
@@ -78,7 +87,7 @@ const fillRoomMinibarData = (room, activeMinibarItems) => {
 
   return {
     ...room,
-    minibar: completeMinibar
+    room_inventory: completeRoomInventory
   };
 };
 
@@ -110,10 +119,10 @@ const managerRoomService = {
       Room.countDocuments(filter),
     ]);
 
-    const activeMinibarItems = await MinibarItem.find({ is_active: true }).lean();
-    const roomsWithMinibar = rooms.map(room => fillRoomMinibarData(room, activeMinibarItems));
+    const activeRoomInventoryItems = await RoomInventoryItem.find({ is_active: true }).lean();
+    const roomsWithInventory = rooms.map(room => fillRoomInventoryData(room, activeRoomInventoryItems));
 
-    const sortedRooms = sortManagerRooms(roomsWithMinibar);
+    const sortedRooms = sortManagerRooms(roomsWithInventory);
     const pagedRooms = sortedRooms.slice(skip, skip + limitNumber);
 
     return {
@@ -131,9 +140,9 @@ const managerRoomService = {
     const room = await Room.findById(id).populate(POPULATE_OPTS);
     if (!room) throw { status: 404, message: 'Room not found' };
     
-    const activeMinibarItems = await MinibarItem.find({ is_active: true }).lean();
+    const activeRoomInventoryItems = await RoomInventoryItem.find({ is_active: true }).lean();
     const roomLean = room.toObject ? room.toObject() : room;
-    return fillRoomMinibarData(roomLean, activeMinibarItems);
+    return fillRoomInventoryData(roomLean, activeRoomInventoryItems);
   },
 
   async create(data) {
@@ -147,21 +156,17 @@ const managerRoomService = {
     const room = await Room.create(data);
     const populated = await room.populate(POPULATE_OPTS);
     
-    const activeMinibarItems = await MinibarItem.find({ is_active: true }).lean();
+    const activeRoomInventoryItems = await RoomInventoryItem.find({ is_active: true }).lean();
     const roomLean = populated.toObject ? populated.toObject() : populated;
-    return fillRoomMinibarData(roomLean, activeMinibarItems);
+    return fillRoomInventoryData(roomLean, activeRoomInventoryItems);
   },
 
   async update(id, data) {
     const existingRoom = await Room.findById(id);
     if (!existingRoom) throw { status: 404, message: 'Room not found' };
 
-    // Format minibar item_id as ObjectId if passed as object
-    if (data.minibar && Array.isArray(data.minibar)) {
-      data.minibar = data.minibar.map(m => ({
-        item_id: m.item_id?._id || m.item_id,
-        quantity: Number(m.quantity ?? 0)
-      }));
+    if (data.room_inventory && Array.isArray(data.room_inventory)) {
+      data.room_inventory = normalizeRoomInventoryPayload(data.room_inventory);
     }
 
     const room = await Room.findByIdAndUpdate(id, data, {
@@ -169,9 +174,9 @@ const managerRoomService = {
       runValidators: true,
     }).populate(POPULATE_OPTS);
     
-    const activeMinibarItems = await MinibarItem.find({ is_active: true }).lean();
+    const activeRoomInventoryItems = await RoomInventoryItem.find({ is_active: true }).lean();
     const roomLean = room.toObject ? room.toObject() : room;
-    return fillRoomMinibarData(roomLean, activeMinibarItems);
+    return fillRoomInventoryData(roomLean, activeRoomInventoryItems);
   },
 
   async remove(id) {

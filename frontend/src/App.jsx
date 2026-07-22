@@ -17,7 +17,7 @@ import EditRoomPage from './features/manager/pages/EditRoomPage.jsx';
 import AddRoomTypePage from './features/manager/pages/AddRoomTypePage.jsx';
 import EditRoomTypePage from './features/manager/pages/EditRoomTypePage.jsx';
 import ManagerStaffTasksPage from './features/manager/pages/ManagerStaffTasksPage.jsx';
-import ManagerMinibarItemsPage from './features/manager/pages/ManagerMinibarItemsPage.jsx';
+import ManagerRoomInventoryPage from './features/manager/pages/ManagerRoomInventoryPage.jsx';
 import ManagerCustomerFeedbackPage from './features/manager/pages/ManagerCustomerFeedbackPage.jsx';
 import ManagerPoliciesPage from './features/manager/pages/ManagerPoliciesPage.jsx';
 import HousekeepingTasksPage from './features/manager/pages/HousekeepingTasksPage.jsx';
@@ -162,6 +162,7 @@ const App = () => {
         <Route path="rooms" element={<RoomListPage />} />
         <Route path="rooms/search" element={<RoomSearchResultsPage />} />
         <Route path="rooms/:roomId" element={<RoomDetailPage />} />
+        <Route path="policies" element={<CustomerPoliciesPage />} />
 
         {/* Authenticated routes */}
         <Route element={<AuthenticatedRoute />}>
@@ -187,8 +188,8 @@ const App = () => {
             <Route path="housekeeping/schedule" element={<HousekeepingSchedulePage />} />
             <Route path="staff-task" element={<ManagerStaffTasksPage />} />
             <Route path="staff-tasks" element={<ManagerStaffTasksPage />} />
-            <Route path="minibar" element={<ManagerMinibarItemsPage />} />
-            <Route path="minibar-items" element={<ManagerMinibarItemsPage />} />
+            <Route path="room-inventory" element={<ManagerRoomInventoryPage />} />
+            <Route path="room-inventory-items" element={<ManagerRoomInventoryPage />} />
             <Route path="feedback" element={<ManagerCustomerFeedbackPage />} />
             <Route path="policies" element={<ManagerPoliciesPage />} />
           </Route>

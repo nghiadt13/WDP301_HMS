@@ -75,6 +75,10 @@ button:disabled {
   transition: color 160ms ease;
 }
 
+.header-nav a[href="/customer/policies"] {
+  display: none;
+}
+
 .header-nav a:hover,
 .header-nav a:focus-visible {
   color: #168ff3;
@@ -1839,6 +1843,112 @@ button:disabled {
 .home-rooms-btn-solid:focus-visible {
   background: #b4a36f;
   outline: none;
+}
+
+.home-policy-section {
+  width: min(1180px, calc(100% - 40px));
+  margin: 72px auto 88px;
+  padding: 36px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.home-policy-heading {
+  max-width: 720px;
+  margin-bottom: 28px;
+}
+
+.home-policy-heading span,
+.home-policy-card > span {
+  display: inline-flex;
+  margin-bottom: 10px;
+  color: #65a30d;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-policy-heading h2 {
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.15;
+}
+
+.home-policy-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.home-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.home-policy-card {
+  min-height: 220px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.home-policy-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  background: #ecfccb;
+  color: #4d7c0f;
+}
+
+.home-policy-card h3 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.home-policy-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.home-policy-button {
+  height: 44px;
+  margin-top: 26px;
+  padding: 0 24px;
+  border: 0;
+  background: #bef264;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.home-policy-button:hover,
+.home-policy-button:focus-visible {
+  background: #a3e635;
+  outline: none;
+}
+
+@media (max-width: 920px) {
+  .home-policy-section {
+    width: min(100% - 28px, 1180px);
+    padding: 26px;
+    margin: 52px auto 64px;
+  }
+
+  .home-policy-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .room-search-page,

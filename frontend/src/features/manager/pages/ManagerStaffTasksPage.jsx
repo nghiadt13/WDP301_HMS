@@ -12,7 +12,9 @@ const emptyForm = {
   room_number: '',
   room_type: '',
   status: 'assigned',
-  deadline: ''
+  deadline: '',
+  start_time: '08:00',
+  end_time: '09:00',
 };
 
 const staffTypes = { housekeeping: 'Nhân viên dọn phòng' };
@@ -24,6 +26,27 @@ const statuses = {
 const pad = (value) => String(value).padStart(2, '0');
 const toInputDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 const todayInput = () => toInputDate(new Date());
+const toInputTime = (minutes) => `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+const toMinutes = (value) => {
+  const [hours, minutes] = String(value || '').split(':').map(Number);
+  return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : null;
+};
+const hasStaffBreakConflict = (firstStart, firstEnd, secondStart, secondEnd) => (
+  firstStart < secondEnd + 15 && firstEnd + 15 > secondStart
+);
+const timeOptions = [
+  ...Array.from({ length: 24 * 4 }, (_, index) => toInputTime(index * 15)),
+  '23:59',
+];
+const getInitialTimes = (dateValue) => {
+  if (dateValue !== todayInput()) return { start_time: '08:00', end_time: '09:00' };
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = Math.ceil((currentMinutes + 1) / 15) * 15;
+  if (startMinutes > 23 * 60 + 44) return null;
+  const endMinutes = Math.min(startMinutes + 60, 23 * 60 + 59);
+  return { start_time: toInputTime(startMinutes), end_time: toInputTime(endMinutes) };
+};
 const toDate = (value) => {
   const date = value ? new Date(value) : new Date();
   if (Number.isNaN(date.getTime())) return new Date();
@@ -57,7 +80,9 @@ const toForm = (task) => ({
   room_number: task.room_number || '',
   room_type: task.room_type || '',
   status: normalizeStatus(task.status || 'assigned'),
-  deadline: task.deadline ? toInputDate(toDate(task.deadline)) : '',
+  deadline: task.work_date || task.deadline ? toInputDate(toDate(task.work_date || task.deadline)) : '',
+  start_time: task.start_time || '08:00',
+  end_time: task.end_time || '09:00',
 });
 const statusTone = (status) => {
   if (['completed'].includes(status)) return 'is-good';
@@ -81,10 +106,13 @@ const ManagerStaffTasksPage = () => {
   const isEditing = mode === 'edit' && selectedTask;
   const isCreating = mode === 'create';
   const isModalOpen = isCreating || isEditing;
+  const canEditSelected = isCreating || ['assigned', 'notstarted'].includes(normalizeStatus(selectedTask?.status));
   const assignableStaff = staffMembers.filter((member) => member.role === 'housekeeping');
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)), [weekStart]);
   const weekStartKey = toInputDate(weekStart);
   const weekEndKey = toInputDate(addDays(weekStart, 6));
+  const todayKey = todayInput();
+  const defaultCreateDate = weekStartKey < todayKey ? todayKey : weekStartKey;
 
   const loadTasks = async (nextId = selectedId) => {
     const data = await managerApi.getStaffTasks();
@@ -145,6 +173,9 @@ const ManagerStaffTasksPage = () => {
       const key = task.deadline ? toInputDate(toDate(task.deadline)) : '';
       if (groupedTasks[key]) groupedTasks[key].push(task);
     });
+    Object.values(groupedTasks).forEach((dayTasks) => {
+      dayTasks.sort((first, second) => String(first.start_time || '').localeCompare(String(second.start_time || '')));
+    });
     return groupedTasks;
   }, [weekDays, weekTasks]);
 
@@ -163,8 +194,17 @@ const ManagerStaffTasksPage = () => {
   };
 
   const openCreateModal = (dateValue = todayInput()) => {
+    if (dateValue < todayInput()) {
+      setMessage('Không thể tạo lịch cho ngày đã qua.');
+      return;
+    }
+    const initialTimes = getInitialTimes(dateValue);
+    if (!initialTimes) {
+      setMessage('Hôm nay không còn khung giờ hợp lệ để tạo lịch. Vui lòng chọn ngày tiếp theo.');
+      return;
+    }
     setSelectedId('');
-    setForm({ ...emptyForm, deadline: dateValue });
+    setForm({ ...emptyForm, ...initialTimes, deadline: dateValue });
     setMode('create');
     setMessage('');
   };
@@ -193,6 +233,29 @@ const ManagerStaffTasksPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!form.start_time || !form.end_time || form.end_time <= form.start_time) {
+      setMessage('Giờ kết thúc phải sau giờ bắt đầu.');
+      return;
+    }
+    const startMinutes = toMinutes(form.start_time);
+    const endMinutes = toMinutes(form.end_time);
+    const staffConflict = tasks.find((task) => (
+      task._id !== selectedTask?._id
+      && String(task.assigned_staff_id || '') === String(form.assigned_staff_id || '')
+      && toInputDate(toDate(task.work_date || task.deadline)) === form.deadline
+      && toMinutes(task.start_time) !== null
+      && toMinutes(task.end_time) !== null
+      && hasStaffBreakConflict(
+        startMinutes,
+        endMinutes,
+        toMinutes(task.start_time),
+        toMinutes(task.end_time)
+      )
+    ));
+    if (staffConflict) {
+      setMessage(`Nhân viên đã có lịch ${staffConflict.start_time}-${staffConflict.end_time} tại phòng ${staffConflict.room_number}. Mỗi lịch phải cách nhau ít nhất 15 phút.`);
+      return;
+    }
     try {
       const payload = {
         ...form,
@@ -258,7 +321,7 @@ const ManagerStaffTasksPage = () => {
             <button className="manager-ops-secondary" type="button" onClick={() => setWeekStart(addDays(weekStart, 7))}>
               Tuần sau <ChevronRight size={15} />
             </button>
-            <button className="manager-ops-button" type="button" onClick={() => openCreateModal(weekStartKey)}>
+            <button className="manager-ops-button" type="button" onClick={() => openCreateModal(defaultCreateDate)}>
               <Plus size={16} /> Thêm lịch
             </button>
           </div>
@@ -287,7 +350,7 @@ const ManagerStaffTasksPage = () => {
                     <strong>{formatWeekday(day)}</strong>
                     <span>{formatShortDate(day)}</span>
                   </div>
-                  <button className="icon-action-button" type="button" onClick={() => openCreateModal(key)} aria-label={`Thêm lịch ngày ${formatShortDate(day)}`}>
+                  <button className="icon-action-button" type="button" disabled={key < todayKey} onClick={() => openCreateModal(key)} aria-label={`Thêm lịch ngày ${formatShortDate(day)}`}>
                     <Plus size={16} />
                   </button>
                 </header>
@@ -303,11 +366,15 @@ const ManagerStaffTasksPage = () => {
                           <span className={`manager-ops-status ${statusTone(status)}`}>{statuses[status] || task.status}</span>
                         </div>
                         <div className="staff-schedule-meta">
+                          <span className="staff-schedule-time">
+                            {task.start_time && task.end_time ? `${task.start_time} - ${task.end_time}` : 'Chưa có khung giờ'}
+                          </span>
                           <span>{task.assigned_to || 'Chưa phân công'}</span>
                           <span>Phòng {task.room_number || '-'}</span>
                           <span>{task.room_type || 'Chưa có loại phòng'}</span>
                         </div>
                         {note ? <p>{note}</p> : <p className="is-muted">Chưa có ghi chú.</p>}
+                        {task.completion_note ? <p className="staff-completion-note">Hoàn thành: {task.completion_note}</p> : null}
                       </button>
                     );
                   })}
@@ -335,16 +402,19 @@ const ManagerStaffTasksPage = () => {
             </div>
 
             <form className="manager-ops-form" onSubmit={handleSubmit}>
-              <label>Tên ca / công việc<input name="title" onChange={handleChange} required value={form.title} placeholder="Ví dụ: Ca dọn phòng tầng 3" /></label>
-              <label>Giao cho<select name="assigned_staff_id" onChange={handleChange} required value={form.assigned_staff_id}><option value="">Chọn nhân viên</option>{assignableStaff.map((staff) => <option key={staff._id} value={staff._id}>{staff.full_name}</option>)}</select></label>
-              <label>Số phòng<select name="room_number" onChange={handleChange} required value={form.room_number}><option value="">Chọn số phòng</option>{rooms.map((room) => <option key={room._id || room.id} value={room.roomName}>{room.roomName}</option>)}</select></label>
+              <label>Tên ca / công việc<input disabled={!canEditSelected} maxLength="120" name="title" onChange={handleChange} required value={form.title} placeholder="Ví dụ: Dọn phòng CDT301" /></label>
+              <label>Giao cho<select disabled={!canEditSelected} name="assigned_staff_id" onChange={handleChange} required value={form.assigned_staff_id}><option value="">Chọn nhân viên</option>{assignableStaff.map((staff) => <option key={staff._id} value={staff._id}>{staff.full_name}</option>)}</select></label>
+              <label>Số phòng<select disabled={!canEditSelected} name="room_number" onChange={handleChange} required value={form.room_number}><option value="">Chọn số phòng</option>{rooms.map((room) => <option key={room._id || room.id} value={room.roomName}>{room.roomName}</option>)}</select></label>
               <label>Loại phòng<input readOnly value={form.room_type || 'Chọn số phòng để hiển thị loại phòng'} /></label>
               <label>Trạng thái<input readOnly value={statuses[getScheduleStatus(form.status)] || 'Đã lên lịch'} /></label>
               <label>Ngày làm việc<input readOnly value={form.deadline ? formatDate(form.deadline) : 'Chưa có ngày'} /></label>
-              <label className="manager-ops-wide">Ghi chú công việc<textarea name="description" onChange={handleChange} rows="4" value={form.description} placeholder="Ví dụ: ưu tiên lau phòng tắm, bổ sung khăn, kiểm tra ban công..." /></label>
-              <div className="manager-ops-actions">
+              <label>Giờ bắt đầu<select disabled={!canEditSelected} name="start_time" onChange={handleChange} required value={form.start_time}>{timeOptions.map((time) => <option key={`start-${time}`} value={time}>{time}</option>)}</select></label>
+              <label>Giờ kết thúc<select disabled={!canEditSelected} name="end_time" onChange={handleChange} required value={form.end_time}>{timeOptions.map((time) => <option key={`end-${time}`} value={time}>{time}</option>)}</select></label>
+              <label className="manager-ops-wide">Ghi chú công việc<textarea disabled={!canEditSelected} maxLength="1000" name="description" onChange={handleChange} rows="4" value={form.description} placeholder="Ví dụ: ưu tiên lau phòng tắm, bổ sung khăn, kiểm tra ban công..." /></label>
+              {selectedTask?.completion_note ? <label className="manager-ops-wide">Ghi chú hoàn thành<textarea readOnly rows="3" value={selectedTask.completion_note} /></label> : null}
+              {canEditSelected ? <div className="manager-ops-actions">
                 <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo lịch làm việc'}</button>
-              </div>
+              </div> : null}
             </form>
           </section>
         </div>

@@ -18,9 +18,9 @@ const housekeepingController = {
     }
   },
 
-  async getMinibarItems(req, res) {
+  async getRoomInventoryItems(req, res) {
     try {
-      const data = await housekeepingService.getMinibarItems(req.query, req.user);
+      const data = await housekeepingService.getRoomInventoryItems(req.query, req.user);
       res.status(200).json({ success: true, data });
     } catch (err) {
       sendError(res, err);
@@ -92,7 +92,7 @@ const housekeepingController = {
 
   async completeCleaningTask(req, res) {
     try {
-      const data = await housekeepingService.completeCleaningTask(req.params.id, req.user);
+      const data = await housekeepingService.completeCleaningTask(req.params.id, req.user, req.body);
       res.status(200).json({ success: true, data, message: 'Cleaning task completed successfully' });
     } catch (err) {
       sendError(res, err);

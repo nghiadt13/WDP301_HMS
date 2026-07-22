@@ -36,6 +36,7 @@ const ManagerCustomerFeedbackPage = () => {
 
   const selectedFeedback = feedbacks.find((feedback) => feedback._id === selectedId);
   const responses = getResponses(selectedFeedback);
+  const hasResponse = responses.length > 0 || normalizeStatus(selectedFeedback?.status) === 'responded';
 
   const loadFeedbacks = async (nextId = selectedId) => {
     const data = await managerApi.getCustomerFeedbacks();
@@ -84,6 +85,10 @@ const ManagerCustomerFeedbackPage = () => {
     event.preventDefault();
     if (!selectedFeedback) {
       setMessage('Vui lòng chọn một góp ý trước khi phản hồi.');
+      return;
+    }
+    if (hasResponse) {
+      setMessage('Góp ý này đã được phản hồi.');
       return;
     }
     try {
@@ -171,15 +176,19 @@ const ManagerCustomerFeedbackPage = () => {
                   <small>Ngày gửi: {formatDate(selectedFeedback.submitted_at || selectedFeedback.createdAt)}</small>
                 </div>
                 <div className="manager-ops-summary manager-ops-wide">
-                  <strong>Các phản hồi đã gửi</strong>
+                  <strong>Phản hồi đã gửi</strong>
                   {responses.length ? responses.map((response, index) => (
                     <p key={`${response.respondedAt || index}-${index}`}>{response.responseText}<small> - {response.responderName || 'Quản lý'} {response.respondedAt ? `(${formatDate(response.respondedAt)})` : ''}</small></p>
                   )) : <p>Chưa có phản hồi nào.</p>}
                 </div>
-                <label className="manager-ops-wide">Thêm phản hồi mới<textarea onChange={(event) => setResponseText(event.target.value)} placeholder="Nhập phản hồi cho khách hàng..." required rows="6" value={responseText} /></label>
-                <div className="manager-ops-actions">
-                  <button className="manager-ops-button" type="submit"><Star size={15} /> {responses.length ? 'Thêm phản hồi' : 'Gửi phản hồi'}</button>
-                </div>
+                {!hasResponse ? (
+                  <>
+                    <label className="manager-ops-wide">Nội dung phản hồi<textarea onChange={(event) => setResponseText(event.target.value)} placeholder="Nhập phản hồi cho khách hàng..." required rows="6" value={responseText} /></label>
+                    <div className="manager-ops-actions">
+                      <button className="manager-ops-button" type="submit"><Star size={15} /> Gửi phản hồi</button>
+                    </div>
+                  </>
+                ) : null}
               </form>
             ) : <div className="manager-ops-detail-empty">Chọn một góp ý để xem chi tiết và phản hồi.</div>}
           </article>

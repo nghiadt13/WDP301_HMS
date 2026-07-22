@@ -2,10 +2,9 @@ const StaffTask = require('../../../models/staffTask.model');
 const Room = require('../../../models/room.model');
 const CustomerServiceRequest = require('../../../models/customerServiceRequest.model');
 const Inspection = require('../../../models/inspection.model');
-const MinibarItem = require('../../../models/minibarItem.model');
+const RoomInventoryItem = require('../../../models/roomInventoryItem.model');
 const MaintenanceRequest = require('../../../models/maintenanceRequest.model');
 const User = require('../../../models/user.model');
-const managerRoomService = require('../room/room.service');
 const { createHttpError } = require('../../../utils/error.utils');
 
 const normalizeRole = (user) => String(user?.role_id?.name || user?.role || '').toLowerCase();
@@ -28,7 +27,22 @@ const isActiveTaskStatus = (status) => {
 };
 
 const isHousekeepingTask = (task) => String(task?.staff_type || '').toLowerCase() === 'housekeeping';
-const isManagerAssignedTask = (task) => /manager/i.test(String(task?.assignedBy || ''));
+const isManagerAssignedTask = (task) => (
+  String(task?.task_origin || '').toLowerCase() === 'manager_schedule'
+  || /manager/i.test(String(task?.assignedBy || ''))
+);
+const isManagerScheduleTask = (task) => (
+  String(task?.task_origin || '').toLowerCase() === 'manager_schedule'
+  || String(task?.cleaningType || '').toLowerCase() === 'housekeeping schedule'
+);
+
+const getScheduledStart = (task) => {
+  if (!isManagerScheduleTask(task) || !task.work_date || !task.start_time) return null;
+  const [hours, minutes] = String(task.start_time).split(':').map(Number);
+  const scheduledStart = new Date(task.work_date);
+  scheduledStart.setHours(hours, minutes, 0, 0);
+  return Number.isNaN(scheduledStart.getTime()) ? null : scheduledStart;
+};
 
 const normalizeTaskStatus = (status) => {
   const normalized = String(status || '').trim().toLowerCase();
@@ -131,10 +145,17 @@ const mapTask = (task) => ({
   assigned_staff_id: task.assigned_staff_id,
   assigned_to: task.assigned_to,
   deadline: task.deadline,
+  work_date: task.work_date,
+  start_time: task.start_time,
+  end_time: task.end_time,
+  duration_minutes: task.duration_minutes,
+  task_origin: task.task_origin,
+  room_type: task.room_type,
   assignedBy: task.assignedBy,
   acceptedAt: task.acceptedAt,
   startedAt: task.startedAt,
   completedAt: task.completedAt,
+  completion_note: task.completion_note,
   cleaningType: task.cleaningType,
   receptionistNote: task.receptionistNote,
   guestRequest: task.guestRequest,
@@ -151,17 +172,17 @@ const mapInspection = (inspection) => ({
   checklist: inspection.checklist || {},
   damage: inspection.damage || [],
   lostItem: inspection.lostItem || [],
-  minibar: inspection.minibar || [],
-  minibarReport: {
+  room_inventory: inspection.room_inventory || [],
+  roomInventoryReport: {
     items: inspection.invoice_items || [],
-    total: Number(inspection.minibar_total || 0),
+    total: Number(inspection.room_inventory_total ?? 0),
   },
   photos: inspection.photos || [],
   note: inspection.note || '',
   status: inspection.status,
   remarks: inspection.remarks,
-  minibar_used: inspection.minibar_used,
-  minibar_total: Number(inspection.minibar_total || 0),
+  room_inventory_used: inspection.room_inventory_used,
+  room_inventory_total: Number(inspection.room_inventory_total ?? 0),
   invoice_items: inspection.invoice_items || [],
   missing_items: inspection.missing_items || [],
   damaged_items: inspection.damaged_items || [],
@@ -334,10 +355,43 @@ const housekeepingService = {
   async getRooms(query = {}, user) {
     ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist']);
 
-    return managerRoomService.getAll(query);
+    const {
+      roomTypeId,
+      status,
+      isActive,
+      page = 1,
+      limit = 200,
+    } = query;
+
+    const filter = {};
+    if (roomTypeId) filter.room_type_id = roomTypeId;
+    if (status) filter.status = status;
+    if (isActive !== undefined) filter.isActive = String(isActive).toLowerCase() === 'true';
+
+    const pageNumber = Math.max(Number(page) || 1, 1);
+    const limitNumber = Math.max(Number(limit) || 200, 1);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [rooms, total] = await Promise.all([
+      Room.find(filter)
+        .populate('room_type_id', 'name description bed_type capacity base_price images features facilities')
+        .populate('room_inventory.item_id', 'name category price stock_status description is_active')
+        .skip(skip)
+        .limit(limitNumber)
+        .lean(),
+      Room.countDocuments(filter),
+    ]);
+
+    return {
+      data: rooms,
+      total,
+      page: pageNumber,
+      limit: limitNumber,
+      totalPages: Math.ceil(total / limitNumber),
+    };
   },
 
-  async getMinibarItems(query = {}, user) {
+  async getRoomInventoryItems(query = {}, user) {
     ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist']);
 
     const filter = {};
@@ -346,7 +400,7 @@ const housekeepingService = {
       filter.is_active = String(query.is_active).toLowerCase() === 'true';
     }
 
-    return MinibarItem.find(filter).sort({ createdAt: -1 }).lean();
+    return RoomInventoryItem.find(filter).sort({ createdAt: -1 }).lean();
   },
 
   async confirmCheckout(body = {}, user) {
@@ -431,7 +485,10 @@ const housekeepingService = {
 
     const managerOnly = String(query.manager_assigned_only || '').toLowerCase() === 'true';
     if (managerOnly) {
-      filter.assignedBy = { $regex: 'manager', $options: 'i' };
+      filter.$or = [
+        { task_origin: 'manager_schedule' },
+        { assignedBy: { $regex: 'manager', $options: 'i' } },
+      ];
     }
 
     const tasks = await StaffTask.find(filter).sort({ createdAt: -1 }).lean();
@@ -476,13 +533,18 @@ const housekeepingService = {
       throw createHttpError('Task cannot be started from its current status', 409);
     }
 
+    const scheduledStart = getScheduledStart(task);
+    if (scheduledStart && new Date() < scheduledStart) {
+      throw createHttpError('Scheduled work cannot be started before its assigned time', 409);
+    }
+
     const pendingMaintenance = await MaintenanceRequest.findOne({ room: task.room_number, status: { $in: ['Open', 'InProgress'] } });
     if (pendingMaintenance) {
       throw createHttpError('Task cannot start because maintenance is still in progress', 409);
     }
 
     const room = await Room.findOne({ roomName: task.room_number });
-    if (room) {
+    if (room && !isManagerScheduleTask(task)) {
       room.status = 'Cleaning';
       room.inspectionStatus = 'Completed';
       await room.save();
@@ -494,7 +556,7 @@ const housekeepingService = {
     return mapTask(task);
   },
 
-  async completeCleaningTask(id, user) {
+  async completeCleaningTask(id, user, body = {}) {
     const task = await StaffTask.findById(id);
     if (!task) throw createHttpError('Task not found', 404);
     if (!isHousekeepingTask(task)) throw createHttpError('Only housekeeping cleaning task can be completed', 400);
@@ -515,10 +577,11 @@ const housekeepingService = {
 
     task.status = 'Completed';
     task.completedAt = new Date();
+    task.completion_note = String(body.completion_note || '').trim().slice(0, 1000);
     await task.save();
 
     const room = await Room.findOne({ roomName: task.room_number });
-    if (room) {
+    if (room && !isManagerScheduleTask(task)) {
       room.status = 'Available';
       room.inspectionStatus = 'Completed';
       await room.save();
@@ -542,7 +605,7 @@ const housekeepingService = {
 
     if (nextStatus === 'Completed') {
       task.completedAt = new Date();
-      if (room) {
+      if (room && !isManagerScheduleTask(task)) {
         room.status = 'Available';
         room.inspectionStatus = 'Completed';
         await room.save();
@@ -551,7 +614,7 @@ const housekeepingService = {
 
     if (nextStatus === 'Cleaning') {
       task.startedAt = task.startedAt || new Date();
-      if (room) {
+      if (room && !isManagerScheduleTask(task)) {
         room.status = 'Cleaning';
         room.inspectionStatus = 'Completed';
         await room.save();
@@ -560,7 +623,7 @@ const housekeepingService = {
 
     if (nextStatus === 'Accepted') {
       task.acceptedAt = new Date();
-      if (room) {
+      if (room && !isManagerScheduleTask(task)) {
         room.status = 'Cleaning';
         room.inspectionStatus = 'Completed';
         await room.save();
@@ -568,7 +631,7 @@ const housekeepingService = {
     }
 
     if (nextStatus === 'WaitingMaintenance') {
-      if (room) {
+      if (room && !isManagerScheduleTask(task)) {
         room.status = 'Maintenance';
         room.inspectionStatus = 'Completed';
         await room.save();
@@ -576,7 +639,7 @@ const housekeepingService = {
     }
 
     if (nextStatus === 'Assigned') {
-      if (room) {
+      if (room && !isManagerScheduleTask(task)) {
         room.status = 'Dirty';
         room.inspectionStatus = 'Pending';
         await room.save();
@@ -584,7 +647,7 @@ const housekeepingService = {
     }
 
     if (nextStatus === 'Cancelled') {
-      if (room) {
+      if (room && !isManagerScheduleTask(task)) {
         room.status = 'Dirty';
         room.inspectionStatus = 'Pending';
         await room.save();
@@ -606,7 +669,7 @@ const housekeepingService = {
     }
 
     const room = await Room.findOne({ roomName: task.room_number });
-    if (room) {
+    if (room && !isManagerScheduleTask(task)) {
       room.status = 'Dirty';
       room.inspectionStatus = 'Pending';
       await room.save();
@@ -920,11 +983,11 @@ const housekeepingService = {
       checklist = {},
       damage = [],
       lostItem = [],
-      minibar = [],
+      room_inventory = [],
       photos = [],
       note = '',
       remarks = '',
-      minibar_used = false,
+      room_inventory_used = false,
       missing_items = [],
       damaged_items = [],
       maintenance_required = false,
@@ -934,34 +997,70 @@ const housekeepingService = {
 
     if (!room_number) throw createHttpError('Room number is required', 400);
 
-    const roomRecord = await Room.findOne({ roomName: room_number });
+    const roomRecord = await Room.findOne({ roomName: room_number })
+      .populate('room_inventory.item_id', 'name category price is_active');
     const sourceTask = task_id ? await StaffTask.findById(task_id) : null;
     const isInspectionReviewTask = Boolean(
       sourceTask
       && String(sourceTask.staff_type || '').trim().toLowerCase() === 'housekeeping'
       && String(sourceTask.cleaningType || '').trim().toLowerCase() === 'inspection review'
     );
+    if (isInspectionReviewTask && normalizeTaskStatus(sourceTask.status) !== 'Accepted') {
+      throw createHttpError('Inspection review task must be accepted before it can be completed', 409);
+    }
     let task = null;
     let invoiceItems = [];
-    let minibarTotal = 0;
+    let roomInventoryTotal = 0;
+    const selectedRoomInventory = Array.isArray(room_inventory) ? room_inventory : [];
+    let normalizedRoomInventory = [];
+    const inventoryAdjustments = [];
 
-    if (minibar_used || minibar.length) {
-      const minibarItems = await MinibarItem.find({ is_active: true }).lean();
-      const minibarItemById = new Map(minibarItems.map((item) => [String(item._id), item]));
-      const minibarItemByName = new Map(minibarItems.map((item) => [String(item.name).toLowerCase(), item]));
+    if (room_inventory_used || selectedRoomInventory.length) {
+      if (!roomRecord) {
+        throw createHttpError('Room not found for room inventory validation', 404);
+      }
 
-      const selectedItems = minibar.length ? minibar : [];
-      const resolvedItems = selectedItems.map((entry) => {
-        const qty = Math.max(1, Number(entry.qty || 1));
-        const dbItem = minibarItemById.get(String(entry.item_id || entry.itemId || entry._id || ''))
-          || minibarItemByName.get(String(entry.item || entry.name || '').toLowerCase())
-          || null;
-        const itemName = dbItem?.name || entry.item || entry.name || 'Minibar item';
-        const unitPrice = Number(dbItem?.price ?? entry.price ?? 0);
+      const roomInventoryCatalogItems = await RoomInventoryItem.find({ is_active: true }).lean();
+      const roomInventoryEntries = roomInventoryCatalogItems.map((item) => ({
+        item_id: item,
+        quantity: Number(item.quantity || 0),
+      }));
+      const resolvedItems = selectedRoomInventory.map((entry) => {
+        const qty = Number(entry.qty ?? entry.quantity ?? 0);
+        if (!Number.isInteger(qty) || qty <= 0) {
+          throw createHttpError('Room inventory quantity must be a positive integer', 400);
+        }
+
+        const requestedId = String(entry.item_id || entry.itemId || entry._id || '').trim();
+        const requestedName = String(entry.item || entry.name || '').trim().toLowerCase();
+        const roomInventoryEntry = roomInventoryEntries.find((roomEntry) => {
+          const item = roomEntry.item_id;
+          const itemId = String(item?._id || item || '').trim();
+          const itemName = String(item?.name || '').trim().toLowerCase();
+          return (requestedId && itemId === requestedId) || (requestedName && itemName === requestedName);
+        });
+
+        if (!roomInventoryEntry || roomInventoryEntry.item_id?.is_active === false) {
+          throw createHttpError('Selected room inventory item does not exist in the room inventory catalog', 400);
+        }
+
+        const availableQty = Number(roomInventoryEntry.quantity || 0);
+        if (qty > availableQty) {
+          const itemName = roomInventoryEntry.item_id?.name || entry.item || entry.name || 'vật tư phòng';
+          throw createHttpError(`Số lượng ${itemName} trong kho không đủ. Hiện còn ${availableQty}.`, 400);
+        }
+
+        const unitPrice = Number(roomInventoryEntry.item_id?.price || 0);
+        if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+          const itemName = roomInventoryEntry.item_id?.name || entry.item || entry.name || 'vật tư phòng';
+          throw createHttpError(`Vật tư ${itemName} chưa được cấu hình giá hợp lệ.`, 400);
+        }
+
+        const itemName = roomInventoryEntry.item_id?.name || entry.item || entry.name || 'Room inventory item';
         const total = qty * unitPrice;
-        minibarTotal += total;
+        roomInventoryTotal += total;
         return {
-          item_id: dbItem?._id || entry.item_id || entry.itemId || null,
+          item_id: roomInventoryEntry.item_id?._id || entry.item_id || entry.itemId || null,
           item: itemName,
           qty,
           price: unitPrice,
@@ -969,40 +1068,60 @@ const housekeepingService = {
         };
       });
 
-      invoiceItems = resolvedItems.map((entry) => ({
+      const groupedItems = new Map();
+      resolvedItems.forEach((entry) => {
+        const key = String(entry.item_id || entry.item || '').trim();
+        const existing = groupedItems.get(key);
+        if (existing) {
+          existing.qty += entry.qty;
+          existing.total += entry.total;
+        } else {
+          groupedItems.set(key, { ...entry });
+        }
+      });
+
+      normalizedRoomInventory = Array.from(groupedItems.values());
+      normalizedRoomInventory.forEach((entry) => {
+        const key = String(entry.item_id || '').trim();
+        const roomInventoryEntry = roomInventoryEntries.find((roomEntry) => {
+          const item = roomEntry.item_id;
+          const itemId = String(item?._id || item || '').trim();
+          return key && itemId === key;
+        });
+        const availableQty = Number(roomInventoryEntry?.quantity || 0);
+        if (!roomInventoryEntry || entry.qty > availableQty) {
+          throw createHttpError(`Room inventory quantity for ${entry.item} exceeds the available stock. Available: ${availableQty}.`, 400);
+        }
+
+        inventoryAdjustments.push({
+          itemId: entry.item_id,
+          qty: entry.qty,
+        });
+      });
+
+      roomInventoryTotal = normalizedRoomInventory.reduce((sum, entry) => sum + Number(entry.total || 0), 0);
+      invoiceItems = normalizedRoomInventory.map((entry) => ({
         name: entry.item,
         quantity: entry.qty,
         unit_price: entry.price,
         total: entry.total,
-        note: 'Minibar usage recorded during inspection',
+        note: 'Room inventory usage recorded during inspection',
       }));
 
-      // Deduct quantity from the physical room's minibar stock
-      if (roomRecord) {
-        if (!roomRecord.minibar) roomRecord.minibar = [];
-        const currentMinibar = [...roomRecord.minibar];
+    }
 
-        for (const entry of resolvedItems) {
-          const dbItemIdStr = String(entry.item_id || '');
-          const qtyUsed = entry.qty || 1;
-          if (!dbItemIdStr) {
-            continue;
-          }
-
-          const itemIndex = currentMinibar.findIndex((m) => m.item_id?.toString() === dbItemIdStr);
-
-          if (itemIndex > -1) {
-            currentMinibar[itemIndex].quantity = Math.max(0, (currentMinibar[itemIndex].quantity || 0) - qtyUsed);
-          } else {
-            // Default room stocking quantity to 5, minus consumed qty
-            currentMinibar.push({
-              item_id: entry.item_id,
-              quantity: Math.max(0, 5 - qtyUsed)
-            });
-          }
+    if (inventoryAdjustments.length) {
+      await Promise.all(inventoryAdjustments.map(async ({ itemId, qty }) => {
+        const item = await RoomInventoryItem.findById(itemId);
+        if (!item) {
+          throw createHttpError('Selected room inventory item does not exist', 400);
         }
-        roomRecord.minibar = currentMinibar;
-      }
+
+        const nextQuantity = Math.max(0, Number(item.quantity || 0) - Number(qty || 0));
+        item.quantity = nextQuantity;
+        item.stock_status = nextQuantity === 0 ? 'out_of_stock' : nextQuantity <= 5 ? 'low_stock' : 'in_stock';
+        await item.save();
+      }));
     }
 
     if (roomRecord) {
@@ -1013,19 +1132,38 @@ const housekeepingService = {
     }
 
     if (maintenance_required || damaged_items.length || damage.length) {
-      task = await StaffTask.create({
-        title: `Maintenance required for room ${room_number}`,
-        description: remarks || 'Damage detected during inspection',
-        staff_type: 'technical',
-        assigned_staff_id: null,
-        assigned_to: 'Technical Team',
-        room_number,
-        priority: 'high',
-        status: 'Assigned',
-        deadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        assignedBy: 'Receptionist',
-        receptionistNote: note || remarks || 'Maintenance required',
-      });
+      const maintenanceDescription = remarks
+        || note
+        || damaged_items.map((item) => item.name || item.note).filter(Boolean).join(', ')
+        || damage.join(', ')
+        || 'Damage detected during inspection';
+
+      const duplicateMaintenanceRequest = await MaintenanceRequest.findOne({
+        room: room_number,
+        description: maintenanceDescription,
+        status: { $in: ['Open', 'InProgress'] },
+      }).sort({ createdAt: -1 });
+
+      if (!duplicateMaintenanceRequest) {
+        await MaintenanceRequest.create({
+          room: room_number,
+          category: 'Damage Report',
+          priority: 'high',
+          description: maintenanceDescription,
+          status: 'Open',
+          assignedTech: 'Maintenance Team',
+          reportedBy: user?.full_name || 'Housekeeping',
+          note,
+        });
+      }
+
+      if (sourceTask) {
+        sourceTask.status = 'Completed';
+        sourceTask.completedAt = new Date();
+        sourceTask.completion_note = note || remarks || sourceTask.completion_note;
+        await sourceTask.save();
+        task = sourceTask;
+      }
     } else if (!isInspectionReviewTask) {
       task = await StaffTask.create({
         title: `Cleaning required for room ${room_number}`,
@@ -1055,15 +1193,15 @@ const housekeepingService = {
       checklist,
       damage,
       lostItem,
-      minibar,
+      room_inventory: normalizedRoomInventory,
       photos,
       note,
       inspected_by: user?._id || null,
       inspector_name: user?.full_name || 'System',
       status: 'submitted',
       remarks,
-      minibar_used: minibar_used || minibar.length > 0,
-      minibar_total: minibarTotal,
+      room_inventory_used: room_inventory_used || normalizedRoomInventory.length > 0,
+      room_inventory_total: roomInventoryTotal,
       invoice_items: invoiceItems,
       missing_items: missing_items || [],
       damaged_items: damaged_items || [],
@@ -1075,7 +1213,7 @@ const housekeepingService = {
 
     return {
       inspection: mapInspection(inspection),
-      task: mapTask(task),
+      task: task ? mapTask(task) : null,
     };
   },
 
@@ -1172,7 +1310,7 @@ const housekeepingService = {
     }
 
     const room = await Room.findOne({ roomName: task.room_number });
-    if (room) {
+    if (room && !isManagerScheduleTask(task)) {
       room.status = 'Dirty';
       room.inspectionStatus = 'Pending';
       await room.save();

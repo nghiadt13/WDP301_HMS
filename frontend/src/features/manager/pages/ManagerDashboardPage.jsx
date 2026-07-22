@@ -109,7 +109,7 @@ const ManagerDashboardPage = () => {
   
   const roomRevenueFmt = formatCurrency(stats?.kpis?.roomRevenue);
   const serviceRevenueFmt = formatCurrency(stats?.kpis?.serviceRevenue);
-  const minibarRevenueFmt = formatCurrency(stats?.kpis?.minibarRevenue);
+  const roomInventoryRevenueFmt = formatCurrency(stats?.kpis?.roomInventoryRevenue);
   const otherRevenueFmt = formatCurrency(stats?.kpis?.otherRevenue);
 
   // Default activities array if empty
@@ -146,7 +146,7 @@ const ManagerDashboardPage = () => {
         <section className="manager-grid" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <StatCard title="Tiền phòng" value={roomRevenueFmt} icon="bed" iconTone="primary" />
           <StatCard title="Dịch vụ" value={serviceRevenueFmt} icon="sparkle" iconTone="soft" />
-          <StatCard title="Minibar" value={minibarRevenueFmt} icon="box" iconTone="pale" />
+          <StatCard title="Vật tư phòng" value={roomInventoryRevenueFmt} icon="box" iconTone="pale" />
           <StatCard title="Thu nhập khác" value={otherRevenueFmt} icon="wallet" iconTone="gray" />
         </section>
 
@@ -320,7 +320,7 @@ const ManagerDashboardPage = () => {
                   <i><b className="blue" style={{ width: `${(stats?.kpis?.roomRevenue / stats?.kpis?.totalRevenue) * 100 || 0}%` }} /></i>
                </div>
                <div className="manager-progress" style={{ marginTop: '16px' }}>
-                  <p><span>Phụ phí / Minibar</span><strong>${stats?.kpis?.extraRevenue || 0}</strong></p>
+                  <p><span>Phụ phí / Vật tư phòng</span><strong>${stats?.kpis?.extraRevenue || 0}</strong></p>
                   <i><b className="lime" style={{ width: `${(stats?.kpis?.extraRevenue / stats?.kpis?.totalRevenue) * 100 || 0}%` }} /></i>
                </div>
             </div>

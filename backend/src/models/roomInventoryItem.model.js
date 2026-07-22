@@ -1,6 +1,6 @@
 ﻿const mongoose = require('mongoose');
 
-const minibarItemSchema = new mongoose.Schema(
+const roomInventoryItemSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -44,11 +44,11 @@ const minibarItemSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    collection: 'minibar_items',
+    collection: 'room_inventory_items',
   }
 );
 
-minibarItemSchema.index({ category: 1, is_active: 1 });
+roomInventoryItemSchema.index({ category: 1, is_active: 1 });
 
-module.exports = mongoose.model('MinibarItem', minibarItemSchema);
+module.exports = mongoose.model('RoomInventoryItem', roomInventoryItemSchema);
 
