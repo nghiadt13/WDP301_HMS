@@ -28,8 +28,22 @@ const ReceptionistBookingDetailPage = () => {
     );
   }
 
-  const { booking, rooms, stayGuests, payments, canCheckin, blockingReasons } = data.data;
+  const { 
+    booking = {}, 
+    rooms = [], 
+    stayGuests = [], 
+    payments = [], 
+    canCheckin = false, 
+    blockingReasons = [] 
+  } = data?.data || {};
 
+  if (!booking || Object.keys(booking).length === 0) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+        Không tìm thấy thông tin đặt phòng.
+      </div>
+    );
+  }
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);

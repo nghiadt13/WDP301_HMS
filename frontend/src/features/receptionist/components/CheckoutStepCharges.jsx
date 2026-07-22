@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAddCharge, useRemoveCharge } from '../hooks/use-checkout';
-import { Receipt, Plus } from 'lucide-react';
+import { Receipt, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const CheckoutStepCharges = ({ bookingId, summary }) => {
@@ -9,7 +9,7 @@ const CheckoutStepCharges = ({ bookingId, summary }) => {
   const minibarRooms = summary?.inspectionState?.rooms || [];
 
   const [chargeData, setChargeData] = useState({
-    room_id: summary.rooms[0]?.roomId || '',
+    room_id: (summary.rooms || [])[0]?.roomId || '',
     description: '',
     amount: '',
     charge_type: 'service'
@@ -127,7 +127,7 @@ const CheckoutStepCharges = ({ bookingId, summary }) => {
               <div style={{ position: 'relative' }}>
                 <select style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '14px', color: '#0f172a', outline: 'none', appearance: 'none', cursor: 'pointer' }} value={chargeData.room_id} onChange={e => setChargeData({...chargeData, room_id: e.target.value})}>
                   <option value="">-- Áp dụng chung toàn bộ hóa đơn --</option>
-                  {summary.rooms.map(room => (
+                  {(summary.rooms || []).map(room => (
                     <option key={room.id} value={room.roomId}>Phòng {room.roomName}</option>
                   ))}
                 </select>
@@ -173,7 +173,7 @@ const CheckoutStepCharges = ({ bookingId, summary }) => {
         <div style={{ flex: '1 1 350px' }}>
           <div>
             <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Danh sách phụ phí</h4>
-            {summary.charges.length === 0 ? (
+            {(summary.charges || []).length === 0 ? (
               <div style={{ padding: '60px 20px', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '2px dashed #e2e8f0' }}>
                 <div style={{ width: '56px', height: '56px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', margin: '0 auto 16px' }}>
                   <Receipt size={28} />
@@ -183,7 +183,7 @@ const CheckoutStepCharges = ({ bookingId, summary }) => {
               </div>
             ) : (
               <div style={{ display: 'grid', gap: '12px' }}>
-                {summary.charges.map(charge => (
+                {(summary.charges || []).map(charge => (
                   <div key={charge._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                     <div>
                       <div style={{ fontWeight: '600', fontSize: '15px', color: '#0f172a' }}>{charge.description}</div>
@@ -191,7 +191,7 @@ const CheckoutStepCharges = ({ bookingId, summary }) => {
                         <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontWeight: '500' }}>
                           {charge.charge_type === 'minibar' ? 'Minibar' : charge.charge_type === 'damage' ? 'Bồi thường' : charge.charge_type === 'service' ? 'Dịch vụ' : 'Khác'}
                         </span>
-                        {charge.room_id && <span>• Phòng {summary.rooms.find(r => r.roomId === charge.room_id)?.roomName || ''}</span>}
+                        {charge.room_id && <span>• Phòng {(summary.rooms || []).find(r => r.roomId === charge.room_id)?.roomName || ''}</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
