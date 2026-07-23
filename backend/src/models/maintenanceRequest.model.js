@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const maintenanceRequestSchema = new mongoose.Schema(
   {
+    inspection_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Inspection',
+      default: null,
+    },
     room: {
       type: String,
       trim: true,
@@ -26,6 +31,10 @@ const maintenanceRequestSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    images: {
+      type: [String],
+      default: [],
     },
     status: {
       type: String,
@@ -55,5 +64,6 @@ const maintenanceRequestSchema = new mongoose.Schema(
 );
 
 maintenanceRequestSchema.index({ room: 1, status: 1 });
+maintenanceRequestSchema.index({ inspection_id: 1, status: 1 });
 
 module.exports = mongoose.model('MaintenanceRequest', maintenanceRequestSchema);

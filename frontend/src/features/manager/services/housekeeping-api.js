@@ -56,6 +56,7 @@ const normalizeMaintenance = (item) => ({
   priority: item?.priority || 'medium',
   description: item?.description || '',
   image: item?.image || '',
+  images: Array.isArray(item?.images) ? item.images : (item?.image ? [item.image] : []),
   status: item?.status || 'Open',
   assignedTech: item?.assignedTech || '',
   reportedBy: item?.reportedBy || 'Housekeeping',
@@ -80,6 +81,12 @@ const normalizeInspection = (inspection) => ({
   lostItem: Array.isArray(inspection?.lostItem) ? inspection.lostItem : [],
   missingItems: Array.isArray(inspection?.missing_items) ? inspection.missing_items : [],
   damagedItems: Array.isArray(inspection?.damaged_items) ? inspection.damaged_items : [],
+  damageMissingItems: Array.isArray(inspection?.damage_missing_items)
+    ? inspection.damage_missing_items
+    : [
+      ...(Array.isArray(inspection?.damaged_items) ? inspection.damaged_items : []),
+      ...(Array.isArray(inspection?.missing_items) ? inspection.missing_items : []),
+    ],
   maintenanceRequired: Boolean(inspection?.maintenance_required),
   createdAt: inspection?.createdAt || null,
   updatedAt: inspection?.updatedAt || null,

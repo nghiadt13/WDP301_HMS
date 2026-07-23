@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import HousekeepingRoomInventoryPicker from '../components/HousekeepingRoomInventoryPicker.jsx';
+import DamageMissingItemsEditor, { withDamageMissingItemClientId } from '@/components/DamageMissingItemsEditor.jsx';
 import HousekeepingStatusBadge from '../components/HousekeepingStatusBadge.jsx';
 import { useHousekeepingDashboard, useHousekeepingMaintenance, useHousekeepingTasks } from '../hooks/use-housekeeping.js';
 import { housekeepingApi } from '../services/housekeeping-api.js';
@@ -99,18 +100,9 @@ const HousekeepingTasksPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [completionNote, setCompletionNote] = useState('');
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-  const [isIssueSubmitting, setIsIssueSubmitting] = useState(false);
   const [roomInventorySelection, setRoomInventorySelection] = useState([]);
-  const [issueForm, setIssueForm] = useState({
-    task_id: '',
-    room_number: '',
-    category: 'Equipment Failure',
-    priority: 'high',
-    description: '',
-    image: '',
-    note: '',
-  });
+  const [damageMissingItems, setDamageMissingItems] = useState([]);
+  const [damageDraftSourceId, setDamageDraftSourceId] = useState('');
 
   const taskActionMutation = useMutation({
     mutationFn: async ({ action, task }) => {
@@ -140,38 +132,35 @@ const HousekeepingTasksPage = () => {
   });
 
   const handoverMutation = useMutation({
-    mutationFn: async ({ task, inspection, roomStatus }) => {
-      const selectedRoomInventory = Array.isArray(inspection?.room_inventory)
-        ? inspection.room_inventory
-        : Array.isArray(inspection?.roomInventory)
-          ? inspection.roomInventory
-          : [];
-      const selectedMissingItems = Array.isArray(inspection?.missing_items)
-        ? inspection.missing_items
-        : inspection?.missingItems || [];
-      const selectedDamagedItems = Array.isArray(inspection?.damaged_items)
-        ? inspection.damaged_items
-        : inspection?.damagedItems || [];
-
-      return housekeepingApi.createInspection({
-        task_id: task.id,
-        room_number: task.roomNumber,
-        room: task.roomNumber,
-        checklist: inspection?.checklist || {},
-        damage: inspection?.damage || [],
-        lostItem: inspection?.lostItem || [],
-        room_inventory: selectedRoomInventory,
-        photos: inspection?.photos || [],
-        note: inspection?.note || `Room ${task.roomNumber} is ready for receptionist checkout review.`,
-        remarks: inspection?.remarks || 'Ready for checkout',
-        room_inventory_used: Boolean(inspection?.room_inventory_used ?? inspection?.roomInventoryUsed ?? selectedRoomInventory.length > 0),
-        missing_items: selectedMissingItems,
-        damaged_items: selectedDamagedItems,
-        maintenance_required: Boolean(inspection?.maintenance_required ?? inspection?.maintenanceRequired ?? false),
-        room_status_before: roomStatus || '',
-        room_status_after: 'Dirty',
-      });
-    },
+    mutationFn: async ({ task, inspection, roomStatus }) => housekeepingApi.createInspection({
+      task_id: task.id,
+      room_number: task.roomNumber,
+      room: task.roomNumber,
+      checklist: inspection?.checklist || {},
+      damage: inspection?.damage || [],
+      lostItem: inspection?.lostItem || [],
+      room_inventory: inspection?.room_inventory || inspection?.roomInventory || [],
+      photos: inspection?.photos || [],
+      note: inspection?.note || `Room ${task.roomNumber} is ready for receptionist checkout review.`,
+      remarks: inspection?.remarks || 'Ready for checkout',
+      room_inventory_used: Boolean(inspection?.room_inventory_used ?? inspection?.roomInventoryUsed ?? (inspection?.room_inventory || inspection?.roomInventory || []).length > 0),
+      missing_items: inspection?.missingItems || [],
+      damaged_items: inspection?.damagedItems || [],
+      damage_missing_items: (inspection?.damageMissingItems || [])
+        .filter((item) => String(item?.name || '').trim().length > 0)
+        .map((item) => ({
+          ...item,
+          name: String(item?.name || '').trim(),
+          type: item?.type || 'damaged',
+          description: String(item?.description || item?.note || '').trim(),
+          estimated_compensation_amount: item?.estimated_compensation_amount === '' ? 0 : Number(item?.estimated_compensation_amount || 0),
+          approved_compensation_amount: item?.approved_compensation_amount === '' || item?.approved_compensation_amount === undefined || item?.approved_compensation_amount === null ? null : Number(item?.approved_compensation_amount),
+          photos: Array.isArray(item?.photos) ? item.photos : [],
+        })),
+      maintenance_required: inspection?.maintenanceRequired || false,
+      room_status_before: roomStatus || '',
+      room_status_after: 'Dirty',
+    }),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
@@ -187,89 +176,6 @@ const HousekeepingTasksPage = () => {
       window.alert(getMutationErrorMessage(error));
     },
   });
-
-  const openIssueModal = (task) => {
-    if (!task?.roomNumber) {
-      toast.error('Room number is required to report maintenance.');
-      return;
-    }
-
-    setIssueForm({
-      task_id: task.id || '',
-      room_number: task.roomNumber || '',
-      category: 'Equipment Failure',
-      priority: 'high',
-      description: task.receptionistNote ? `Maintenance required for room ${task.roomNumber}: ${task.receptionistNote}` : `Maintenance required for room ${task.roomNumber}`,
-      image: '',
-      note: '',
-    });
-    setIsIssueModalOpen(true);
-  };
-
-  const closeIssueModal = () => {
-    setIsIssueModalOpen(false);
-    setIsIssueSubmitting(false);
-    setIssueForm({
-      task_id: '',
-      room_number: '',
-      category: 'Equipment Failure',
-      priority: 'high',
-      description: '',
-      image: '',
-      note: '',
-    });
-    taskActionMutation.reset();
-  };
-
-  const submitIssueReport = async () => {
-    if (isIssueSubmitting) return;
-
-    const roomNumber = issueForm.room_number.trim();
-    const category = issueForm.category.trim();
-    const description = issueForm.description.trim();
-
-    if (!roomNumber) {
-      toast.error('Room number is required.');
-      return;
-    }
-
-    if (!category) {
-      toast.error('Category is required.');
-      return;
-    }
-
-    if (!description) {
-      toast.error('Description is required.');
-      return;
-    }
-
-    try {
-      setIsIssueSubmitting(true);
-      const result = await housekeepingApi.reportIssue({
-        task_id: issueForm.task_id,
-        room_number: roomNumber,
-        category,
-        priority: issueForm.priority,
-        description,
-        image: issueForm.image.trim(),
-        note: issueForm.note.trim(),
-        reportedBy: 'Housekeeping',
-      });
-
-      toast.success(result?.duplicate ? 'Maintenance report already exists.' : 'Maintenance report created successfully.');
-      closeIssueModal();
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['housekeeping-dashboard'] }),
-        queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] }),
-        queryClient.invalidateQueries({ queryKey: ['housekeeping-maintenance'] }),
-        queryClient.invalidateQueries({ queryKey: ['receptionist-operational-board'] }),
-      ]);
-    } catch (error) {
-      toast.error(getMutationErrorMessage(error));
-    } finally {
-      setIsIssueSubmitting(false);
-    }
-  };
 
   const baseTasks = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -386,6 +292,7 @@ const HousekeepingTasksPage = () => {
   useEffect(() => {
     if (!selectedTaskIsInspectionReview) {
       setRoomInventorySelection([]);
+      setDamageMissingItems([]);
       return;
     }
 
@@ -415,6 +322,32 @@ const HousekeepingTasksPage = () => {
     setRoomInventorySelection(nextSelection);
   }, [inspectionQuery.data?.room_inventory, selectedRoomInventoryItems, selectedTaskIsInspectionReview]);
 
+  useEffect(() => {
+    if (!selectedTaskIsInspectionReview) {
+      setDamageMissingItems([]);
+      setDamageDraftSourceId('');
+      return;
+    }
+
+    const existingItems = Array.isArray(inspectionQuery.data?.damageMissingItems)
+      ? inspectionQuery.data.damageMissingItems
+      : [];
+    const nextSourceId = inspectionQuery.data?.id || selectedTask?.roomNumber || '';
+
+    // Fix: Only populate from inspectionQuery if draft source ID changed.
+    // Do NOT check damageMissingItems.length so user added items/photos are NOT overwritten when query re-arms or re-fetches!
+    if (damageDraftSourceId === nextSourceId) {
+      return;
+    }
+
+    setDamageDraftSourceId(nextSourceId);
+    setDamageMissingItems(existingItems.map((item) => withDamageMissingItemClientId({
+      ...item,
+      estimated_compensation_amount: item?.estimated_compensation_amount ?? '',
+      approved_compensation_amount: item?.approved_compensation_amount ?? '',
+    }, item?.type || 'damaged')));
+  }, [damageDraftSourceId, inspectionQuery.data?.id, inspectionQuery.data?.damageMissingItems, selectedTask?.roomNumber, selectedTaskIsInspectionReview]);
+
   const summary = useMemo(() => {
     const all = data || [];
     const assigned = all.filter((task) => normalizeStatus(task.status) === 'assigned').length;
@@ -431,11 +364,6 @@ const HousekeepingTasksPage = () => {
   }, [data]);
 
   const onTaskAction = async (action, task) => {
-    if (action === 'issue') {
-      openIssueModal(task);
-      return;
-    }
-
     await taskActionMutation.mutateAsync({ action, task });
     await refetch();
   };
@@ -448,6 +376,7 @@ const HousekeepingTasksPage = () => {
         ...inspectionQuery.data,
         room_inventory: roomInventorySelection,
         room_inventory_used: roomInventorySelection.length > 0,
+        damageMissingItems,
       },
       roomStatus: selectedRoom?.status || '',
     });
@@ -718,6 +647,17 @@ const HousekeepingTasksPage = () => {
                 )}
               </section>
 
+              {selectedTaskIsInspectionReview ? (
+                <section className="housekeeping-task-detail-section">
+                  <DamageMissingItemsEditor
+                    title="Damage & Missing Items"
+                    description="Add damaged or missing items before handing the inspection back to receptionist. Photo evidence is optional."
+                    value={damageMissingItems}
+                    onChange={setDamageMissingItems}
+                  />
+                </section>
+              ) : null}
+
               <section className="housekeeping-task-detail-section">
                 <h4>Condition photos</h4>
                 {inspectionQuery.data?.photos?.length ? (
@@ -792,14 +732,6 @@ const HousekeepingTasksPage = () => {
                     </button>
                   </>
                 ) : null}
-                <button
-                  className="housekeeping-outline-btn"
-                  type="button"
-                  disabled={!isActionAllowed('issue', selectedTask.status) || taskActionMutation.isPending}
-                  onClick={() => onTaskAction('issue', selectedTask)}
-                >
-                  Report Maintenance
-                </button>
               </section>
               {selectedTaskHasActiveMaintenance ? (
                 <p className="housekeeping-task-warning">
@@ -811,88 +743,6 @@ const HousekeepingTasksPage = () => {
         </aside>
       </section>
 
-      {isIssueModalOpen ? (
-        <div className="housekeeping-modal-backdrop" role="presentation" onClick={closeIssueModal}>
-          <div className="housekeeping-modal-card housekeeping-issue-modal" role="dialog" aria-modal="true" aria-labelledby="maintenance-report-title" onClick={(event) => event.stopPropagation()}>
-            <h3 id="maintenance-report-title">Report Maintenance</h3>
-            <p>Submit a maintenance request for the selected room.</p>
-
-            <div className="housekeeping-issue-modal-grid">
-              <label>
-                <span>Room Number *</span>
-                <input
-                  className="housekeeping-maintenance-input"
-                  value={issueForm.room_number}
-                  onChange={(event) => setIssueForm((prev) => ({ ...prev, room_number: event.target.value }))}
-                  placeholder="e.g. 305"
-                />
-              </label>
-
-              <label>
-                <span>Category *</span>
-                <input
-                  className="housekeeping-maintenance-input"
-                  value={issueForm.category}
-                  onChange={(event) => setIssueForm((prev) => ({ ...prev, category: event.target.value }))}
-                  placeholder="Equipment Failure"
-                />
-              </label>
-
-              <label>
-                <span>Priority *</span>
-                <select
-                  value={issueForm.priority}
-                  onChange={(event) => setIssueForm((prev) => ({ ...prev, priority: event.target.value }))}
-                >
-                  <option value="urgent">urgent</option>
-                  <option value="high">high</option>
-                  <option value="medium">medium</option>
-                  <option value="low">low</option>
-                </select>
-              </label>
-
-              <label className="housekeeping-issue-modal-wide">
-                <span>Description *</span>
-                <textarea
-                  className="housekeeping-maintenance-textarea"
-                  value={issueForm.description}
-                  onChange={(event) => setIssueForm((prev) => ({ ...prev, description: event.target.value }))}
-                  placeholder="Describe the maintenance issue"
-                />
-              </label>
-
-              <label className="housekeeping-issue-modal-wide">
-                <span>Photo URL</span>
-                <input
-                  className="housekeeping-maintenance-input"
-                  value={issueForm.image}
-                  onChange={(event) => setIssueForm((prev) => ({ ...prev, image: event.target.value }))}
-                  placeholder="Optional photo URL"
-                />
-              </label>
-
-              <label className="housekeeping-issue-modal-wide">
-                <span>Notes</span>
-                <textarea
-                  className="housekeeping-maintenance-textarea"
-                  value={issueForm.note}
-                  onChange={(event) => setIssueForm((prev) => ({ ...prev, note: event.target.value }))}
-                  placeholder="Optional notes"
-                />
-              </label>
-            </div>
-
-            <div className="housekeeping-modal-actions">
-              <button className="housekeeping-outline-btn" type="button" onClick={closeIssueModal} disabled={isIssueSubmitting}>
-                Cancel
-              </button>
-              <button className="housekeeping-btn" type="button" onClick={submitIssueReport} disabled={isIssueSubmitting}>
-                {isIssueSubmitting ? 'Saving...' : 'Submit Report'}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 };

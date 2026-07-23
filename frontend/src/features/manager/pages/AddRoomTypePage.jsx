@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { useCreateRoomType, useAmenities } from '../hooks/use-rooms';
-import { uploadApi } from '../services/room-api';
+import ImageUploadField from '@/components/ImageUploadField.jsx';
 import './add-room.css';
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:9999';
@@ -46,9 +46,7 @@ const AddRoomTypePage = () => {
 
   const [form, setForm] = useState(defaultForm);
   const [errors, setErrors] = useState({});
-  const [uploading, setUploading] = useState(false);
   const [coverIndex, setCoverIndex] = useState(0);
-  const fileInputRef = useRef(null);
 
   const [bedCount, setBedCount] = useState(1);
   const [adults, setAdults] = useState(2);
@@ -155,53 +153,6 @@ const AddRoomTypePage = () => {
         : [...prev.facilities, name],
     }));
   };
-
-
-
-  const handleFileSelect = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    setUploading(true);
-    try {
-      const uploadedUrls = [];
-      for (const file of files) {
-        const res = await uploadApi.uploadImage(file);
-        uploadedUrls.push(res.data.url);
-      }
-      setForm((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uploadedUrls],
-      }));
-    } catch (err) {
-      console.error('Upload failed:', err);
-      const msg = err.response?.data?.message || 'Tải ảnh lên thất bại. Vui lòng thử lại.';
-      alert(msg);
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveImage = async (index) => {
-    const imageUrl = form.images[index];
-    const filename = imageUrl.split('/').pop();
-
-    setForm((prev) => {
-      const newImages = prev.images.filter((_, i) => i !== index);
-      if (index <= coverIndex) {
-        setCoverIndex(Math.min(coverIndex, newImages.length - 1));
-      }
-      return { ...prev, images: newImages };
-    });
-
-    try {
-      await uploadApi.deleteImage(filename);
-    } catch (err) {
-      console.error('Failed to delete image file:', err);
-    }
-  };
-
   const handleCoverSelect = (index) => {
     setCoverIndex(index);
   };
@@ -500,50 +451,22 @@ const AddRoomTypePage = () => {
               <span className="ar-card-title">Hình ảnh loại phòng</span>
             </div>
 
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              multiple
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
+            <ImageUploadField
+              label="Hình ảnh loại phòng"
+              helperText="Chọn một ảnh đã tải lên để đặt làm ảnh bìa."
+              value={form.images}
+              onChange={(images) => {
+                setForm((prev) => ({ ...prev, images }));
+                setCoverIndex((current) => Math.max(0, Math.min(current, Math.max(images.length - 1, 0))));
+              }}
+              buttonLabel="Kéo và thả hoặc bấm để tải ảnh lên"
+              emptyStateLabel="Chưa có ảnh nào được tải lên."
+              renderImageUrl={toFullUrl}
+              variant="dropzone"
+              selectedIndex={coverIndex}
+              selectedBadgeLabel="Ảnh bìa"
+              onPreviewClick={handleCoverSelect}
             />
-            <div className="ar-drop-zone" onClick={() => fileInputRef.current?.click()}>
-              <Upload size={36} className="ar-drop-zone-icon" />
-              <p>{uploading ? 'Đang tải lên...' : 'Kéo và thả để tải ảnh lên'}</p>
-              {!uploading && <p className="ar-drop-hint">hoặc</p>}
-              {!uploading && (
-                <button type="button" className="ar-drop-upload-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                  Chọn hình ảnh
-                </button>
-              )}
-            </div>
-
-            {form.images.length > 0 && (
-              <>
-                <div className="ar-thumbs-label">Tệp đã tải lên (Chọn một ảnh để làm ảnh bìa)</div>
-                <div className="ar-thumbs-row">
-                  {form.images.map((url, i) => (
-                    <div
-                      key={i}
-                      className={`ar-thumb${coverIndex === i ? ' is-cover' : ''}`}
-                      onClick={() => handleCoverSelect(i)}
-                    >
-                      <img src={toFullUrl(url)} alt={`Hình ảnh loại phòng ${i + 1}`} />
-                      <button
-                        type="button"
-                        className="ar-thumb-remove"
-                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(i); }}
-                        title="Xóa hình ảnh"
-                      >
-                        <X size={10} />
-                      </button>
-                      {coverIndex === i && <div className="ar-thumb-cover">Ảnh bìa</div>}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
 
           <div className="ar-card">

@@ -4,6 +4,20 @@ const path = require('path');
 const fs = require('fs');
 
 const router = express.Router();
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MIME_EXTENSION_MAP = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+};
+
+const sanitizeBasename = (value) => String(value || '')
+  .replace(/\.[^.]+$/, '')
+  .replace(/[^A-Za-z0-9_-]+/g, '-')
+  .replace(/-+/g, '-')
+  .replace(/^-|-$/g, '')
+  .toLowerCase()
+  .slice(0, 60) || 'image';
 
 // Ensure upload directory exists
 const uploadDir = path.join(__dirname, '../../uploads/rooms');
@@ -16,21 +30,32 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `room-${uniqueSuffix}${ext}`);
+    const ext = MIME_EXTENSION_MAP[file.mimetype] || path.extname(file.originalname).toLowerCase();
+    const safeBase = sanitizeBasename(file.originalname);
+    cb(null, `${safeBase}-${uniqueSuffix}${ext}`);
   },
 });
 
 // File filter: only allow images
 const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|gif|webp/;
-  const extOk = allowed.test(path.extname(file.originalname).toLowerCase());
-  const mimeOk = allowed.test(file.mimetype);
-  if (extOk && mimeOk) {
-    cb(null, true);
-  } else {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const extOk = ['.jpg', '.jpeg', '.png', '.webp'].includes(ext);
+  const mimeOk = ALLOWED_MIME_TYPES.has(file.mimetype);
+  const fileKey = `${String(file.originalname || '').toLowerCase()}::${file.mimetype}`;
+
+  if (!extOk || !mimeOk) {
     cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname));
+    return;
   }
+
+  req._seenUploadFiles = req._seenUploadFiles || new Set();
+  if (req._seenUploadFiles.has(fileKey)) {
+    cb(new Error('Duplicate files are not allowed in a single upload request.'));
+    return;
+  }
+
+  req._seenUploadFiles.add(fileKey);
+  cb(null, true);
 };
 
 const upload = multer({
@@ -44,12 +69,15 @@ const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     const messages = {
       LIMIT_FILE_SIZE: 'File is too large. Maximum size is 5MB.',
-      LIMIT_UNEXPECTED_FILE: 'Only image files (jpg, png, gif, webp) are allowed.',
+      LIMIT_UNEXPECTED_FILE: 'Only image files (jpg, jpeg, png, webp) are allowed.',
       LIMIT_FILE_COUNT: 'Too many files. Maximum is 10 images.',
       LIMIT_FIELD_COUNT: 'Too many fields.',
     };
     const message = messages[err.code] || `Upload error: ${err.message}`;
     return res.status(400).json({ success: false, message });
+  }
+  if (err && err.message === 'Duplicate files are not allowed in a single upload request.') {
+    return res.status(400).json({ success: false, message: err.message });
   }
   next(err);
 };

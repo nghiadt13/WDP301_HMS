@@ -36,6 +36,7 @@ const CheckoutStepBilling = ({ bookingId, summary, onComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const isCheckoutCompleted = summary?.booking?.status === 'CheckedOut';
 
+  const approvedDamageTotal = Number(summary?.inspectionState?.approvedDamageTotal || 0);
   const manualChargesTotal = useMemo(
     () => [...(summary.charges || []), ...buildHousekeepingInventoryCharges(summary)]
       .reduce((sum, charge) => sum + Number(charge.amount || 0), 0),
@@ -44,14 +45,14 @@ const CheckoutStepBilling = ({ bookingId, summary, onComplete }) => {
 
   const roomCharge = Number(summary.booking?.totalAmount || 0);
   const depositDeducted = Number(summary.booking?.depositAmount || 0);
-  const subtotal = roomCharge + manualChargesTotal;
+  const subtotal = roomCharge + manualChargesTotal + approvedDamageTotal;
   const finalTotal = Math.max(0, subtotal - depositDeducted);
   const invoice = {
     ...(summary.invoice || {}),
     invoice_code: summary.invoice?.invoice_code || 'DRAFT',
     status: summary.invoice?.status || 'Unpaid',
     room_charge: roomCharge,
-    extra_charges: manualChargesTotal,
+  extra_charges: manualChargesTotal + approvedDamageTotal,
     subtotal,
     deposit_deducted: depositDeducted,
     final_total: finalTotal,
@@ -100,6 +101,10 @@ const CheckoutStepBilling = ({ bookingId, summary, onComplete }) => {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--muted)' }}>Phụ phí khác:</span>
               <span style={{ fontWeight: '500' }}>{formatCurrency(manualChargesTotal)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--muted)' }}>Bồi thường đã duyệt:</span>
+              <span style={{ fontWeight: '500' }}>{formatCurrency(approvedDamageTotal)}</span>
             </div>
             <div style={{ borderTop: '1px dashed var(--line)', margin: '8px 0' }}></div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

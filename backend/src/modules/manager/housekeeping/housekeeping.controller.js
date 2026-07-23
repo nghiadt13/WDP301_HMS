@@ -234,10 +234,10 @@ const housekeepingController = {
     }
   },
 
-  async reportRoomIssue(req, res) {
+  async createMaintenanceRequestFromInspection(req, res) {
     try {
-      const data = await housekeepingService.reportRoomIssue(req.body, req.user);
-      res.status(201).json({ success: true, data, message: 'Room issue reported successfully' });
+      const data = await housekeepingService.createMaintenanceRequestFromInspection(req.params.id, req.body, req.user);
+      res.status(201).json({ success: true, data, message: 'Maintenance task created from inspection report' });
     } catch (err) {
       sendError(res, err);
     }

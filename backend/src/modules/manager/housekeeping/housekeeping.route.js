@@ -34,12 +34,11 @@ router.get('/inspections/:id', authorize('manager', 'housekeeping', 'receptionis
 router.get('/inspection/:roomNumber', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getInspectionByRoom);
 router.post('/inspection', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.createInspection);
 router.patch('/inspection/:id', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.updateInspection);
-router.post('/report-issue', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.reportRoomIssue);
-router.post('/report-room-issue', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.reportRoomIssue);
-router.get('/maintenance-requests', authorize('manager', 'housekeeping', 'receptionist', 'technical'), housekeepingController.getMaintenanceRequests);
-router.get('/maintenance-requests/:id', authorize('manager', 'housekeeping', 'receptionist', 'technical'), housekeepingController.getMaintenanceRequestById);
+router.post('/inspections/:id/maintenance-request', authorize('manager'), housekeepingController.createMaintenanceRequestFromInspection);
+router.get('/maintenance-requests', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getMaintenanceRequests);
+router.get('/maintenance-requests/:id', authorize('manager', 'housekeeping', 'receptionist'), housekeepingController.getMaintenanceRequestById);
 router.patch('/maintenance-requests/:id/assign', authorize('manager'), housekeepingController.assignMaintenanceRequest);
-router.patch('/maintenance-requests/:id/status', authorize('manager', 'technical'), housekeepingController.updateMaintenanceRequestStatus);
+router.patch('/maintenance-requests/:id/status', authorize('manager'), housekeepingController.updateMaintenanceRequestStatus);
 router.patch('/maintenance-requests/:id/approve', authorize('manager'), housekeepingController.approveMaintenanceRequest);
 router.patch('/maintenance-requests/:id/reject', authorize('manager'), housekeepingController.rejectMaintenanceRequest);
 router.patch('/maintenance-requests/:id/complete', authorize('manager'), housekeepingController.completeMaintenanceRequest);

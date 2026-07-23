@@ -1,5 +1,54 @@
 const mongoose = require('mongoose');
 
+const inspectionItemSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ['damaged', 'missing'],
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      default: 1,
+    },
+    severity: {
+      type: String,
+      enum: ['minor', 'major', 'critical'],
+      default: 'minor',
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    note: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    estimated_compensation_amount: {
+      type: Number,
+      default: 0,
+    },
+    approved_compensation_amount: {
+      type: Number,
+      default: null,
+    },
+    photos: {
+      type: [String],
+      default: [],
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const inspectionSchema = new mongoose.Schema(
   {
     room_number: {
@@ -100,23 +149,11 @@ const inspectionSchema = new mongoose.Schema(
       default: [],
     },
     missing_items: {
-      type: [
-        {
-          name: { type: String, trim: true, required: true },
-          quantity: { type: Number, default: 1 },
-          note: { type: String, trim: true, default: '' },
-        },
-      ],
+      type: [inspectionItemSchema],
       default: [],
     },
     damaged_items: {
-      type: [
-        {
-          name: { type: String, trim: true, required: true },
-          severity: { type: String, enum: ['minor', 'major', 'critical'], default: 'minor' },
-          note: { type: String, trim: true, default: '' },
-        },
-      ],
+      type: [inspectionItemSchema],
       default: [],
     },
     maintenance_required: {

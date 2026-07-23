@@ -6,6 +6,9 @@ const RoomInventoryItem = require('../../../models/roomInventoryItem.model');
 const MaintenanceRequest = require('../../../models/maintenanceRequest.model');
 const User = require('../../../models/user.model');
 const { createHttpError } = require('../../../utils/error.utils');
+const mongoose = require('mongoose');
+
+const UPLOADS_PREFIX = '/uploads/rooms/';
 
 const normalizeRole = (user) => String(user?.role_id?.name || user?.role || '').toLowerCase();
 
@@ -56,6 +59,121 @@ const normalizeTaskStatus = (status) => {
 };
 
 const normalizeMaintenanceValue = (value) => String(value || '').trim();
+
+const normalizeMoneyAmount = (value, fallback = 0) => {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  if (Number.isNaN(parsed) || parsed < 0) {
+    throw createHttpError('Compensation amount must be a non-negative number', 400);
+  }
+
+  return parsed;
+};
+
+const normalizeUploadedPath = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+
+  const filename = raw.split('/').pop();
+  if (!filename) return '';
+
+  const safeName = filename.replace(/[^A-Za-z0-9._-]/g, '');
+  return safeName ? `${UPLOADS_PREFIX}${safeName}` : '';
+};
+
+const normalizeUploadedPaths = (values, { requireAtLeastOne = false } = {}) => {
+  const seen = new Set();
+  const paths = (Array.isArray(values) ? values : [values])
+    .map((value) => normalizeUploadedPath(value))
+    .filter((value) => {
+      if (!value || seen.has(value)) return false;
+      seen.add(value);
+      return true;
+    });
+
+  if (requireAtLeastOne && paths.length === 0) {
+    // Photo evidence requirement removed as requested
+  }
+
+  return paths;
+};
+
+const normalizeInspectionItemType = (value, fallback = 'missing') => {
+  const normalized = String(value || fallback).trim().toLowerCase();
+  if (['damaged', 'damage'].includes(normalized)) return 'damaged';
+  if (['missing', 'lost', 'lostitem', 'lost_item'].includes(normalized)) return 'missing';
+  throw createHttpError('Damage report item type must be either damaged or missing', 400);
+};
+
+const normalizeInspectionItem = (item, fallbackType) => {
+  const name = String(item?.name || item?.item || '').trim();
+  if (!name) {
+    throw createHttpError('Damage report item name is required', 400);
+  }
+
+  const type = normalizeInspectionItemType(item?.type, fallbackType);
+  const quantity = Math.max(1, Number(item?.quantity || 1));
+  const severity = ['minor', 'major', 'critical'].includes(String(item?.severity || '').toLowerCase())
+    ? String(item.severity).toLowerCase()
+    : 'minor';
+
+  return {
+    name,
+    type,
+    quantity,
+    severity,
+    description: String(item?.description || item?.note || '').trim(),
+    note: String(item?.note || item?.description || '').trim(),
+    estimated_compensation_amount: normalizeMoneyAmount(item?.estimated_compensation_amount ?? item?.estimatedCompensationAmount ?? item?.estimatedCharge ?? item?.estimated_charge ?? 0, 0),
+    approved_compensation_amount: item?.approved_compensation_amount === null || item?.approvedCompensationAmount === null
+      ? null
+      : normalizeMoneyAmount(item?.approved_compensation_amount ?? item?.approvedCompensationAmount ?? item?.estimated_compensation_amount ?? item?.estimatedCompensationAmount ?? 0, 0),
+    photos: normalizeUploadedPaths(item?.photos || item?.evidencePhotos || item?.images || item?.image, {
+      requireAtLeastOne: false,
+    }),
+  };
+};
+
+const normalizeInspectionItemsPayload = ({
+  damage_missing_items = [],
+  damaged_items = [],
+  missing_items = [],
+  damage = [],
+  lostItem = [],
+}) => {
+  const combinedItems = Array.isArray(damage_missing_items) && damage_missing_items.length
+    ? damage_missing_items
+    : [
+      ...((Array.isArray(damaged_items) ? damaged_items : []).map((item) => ({ ...item, type: item?.type || 'damaged' }))),
+      ...((Array.isArray(missing_items) ? missing_items : []).map((item) => ({ ...item, type: item?.type || 'missing' }))),
+    ];
+    
+  const validItems = combinedItems;
+  const normalizedItems = validItems.map((item) => normalizeInspectionItem(item, item?.type || 'missing'));
+
+  const deduped = [];
+  const seen = new Set();
+  normalizedItems.forEach((item) => {
+    const key = `${item.type}::${item.name.toLowerCase()}::${item.description.toLowerCase()}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    deduped.push(item);
+  });
+
+  const damagedItemsResult = deduped.filter((item) => item.type === 'damaged');
+  const missingItemsResult = deduped.filter((item) => item.type === 'missing');
+
+  return {
+    damagedItems: damagedItemsResult,
+    missingItems: missingItemsResult,
+    legacyDamage: damagedItemsResult.map((item) => item.name),
+    legacyLostItem: missingItemsResult.map((item) => item.name),
+  };
+};
 
 const ensureWorkflowRole = (user, allowedRoles) => {
   const role = normalizeRole(user);
@@ -186,6 +304,10 @@ const mapInspection = (inspection) => ({
   invoice_items: inspection.invoice_items || [],
   missing_items: inspection.missing_items || [],
   damaged_items: inspection.damaged_items || [],
+  damage_missing_items: [
+    ...(inspection.damaged_items || []),
+    ...(inspection.missing_items || []),
+  ],
   maintenance_required: inspection.maintenance_required,
   task_id: inspection.task_id,
   room_status_before: inspection.room_status_before,
@@ -293,11 +415,13 @@ const updateServiceRequestLifecycle = (request, status, user) => {
 
 const mapMaintenanceRequest = (request) => ({
   id: request._id,
+  inspection_id: request.inspection_id || null,
   room: request.room,
   category: request.category,
   priority: request.priority,
   description: request.description,
-  image: request.image,
+  image: request.image || '',
+  images: Array.isArray(request.images) && request.images.length ? request.images : (request.image ? [request.image] : []),
   status: request.status,
   assignedTech: request.assignedTech,
   reportedBy: request.reportedBy,
@@ -681,18 +805,19 @@ const housekeepingService = {
   },
 
   async getMaintenanceRequests(query = {}, user) {
-    ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist', 'technical']);
+    ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist']);
 
     const filter = {};
     if (query.room) filter.room = query.room;
     if (query.status) filter.status = query.status;
+    if (query.inspection_id) filter.inspection_id = query.inspection_id;
 
     const requests = await MaintenanceRequest.find(filter).sort({ createdAt: -1 }).lean();
     return requests.map(mapMaintenanceRequest);
   },
 
   async getMaintenanceRequestById(id, user) {
-    ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist', 'technical']);
+    ensureWorkflowRole(user, ['manager', 'housekeeping', 'receptionist']);
 
     const request = await MaintenanceRequest.findById(id).lean();
     if (!request) throw createHttpError('Maintenance request not found', 404);
@@ -708,13 +833,17 @@ const housekeepingService = {
     request.assignedTech = String(body.assignedTech || request.assignedTech || 'Technical Team');
     request.status = body.status || 'InProgress';
     if (body.note !== undefined) request.note = body.note;
-    if (body.image !== undefined) request.image = body.image;
+    if (body.image !== undefined || body.images !== undefined) {
+      const images = normalizeUploadedPaths(body.images || body.image);
+      request.images = images;
+      request.image = images[0] || '';
+    }
     await request.save();
     return mapMaintenanceRequest(request);
   },
 
   async updateMaintenanceRequestStatus(id, body = {}, user) {
-    const role = ensureWorkflowRole(user, ['manager', 'technical']);
+    ensureWorkflowRole(user, ['manager']);
 
     const request = await MaintenanceRequest.findById(id);
     if (!request) throw createHttpError('Maintenance request not found', 404);
@@ -726,13 +855,13 @@ const housekeepingService = {
       throw createHttpError('Invalid maintenance status', 400);
     }
 
-    if (role.includes('technical') && !['InProgress', 'Resolved'].includes(nextStatus)) {
-      throw createHttpError('Technical staff can only move maintenance to InProgress or Resolved', 403);
-    }
-
     request.status = nextStatus;
     if (body.note !== undefined) request.note = body.note;
-    if (body.image !== undefined) request.image = body.image;
+    if (body.image !== undefined || body.images !== undefined) {
+      const images = normalizeUploadedPaths(body.images || body.image);
+      request.images = images;
+      request.image = images[0] || '';
+    }
 
     if (nextStatus === 'Resolved' && currentStatus !== 'Resolved') {
       await applyMaintenanceResolvedEffects(request, body.note);
@@ -775,7 +904,11 @@ const housekeepingService = {
 
     request.status = 'Resolved';
     if (body.note !== undefined) request.note = body.note;
-    if (body.image !== undefined) request.image = body.image;
+    if (body.image !== undefined || body.images !== undefined) {
+      const images = normalizeUploadedPaths(body.images || body.image);
+      request.images = images;
+      request.image = images[0] || '';
+    }
 
     await applyMaintenanceResolvedEffects(request, body.note);
 
@@ -817,8 +950,34 @@ const housekeepingService = {
     if (query.room_number) filter.room_number = query.room_number;
     if (query.status) filter.status = query.status;
 
+    const hasDamageReport = String(query.has_damage_report || '').toLowerCase() === 'true';
+    if (hasDamageReport) {
+      filter.$or = [
+        { damaged_items: { $exists: true, $ne: [] } },
+        { missing_items: { $exists: true, $ne: [] } },
+      ];
+    }
+
     const inspections = await Inspection.find(filter).sort({ createdAt: -1 }).lean();
-    return inspections.map(mapInspection);
+    const inspectionIds = inspections.map((inspection) => inspection._id).filter(Boolean);
+    const maintenanceRequests = inspectionIds.length
+      ? await MaintenanceRequest.find({ inspection_id: { $in: inspectionIds } }).sort({ createdAt: -1 }).lean()
+      : [];
+    const maintenanceByInspectionId = new Map();
+
+    maintenanceRequests.forEach((request) => {
+      const inspectionId = String(request?.inspection_id || '');
+      if (inspectionId && !maintenanceByInspectionId.has(inspectionId)) {
+        maintenanceByInspectionId.set(inspectionId, request);
+      }
+    });
+
+    return inspections.map((inspection) => ({
+      ...mapInspection(inspection),
+      maintenance_request: maintenanceByInspectionId.has(String(inspection._id))
+        ? mapMaintenanceRequest(maintenanceByInspectionId.get(String(inspection._id)))
+        : null,
+    }));
   },
 
   async getInspectionById(id, user) {
@@ -829,7 +988,11 @@ const housekeepingService = {
 
     const inspection = await Inspection.findById(id).lean();
     if (!inspection) throw createHttpError('Inspection not found', 404);
-    return mapInspection(inspection);
+    const maintenanceRequest = await MaintenanceRequest.findOne({ inspection_id: inspection._id }).sort({ createdAt: -1 }).lean();
+    return {
+      ...mapInspection(inspection),
+      maintenance_request: maintenanceRequest ? mapMaintenanceRequest(maintenanceRequest) : null,
+    };
   },
 
   async getServiceRequestById(id, user) {
@@ -990,12 +1153,25 @@ const housekeepingService = {
       room_inventory_used = false,
       missing_items = [],
       damaged_items = [],
+      damage_missing_items = [],
       maintenance_required = false,
       room_status_before = '',
       room_status_after = 'Cleaning',
     } = body;
 
     if (!room_number) throw createHttpError('Room number is required', 400);
+    if (task_id && !mongoose.Types.ObjectId.isValid(task_id)) {
+      throw createHttpError('Invalid task_id format', 400);
+    }
+
+    const normalizedInspectionItems = normalizeInspectionItemsPayload({
+      damage_missing_items,
+      damaged_items,
+      missing_items,
+      damage,
+      lostItem,
+    });
+    const normalizedPhotos = normalizeUploadedPaths(photos);
 
     const roomRecord = await Room.findOne({ roomName: room_number })
       .populate('room_inventory.item_id', 'name category price is_active');
@@ -1125,38 +1301,13 @@ const housekeepingService = {
     }
 
     if (roomRecord) {
-      roomRecord.status = maintenance_required || damaged_items.length || damage.length ? 'Maintenance' : 'Dirty';
+      roomRecord.status = maintenance_required || normalizedInspectionItems.damagedItems.length ? 'Maintenance' : 'Dirty';
       roomRecord.inspectionStatus = 'Completed';
       roomRecord.currentGuest = guest || roomRecord.currentGuest || '';
       await roomRecord.save();
     }
 
-    if (maintenance_required || damaged_items.length || damage.length) {
-      const maintenanceDescription = remarks
-        || note
-        || damaged_items.map((item) => item.name || item.note).filter(Boolean).join(', ')
-        || damage.join(', ')
-        || 'Damage detected during inspection';
-
-      const duplicateMaintenanceRequest = await MaintenanceRequest.findOne({
-        room: room_number,
-        description: maintenanceDescription,
-        status: { $in: ['Open', 'InProgress'] },
-      }).sort({ createdAt: -1 });
-
-      if (!duplicateMaintenanceRequest) {
-        await MaintenanceRequest.create({
-          room: room_number,
-          category: 'Damage Report',
-          priority: 'high',
-          description: maintenanceDescription,
-          status: 'Open',
-          assignedTech: 'Maintenance Team',
-          reportedBy: user?.full_name || 'Housekeeping',
-          note,
-        });
-      }
-
+    if (maintenance_required || normalizedInspectionItems.damagedItems.length) {
       if (sourceTask) {
         sourceTask.status = 'Completed';
         sourceTask.completedAt = new Date();
@@ -1191,10 +1342,10 @@ const housekeepingService = {
       room: room || room_number,
       guest,
       checklist,
-      damage,
-      lostItem,
-      room_inventory: normalizedRoomInventory,
-      photos,
+      damage: normalizedInspectionItems.legacyDamage,
+      lostItem: normalizedInspectionItems.legacyLostItem,
+        room_inventory: normalizedRoomInventory,
+        photos: normalizedPhotos,
       note,
       inspected_by: user?._id || null,
       inspector_name: user?.full_name || 'System',
@@ -1203,9 +1354,9 @@ const housekeepingService = {
       room_inventory_used: room_inventory_used || normalizedRoomInventory.length > 0,
       room_inventory_total: roomInventoryTotal,
       invoice_items: invoiceItems,
-      missing_items: missing_items || [],
-      damaged_items: damaged_items || [],
-      maintenance_required: maintenance_required || damaged_items.length > 0 || damage.length > 0,
+      missing_items: normalizedInspectionItems.missingItems,
+      damaged_items: normalizedInspectionItems.damagedItems,
+      maintenance_required: maintenance_required || normalizedInspectionItems.damagedItems.length > 0,
       task_id: sourceTask?._id || task?._id || null,
       room_status_before,
       room_status_after,
@@ -1214,82 +1365,6 @@ const housekeepingService = {
     return {
       inspection: mapInspection(inspection),
       task: task ? mapTask(task) : null,
-    };
-  },
-
-  async reportRoomIssue(body = {}, user) {
-    ensureWorkflowRole(user, ['housekeeping', 'manager']);
-
-    const room_number = normalizeMaintenanceValue(body.room_number);
-    const task_id = normalizeMaintenanceValue(body.task_id);
-    const category = normalizeMaintenanceValue(body.category);
-    const description = normalizeMaintenanceValue(body.description);
-    const priority = normalizeMaintenanceValue(body.priority) || 'high';
-    const image = normalizeMaintenanceValue(body.image);
-    const note = normalizeMaintenanceValue(body.note);
-    const reportedBy = normalizeMaintenanceValue(body.reportedBy) || 'Housekeeping';
-
-    if (!room_number || !category || !description) {
-      throw createHttpError('Room number, category and description are required', 400);
-    }
-
-    const room = await Room.findOne({ roomName: room_number });
-    if (room) {
-      room.status = 'Maintenance';
-      room.inspectionStatus = 'Completed';
-      await room.save();
-    }
-
-    const duplicateRequest = await MaintenanceRequest.findOne({
-      room: room_number,
-      category,
-      description,
-      status: { $in: ['Open', 'InProgress'] },
-    }).sort({ createdAt: -1 });
-
-    if (duplicateRequest) {
-      const taskQuery = task_id
-        ? { _id: task_id, room_number, staff_type: 'housekeeping' }
-        : { room_number, staff_type: 'housekeeping', status: { $nin: ['Completed', 'Cancelled'] } };
-
-      const task = await StaffTask.findOne(taskQuery).sort({ createdAt: -1 });
-      if (task) {
-        task.status = 'WaitingMaintenance';
-        await task.save();
-      }
-
-      return {
-        task: task ? mapTask(task) : null,
-        maintenanceRequest: mapMaintenanceRequest(duplicateRequest),
-        duplicate: true,
-      };
-    }
-
-    const maintenanceRequest = await MaintenanceRequest.create({
-      room: room_number,
-      category,
-      priority,
-      description,
-      image,
-      status: 'Open',
-      assignedTech: 'Technical Team',
-      reportedBy,
-      note,
-    });
-
-    const taskQuery = task_id
-      ? { _id: task_id, room_number, staff_type: 'housekeeping' }
-      : { room_number, staff_type: 'housekeeping', status: { $nin: ['Completed', 'Cancelled'] } };
-
-    const task = await StaffTask.findOne(taskQuery).sort({ createdAt: -1 });
-    if (task) {
-      task.status = 'WaitingMaintenance';
-      await task.save();
-    }
-
-    return {
-      task: task ? mapTask(task) : null,
-      maintenanceRequest: mapMaintenanceRequest(maintenanceRequest),
     };
   },
 
@@ -1332,7 +1407,7 @@ const housekeepingService = {
       throw createHttpError('Room number is required', 400);
     }
 
-    if (!/^[A-Za-z0-9-]+$/.test(roomNumber)) {
+    if (!/^[A-Za-z0-9-_]+$/.test(roomNumber)) {
       throw createHttpError('Invalid room number format', 400);
     }
 
@@ -1353,12 +1428,101 @@ const housekeepingService = {
     if (body.remarks !== undefined) inspection.remarks = body.remarks;
     if (body.note !== undefined) inspection.note = body.note;
     if (body.status !== undefined) inspection.status = body.status;
-    if (body.damage !== undefined) inspection.damage = body.damage;
-    if (body.lostItem !== undefined) inspection.lostItem = body.lostItem;
-    if (body.photos !== undefined) inspection.photos = body.photos;
+
+    if (
+      body.damage !== undefined
+      || body.lostItem !== undefined
+      || body.damaged_items !== undefined
+      || body.missing_items !== undefined
+      || body.damage_missing_items !== undefined
+    ) {
+      const normalizedInspectionItems = normalizeInspectionItemsPayload({
+        damage_missing_items: body.damage_missing_items,
+        damaged_items: body.damaged_items !== undefined ? body.damaged_items : inspection.damaged_items,
+        missing_items: body.missing_items !== undefined ? body.missing_items : inspection.missing_items,
+        damage: body.damage !== undefined ? body.damage : inspection.damage,
+        lostItem: body.lostItem !== undefined ? body.lostItem : inspection.lostItem,
+      });
+
+      inspection.damage = normalizedInspectionItems.legacyDamage;
+      inspection.lostItem = normalizedInspectionItems.legacyLostItem;
+      inspection.damaged_items = normalizedInspectionItems.damagedItems;
+      inspection.missing_items = normalizedInspectionItems.missingItems;
+      inspection.maintenance_required = body.maintenance_required !== undefined
+        ? Boolean(body.maintenance_required)
+        : normalizedInspectionItems.damagedItems.length > 0;
+    }
+
+    if (body.photos !== undefined) inspection.photos = normalizeUploadedPaths(body.photos);
+    if (body.room_inventory !== undefined) inspection.room_inventory = Array.isArray(body.room_inventory) ? body.room_inventory : [];
+    if (body.room_inventory_used !== undefined) inspection.room_inventory_used = Boolean(body.room_inventory_used);
+
+    if (inspection.room_inventory_used && Array.isArray(inspection.room_inventory)) {
+      inspection.room_inventory_total = inspection.room_inventory.reduce((total, item) => {
+        if (typeof item?.total === 'number') {
+          return total + Number(item.total || 0);
+        }
+        return total + (Number(item?.qty || item?.quantity || 0) * Number(item?.price || item?.unit_price || 0));
+      }, 0);
+    }
+
+    const room = await Room.findOne({ roomName: inspection.room_number });
+    if (room) {
+      room.status = inspection.maintenance_required || (inspection.damaged_items || []).length ? 'Maintenance' : 'Dirty';
+      room.inspectionStatus = 'Completed';
+      await room.save();
+    }
 
     await inspection.save();
     return mapInspection(inspection);
+  },
+
+  async createMaintenanceRequestFromInspection(id, body = {}, user) {
+    ensureWorkflowRole(user, ['manager']);
+
+    const inspection = await Inspection.findById(id).lean();
+    if (!inspection) throw createHttpError('Inspection not found', 404);
+
+    const items = [
+      ...(Array.isArray(inspection.damaged_items) ? inspection.damaged_items : []),
+      ...(Array.isArray(inspection.missing_items) ? inspection.missing_items : []),
+    ];
+
+    if (!items.length) {
+      throw createHttpError('Inspection does not contain a damage or missing item report', 409);
+    }
+
+    const existingRequest = await MaintenanceRequest.findOne({ inspection_id: inspection._id, status: { $in: ['Open', 'InProgress'] } }).sort({ createdAt: -1 });
+    if (existingRequest) {
+      if (body.assignedTech !== undefined) existingRequest.assignedTech = String(body.assignedTech || existingRequest.assignedTech || 'Technical Team');
+      if (body.priority !== undefined) existingRequest.priority = String(body.priority || existingRequest.priority || 'high');
+      if (body.note !== undefined) existingRequest.note = String(body.note || '').trim();
+      await existingRequest.save();
+      return mapMaintenanceRequest(existingRequest);
+    }
+
+    const photos = items.flatMap((item) => Array.isArray(item?.photos) ? item.photos : []);
+    const description = String(body.description || '').trim()
+      || items.map((item) => item.name).filter(Boolean).join(', ')
+      || inspection.note
+      || inspection.remarks
+      || `Maintenance review for room ${inspection.room_number}`;
+
+    const request = await MaintenanceRequest.create({
+      inspection_id: inspection._id,
+      room: inspection.room_number,
+      category: String(body.category || 'Damage Report').trim() || 'Damage Report',
+      priority: String(body.priority || 'high').trim() || 'high',
+      description,
+      image: photos[0] || '',
+      images: photos,
+      status: body.assignedTech ? 'InProgress' : 'Open',
+      assignedTech: String(body.assignedTech || 'Technical Team').trim() || 'Technical Team',
+      reportedBy: user?.full_name || 'Manager',
+      note: String(body.note || '').trim(),
+    });
+
+    return mapMaintenanceRequest(request);
   },
 };
 

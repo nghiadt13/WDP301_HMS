@@ -16,6 +16,33 @@ const generateInvoiceCode = () => {
   return `INV-${suffix}`;
 };
 
+const normalizeInspectionChargeItems = (inspection) => {
+  if (!inspection) return [];
+
+  const damagedItems = Array.isArray(inspection.damaged_items) ? inspection.damaged_items : [];
+  const missingItems = Array.isArray(inspection.missing_items) ? inspection.missing_items : [];
+
+  return [...damagedItems, ...missingItems].map((item, index) => {
+    const estimated = Number(item?.estimated_compensation_amount || 0);
+    const approved = item?.approved_compensation_amount === null || item?.approved_compensation_amount === undefined
+      ? estimated
+      : Number(item.approved_compensation_amount || 0);
+
+    return {
+      id: item?.id || `${inspection._id || 'inspection'}-${index}`,
+      name: item?.name || 'Damage item',
+      type: item?.type || (damagedItems.includes(item) ? 'damaged' : 'missing'),
+      quantity: Number(item?.quantity || 1),
+      severity: item?.severity || 'minor',
+      description: item?.description || item?.note || '',
+      note: item?.note || item?.description || '',
+      estimated_compensation_amount: estimated,
+      approved_compensation_amount: approved,
+      photos: Array.isArray(item?.photos) ? item.photos : [],
+    };
+  });
+};
+
 const sumRoomInventoryTotal = (inspection) => {
   if (!inspection) return 0;
   const savedTotal = Number(inspection.room_inventory_total || 0);
@@ -56,6 +83,26 @@ const buildApprovedRoomInventoryState = (inspectionState) => {
   return {
     rooms,
     total: rooms.reduce((sum, room) => sum + Number(room?.roomInventoryReport?.total || 0), 0),
+  };
+};
+
+const buildApprovedDamageState = (inspectionState) => {
+  const rooms = (inspectionState?.rooms || []).map((room) => {
+    const items = room?.damageMissingReport?.items || [];
+    const total = items.reduce((sum, item) => sum + Number(item.approved_compensation_amount || 0), 0);
+
+    return {
+      ...room,
+      damageMissingReport: {
+        items,
+        total,
+      },
+    };
+  });
+
+  return {
+    rooms,
+    total: rooms.reduce((sum, room) => sum + Number(room?.damageMissingReport?.total || 0), 0),
   };
 };
 
@@ -158,6 +205,8 @@ const buildInspectionState = async (bookingId) => {
       })
       : [];
     const roomInventoryTotal = sumRoomInventoryTotal(inspection);
+    const damageItems = normalizeInspectionChargeItems(inspection);
+    const damageTotal = damageItems.reduce((sum, item) => sum + Number(item.approved_compensation_amount || 0), 0);
 
     return {
       roomNumber,
@@ -168,6 +217,10 @@ const buildInspectionState = async (bookingId) => {
       roomInventoryReport: {
         items: roomInventoryItems,
         total: roomInventoryTotal,
+      },
+      damageMissingReport: {
+        items: damageItems,
+        total: damageTotal,
       },
     };
   });
@@ -300,7 +353,10 @@ const checkoutService = {
       })),
       stayGuests,
       charges,
-      inspectionState,
+      inspectionState: {
+        ...inspectionState,
+        approvedDamageTotal: inspectionState.rooms.reduce((sum, room) => sum + Number(room?.damageMissingReport?.total || 0), 0),
+      },
       invoice: invoices.length > 0 ? invoices[0] : null
     };
   },
@@ -437,11 +493,13 @@ const checkoutService = {
     if (inspectionState.allRoomsConfirmed) {
       await syncRoomInventoryChargesFromInspection(bookingId, inspectionState);
     }
+    const approvedDamageState = buildApprovedDamageState(inspectionState);
+    const damageChargesTotal = approvedDamageState.total;
 
     const charges = await BookingCharge.find({ booking_id: bookingId });
     const manualChargesTotal = charges
       .reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
-    const extraChargesTotal = manualChargesTotal;
+  const extraChargesTotal = manualChargesTotal + damageChargesTotal;
 
     const roomCharge = booking.total_amount;
     const subtotal = roomCharge + extraChargesTotal;
@@ -483,6 +541,7 @@ const checkoutService = {
         throw createHttpError(`Housekeeping must confirm inspection before checkout can continue${pendingRoomsLabel ? ` for room(s): ${pendingRoomsLabel}` : ''}`, 409);
       }
       await syncRoomInventoryChargesFromInspection(bookingId, inspectionState);
+      const approvedDamageState = buildApprovedDamageState(inspectionState);
 
       const rooms = await BookingRoom.find({ booking_id: bookingId }).populate('room_id', 'roomName');
       const roomNames = rooms.map(r => r.room_id ? r.room_id.roomName : r.room_number).filter(Boolean);
@@ -496,13 +555,14 @@ const checkoutService = {
       const charges = await BookingCharge.find({ booking_id: bookingId });
       const manualChargesTotal = charges
         .reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
+      const damageChargesTotal = approvedDamageState.total;
       const roomCharge = booking.total_amount;
-      const subtotal = roomCharge + manualChargesTotal;
+      const subtotal = roomCharge + manualChargesTotal + damageChargesTotal;
       const depositDeducted = booking.deposit_amount || 0;
       const finalTotal = Math.max(0, subtotal - depositDeducted);
 
       invoice.room_charge = roomCharge;
-      invoice.extra_charges = manualChargesTotal;
+      invoice.extra_charges = manualChargesTotal + damageChargesTotal;
       invoice.subtotal = subtotal;
       invoice.deposit_deducted = depositDeducted;
       invoice.final_total = finalTotal;

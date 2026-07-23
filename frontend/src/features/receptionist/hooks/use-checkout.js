@@ -109,3 +109,17 @@ export const useCompleteCheckout = (bookingId) => {
     }
   });
 };
+
+export const useUpdateCheckoutInspection = (bookingId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ inspectionId, payload }) => {
+      const { data } = await axiosClient.patch(`/housekeeping/inspection/${inspectionId}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checkoutSummary', bookingId] });
+      queryClient.invalidateQueries({ queryKey: ['inspectionResults', bookingId] });
+    }
+  });
+};

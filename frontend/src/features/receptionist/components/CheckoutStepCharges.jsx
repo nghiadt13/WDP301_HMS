@@ -1,7 +1,15 @@
-import { useMemo, useState } from 'react';
-import { useAddCharge, useRemoveCharge } from '../hooks/use-checkout';
+import { useEffect, useMemo, useState } from 'react';
 import { Receipt, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import DamageMissingItemsEditor, { withDamageMissingItemClientId } from '@/components/DamageMissingItemsEditor.jsx';
+import { useAddCharge, useRemoveCharge, useUpdateCheckoutInspection } from '../hooks/use-checkout';
+
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:9999';
+const toFullUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_BASE}${url}`;
+};
 
 const emptyCharge = (summary) => ({
   room_id: (summary.rooms || [])[0]?.roomId || '',
@@ -49,7 +57,28 @@ const buildHousekeepingInventoryCharges = (summary) => {
 const CheckoutStepCharges = ({ bookingId, summary }) => {
   const { mutate: addCharge, isPending: isAdding } = useAddCharge(bookingId);
   const { mutate: removeCharge, isPending: isRemoving } = useRemoveCharge(bookingId);
+  const { mutateAsync: updateInspection, isPending: isUpdatingInspection } = useUpdateCheckoutInspection(bookingId);
+  const damageReportRooms = summary?.inspectionState?.rooms || [];
+
   const [chargeData, setChargeData] = useState(() => emptyCharge(summary));
+  const [inspectionDrafts, setInspectionDrafts] = useState({});
+
+  useEffect(() => {
+    setInspectionDrafts((currentDrafts) => {
+      const nextDrafts = { ...currentDrafts };
+      damageReportRooms.forEach((room) => {
+        const inspectionId = room?.inspection?._id;
+        if (!inspectionId || nextDrafts[inspectionId]?.length) return;
+
+        nextDrafts[inspectionId] = (room?.damageMissingReport?.items || []).map((item) => withDamageMissingItemClientId({
+          ...item,
+          estimated_compensation_amount: item?.estimated_compensation_amount ?? '',
+          approved_compensation_amount: item?.approved_compensation_amount ?? item?.estimated_compensation_amount ?? '',
+        }, item?.type || 'damaged'));
+      });
+      return nextDrafts;
+    });
+  }, [damageReportRooms]);
 
   const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(val || 0));
   const rooms = summary.rooms || [];
@@ -110,6 +139,40 @@ const CheckoutStepCharges = ({ bookingId, summary }) => {
     }
   };
 
+  const approvedDamageTotal = useMemo(
+    () => damageReportRooms.reduce((roomSum, room) => roomSum + Number(room?.damageMissingReport?.total || 0), 0),
+    [damageReportRooms]
+  );
+
+  const buildInspectionPayloadItems = (items = []) => items
+    .map((item) => ({
+      ...item,
+      name: String(item?.name || '').trim(),
+      type: item?.type || 'damaged',
+      description: String(item?.description || '').trim(),
+      estimated_compensation_amount: item?.estimated_compensation_amount === '' ? 0 : Number(item?.estimated_compensation_amount || 0),
+      approved_compensation_amount: item?.approved_compensation_amount === '' ? null : Number(item?.approved_compensation_amount || 0),
+      photos: Array.isArray(item?.photos) ? item.photos : [],
+    }))
+    .filter((item) => item.name);
+
+  const handleSaveDamageReport = async (room) => {
+    const inspectionId = room?.inspection?._id;
+    if (!inspectionId) {
+      toast.error('No inspection record found for this room.');
+      return;
+    }
+
+    const payloadItems = buildInspectionPayloadItems(inspectionDrafts[inspectionId] || []);
+    await updateInspection({
+      inspectionId,
+      payload: {
+        damage_missing_items: payloadItems,
+        maintenance_required: payloadItems.some((item) => item.type === 'damaged'),
+      },
+    });
+    toast.success(`Updated compensation report for room ${room.roomNumber}.`);
+  };
   return (
     <div className="wizard-step-content">
       <div className="wizard-step-header" style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e2e8f0' }}>
@@ -159,6 +222,58 @@ const CheckoutStepCharges = ({ bookingId, summary }) => {
           </div>
         ) : (
           <p style={{ margin: 0, color: '#64748b' }}>Chưa có vật tư phòng phát sinh từ báo cáo Housekeeping.</p>
+        )}
+      </div>
+
+      <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>Damage & Missing Items from Housekeeping</h4>
+          <span style={{ fontWeight: '700', color: '#dc2626' }}>{formatCurrency(approvedDamageTotal)}</span>
+        </div>
+
+        {damageReportRooms.some((room) => (room.damageMissingReport?.items || []).length > 0 || room?.inspection?._id) ? (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {damageReportRooms.map((room) => {
+              const inspectionId = room?.inspection?._id;
+              if (!inspectionId) return null;
+
+              return (
+                <article key={room.roomNumber} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', display: 'grid', gap: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
+                    <strong style={{ color: '#0f172a' }}>Room {room.roomNumber}</strong>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveDamageReport(room)}
+                      disabled={isUpdatingInspection}
+                      style={{
+                        height: '40px',
+                        padding: '0 14px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: isUpdatingInspection ? '#94a3b8' : '#2563eb',
+                        color: '#ffffff',
+                        fontWeight: 600,
+                        cursor: isUpdatingInspection ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {isUpdatingInspection ? 'Saving...' : 'Save compensation'}
+                    </button>
+                  </div>
+
+                  <DamageMissingItemsEditor
+                    title="Reported items"
+                    description="Review, add, remove, and approve compensation amounts. Approved amounts are added to checkout totals automatically."
+                    value={inspectionDrafts[inspectionId] || []}
+                    onChange={(items) => setInspectionDrafts((prev) => ({ ...prev, [inspectionId]: items }))}
+                    showApprovedAmount
+                    renderImageUrl={toFullUrl}
+                  />
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p style={{ margin: 0, color: '#64748b' }}>No damage or missing items were reported by housekeeping.</p>
         )}
       </div>
 
