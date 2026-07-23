@@ -82,11 +82,44 @@ const handleMulterError = (err, req, res, next) => {
   next(err);
 };
 
+// Verify actual binary magic bytes of the file
+const isValidImageMagicBytes = (filePath) => {
+  try {
+    if (!fs.existsSync(filePath)) return false;
+    const buffer = Buffer.alloc(12);
+    const fd = fs.openSync(filePath, 'r');
+    fs.readSync(fd, buffer, 0, 12, 0);
+    fs.closeSync(fd);
+
+    // JPEG: FF D8 FF
+    const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    // PNG: 89 50 4E 47
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+    // WEBP: RIFF...WEBP
+    const isWebp = buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+                   buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
+
+    return isJpeg || isPng || isWebp;
+  } catch (err) {
+    return false;
+  }
+};
+
 // POST /api/upload/rooms — single file upload
 router.post('/rooms', upload.single('image'), handleMulterError, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No image file provided' });
   }
+
+  // Verify file binary content (Magic Bytes)
+  if (!isValidImageMagicBytes(req.file.path)) {
+    try { fs.unlinkSync(req.file.path); } catch (e) {}
+    return res.status(400).json({
+      success: false,
+      message: 'File không phải là định dạng ảnh hợp lệ (Phát hiện tập tin bị đổi đuôi sai định dạng).'
+    });
+  }
+
   const url = `/uploads/rooms/${req.file.filename}`;
   res.status(200).json({ success: true, data: { url } });
 });
@@ -96,6 +129,18 @@ router.post('/rooms/multiple', upload.array('images', 10), handleMulterError, (r
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ success: false, message: 'No image files provided' });
   }
+
+  // Validate magic bytes for all files
+  for (const f of req.files) {
+    if (!isValidImageMagicBytes(f.path)) {
+      req.files.forEach((file) => { try { fs.unlinkSync(file.path); } catch (e) {} });
+      return res.status(400).json({
+        success: false,
+        message: 'Có file tải lên không phải là ảnh hợp lệ (Phát hiện tập tin bị đổi đuôi sai định dạng).'
+      });
+    }
+  }
+
   const urls = req.files.map((f) => `/uploads/rooms/${f.filename}`);
   res.status(200).json({ success: true, data: { urls } });
 });

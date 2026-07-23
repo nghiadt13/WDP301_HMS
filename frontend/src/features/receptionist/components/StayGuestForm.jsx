@@ -90,11 +90,35 @@ const StayGuestForm = ({ bookingRoom, booking, roomIndex, initialGuest, onComple
     }
   };
 
+  const validateImageMagicBytes = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = (e) => {
+        if (!e.target || e.target.readyState !== FileReader.DONE) return resolve(false);
+        const arr = new Uint8Array(e.target.result);
+        if (arr.length < 4) return resolve(false);
+
+        // JPEG: FF D8 FF
+        const isJpeg = arr[0] === 0xff && arr[1] === 0xd8 && arr[2] === 0xff;
+        // PNG: 89 50 4E 47
+        const isPng = arr[0] === 0x89 && arr[1] === 0x50 && arr[2] === 0x4e && arr[3] === 0x47;
+        // WEBP: RIFF...WEBP
+        const isWebp = arr.length >= 12 &&
+                       arr[0] === 0x52 && arr[1] === 0x49 && arr[2] === 0x46 && arr[3] === 0x46 &&
+                       arr[8] === 0x57 && arr[9] === 0x45 && arr[10] === 0x42 && arr[11] === 0x50;
+
+        resolve(isJpeg || isPng || isWebp);
+      };
+      reader.onerror = () => resolve(false);
+      reader.readAsArrayBuffer(file.slice(0, 12));
+    });
+  };
+
   const handleFileUpload = async (e, side) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
+    // Basic MIME type check
     if (!file.type.match('image.*')) {
       setUploadError('Chỉ được tải lên file ảnh (jpg, png, webp,...)');
       return;
@@ -102,6 +126,13 @@ const StayGuestForm = ({ bookingRoom, booking, roomIndex, initialGuest, onComple
     // Limit to 5MB
     if (file.size > 5 * 1024 * 1024) {
       setUploadError('Kích thước ảnh tối đa là 5MB');
+      return;
+    }
+
+    // Validate actual file content (Magic Bytes) to prevent fake extension uploads (.docx -> .jpg)
+    const isValidImage = await validateImageMagicBytes(file);
+    if (!isValidImage) {
+      setUploadError('Tập tin không phải định dạng ảnh hợp lệ (Phát hiện tập tin bị đổi đuôi giả mạo).');
       return;
     }
 
