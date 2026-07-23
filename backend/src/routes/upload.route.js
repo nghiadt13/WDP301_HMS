@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const FileType = require('file-type');
 
 const router = express.Router();
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -82,41 +83,32 @@ const handleMulterError = (err, req, res, next) => {
   next(err);
 };
 
-// Verify actual binary magic bytes of the file
-const isValidImageMagicBytes = (filePath) => {
+// Helper: Verify actual file type using file-type library
+const isValidImageFile = async (filePath) => {
   try {
     if (!fs.existsSync(filePath)) return false;
-    const buffer = Buffer.alloc(12);
-    const fd = fs.openSync(filePath, 'r');
-    fs.readSync(fd, buffer, 0, 12, 0);
-    fs.closeSync(fd);
-
-    // JPEG: FF D8 FF
-    const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-    // PNG: 89 50 4E 47
-    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
-    // WEBP: RIFF...WEBP
-    const isWebp = buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
-                   buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
-
-    return isJpeg || isPng || isWebp;
+    const result = await FileType.fromFile(filePath);
+    if (!result) return false;
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    return allowedMimes.includes(result.mime);
   } catch (err) {
     return false;
   }
 };
 
 // POST /api/upload/rooms — single file upload
-router.post('/rooms', upload.single('image'), handleMulterError, (req, res) => {
+router.post('/rooms', upload.single('image'), handleMulterError, async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No image file provided' });
   }
 
-  // Verify file binary content (Magic Bytes)
-  if (!isValidImageMagicBytes(req.file.path)) {
+  // Verify file binary content using file-type library
+  const valid = await isValidImageFile(req.file.path);
+  if (!valid) {
     try { fs.unlinkSync(req.file.path); } catch (e) {}
     return res.status(400).json({
       success: false,
-      message: 'File không phải là định dạng ảnh hợp lệ (Phát hiện tập tin bị đổi đuôi sai định dạng).'
+      message: 'File không phải là định dạng ảnh hợp lệ (Phát hiện tập tin bị đổi đuôi giả mạo).'
     });
   }
 
@@ -125,18 +117,19 @@ router.post('/rooms', upload.single('image'), handleMulterError, (req, res) => {
 });
 
 // POST /api/upload/rooms/multiple — multiple files upload
-router.post('/rooms/multiple', upload.array('images', 10), handleMulterError, (req, res) => {
+router.post('/rooms/multiple', upload.array('images', 10), handleMulterError, async (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ success: false, message: 'No image files provided' });
   }
 
-  // Validate magic bytes for all files
+  // Validate file-type for all files
   for (const f of req.files) {
-    if (!isValidImageMagicBytes(f.path)) {
+    const valid = await isValidImageFile(f.path);
+    if (!valid) {
       req.files.forEach((file) => { try { fs.unlinkSync(file.path); } catch (e) {} });
       return res.status(400).json({
         success: false,
-        message: 'Có file tải lên không phải là ảnh hợp lệ (Phát hiện tập tin bị đổi đuôi sai định dạng).'
+        message: 'Có file tải lên không phải là ảnh hợp lệ (Phát hiện tập tin bị đổi đuôi giả mạo).'
       });
     }
   }
