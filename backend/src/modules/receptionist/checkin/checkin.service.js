@@ -170,23 +170,25 @@ const checkinService = {
     const subtotal = Number(invoice?.subtotal ?? (roomCharge + extraCharges));
     const finalTotal = Number(invoice?.final_total ?? Math.max(0, subtotal - depositDeducted));
 
-    // Compute canCheckin and blocking reasons
-    const blockingReasons = [];
-    
-    if (booking.payment_status !== 'Paid') {
-      blockingReasons.push('Booking not fully paid');
+    // Date validation
+    const getStartOfDay = (d) => {
+      const date = new Date(d);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
+    const todayStart = getStartOfDay(new Date());
+    const checkInStart = getStartOfDay(booking.check_in_date);
+    const checkOutStart = getStartOfDay(booking.check_out_date);
+
+    if (todayStart < checkInStart) {
+      const day = String(checkInStart.getDate()).padStart(2, '0');
+      const month = String(checkInStart.getMonth() + 1).padStart(2, '0');
+      const year = checkInStart.getFullYear();
+      blockingReasons.push(`Chưa đến ngày nhận phòng (Ngày nhận phòng: ${day}/${month}/${year})`);
+    } else if (todayStart >= checkOutStart) {
+      blockingReasons.push('Đã quá ngày trả phòng của đơn đặt này');
     }
-
-    // Assigned rooms are only a soft warning at this step because the receptionist
-    // can reassign rooms in the wizard if the initially selected room is unavailable.
-    const roomIds = rooms.map(r => r.room_id).filter(Boolean);
-    const assignedRooms = await Room.find({ _id: { $in: roomIds } });
-
-    assignedRooms.forEach(room => {
-      if (!room.isActive) {
-        blockingReasons.push(`Room ${room.roomName} is inactive`);
-      }
-    });
 
     const isCheckedIn = booking.booking_status === 'CheckedIn' || booking.booking_status === 'Checked-in';
     const isCanceled = booking.booking_status === 'Canceled';
@@ -199,6 +201,8 @@ const checkinService = {
     } else if (booking.payment_status !== 'Paid') {
       canCheckin = false;
     } else if (roomIds.length > 0 && assignedRooms.some(r => !r.isActive)) {
+      canCheckin = false;
+    } else if (todayStart < checkInStart || todayStart >= checkOutStart) {
       canCheckin = false;
     }
 
@@ -300,8 +304,25 @@ const checkinService = {
       if (booking.booking_status === 'Canceled') {
         throw createHttpError('Booking is canceled', 400);
       }
-      if (booking.booking_status === 'Completed') {
-        throw createHttpError('Booking is completed', 400);
+      // Check check-in date
+      const getStartOfDay = (d) => {
+        const date = new Date(d);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      };
+
+      const todayStart = getStartOfDay(new Date());
+      const checkInStart = getStartOfDay(booking.check_in_date);
+      const checkOutStart = getStartOfDay(booking.check_out_date);
+
+      if (todayStart < checkInStart) {
+        const day = String(checkInStart.getDate()).padStart(2, '0');
+        const month = String(checkInStart.getMonth() + 1).padStart(2, '0');
+        const year = checkInStart.getFullYear();
+        throw createHttpError(`Chưa đến ngày nhận phòng (Ngày nhận phòng: ${day}/${month}/${year})`, 400);
+      }
+      if (todayStart >= checkOutStart) {
+        throw createHttpError('Đã quá ngày trả phòng của đơn đặt này', 400);
       }
 
       // BR-01: Re-check paymentStatus = Paid
