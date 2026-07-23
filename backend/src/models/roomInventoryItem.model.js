@@ -29,8 +29,9 @@ const roomInventoryItemSchema = new mongoose.Schema(
     },
     image_url: {
       type: String,
+      required: [true, 'Item image is required'],
       trim: true,
-      default: '',
+      maxlength: [2048, 'Image URL is too long'],
     },
     description: {
       type: String,

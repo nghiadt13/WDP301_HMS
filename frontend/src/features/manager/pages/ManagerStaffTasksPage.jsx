@@ -406,7 +406,6 @@ const ManagerStaffTasksPage = () => {
               <label>Giao cho<select disabled={!canEditSelected} name="assigned_staff_id" onChange={handleChange} required value={form.assigned_staff_id}><option value="">Chọn nhân viên</option>{assignableStaff.map((staff) => <option key={staff._id} value={staff._id}>{staff.full_name}</option>)}</select></label>
               <label>Số phòng<select disabled={!canEditSelected} name="room_number" onChange={handleChange} required value={form.room_number}><option value="">Chọn số phòng</option>{rooms.map((room) => <option key={room._id || room.id} value={room.roomName}>{room.roomName}</option>)}</select></label>
               <label>Loại phòng<input readOnly value={form.room_type || 'Chọn số phòng để hiển thị loại phòng'} /></label>
-              <label>Trạng thái<input readOnly value={statuses[getScheduleStatus(form.status)] || 'Đã lên lịch'} /></label>
               <label>Ngày làm việc<input readOnly value={form.deadline ? formatDate(form.deadline) : 'Chưa có ngày'} /></label>
               <label>Giờ bắt đầu<select disabled={!canEditSelected} name="start_time" onChange={handleChange} required value={form.start_time}>{timeOptions.map((time) => <option key={`start-${time}`} value={time}>{time}</option>)}</select></label>
               <label>Giờ kết thúc<select disabled={!canEditSelected} name="end_time" onChange={handleChange} required value={form.end_time}>{timeOptions.map((time) => <option key={`end-${time}`} value={time}>{time}</option>)}</select></label>

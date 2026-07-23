@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -38,7 +38,7 @@ const getStageClass = (status) => {
 const isActionAllowed = (action, status) => {
   const normalized = normalizeStatus(status);
   if (action === 'accept') return ['assigned', 'accepted'].includes(normalized);
-  if (action === 'start') return ['assigned', 'accepted'].includes(normalized);
+  if (action === 'start') return normalized === 'accepted';
   if (action === 'complete') return normalized === 'cleaning';
   if (action === 'issue') return !['completed', 'cancelled', 'canceled'].includes(normalized);
   return true;
@@ -76,7 +76,7 @@ const toChecklistLabel = (key) => {
     amenities: 'Amenities',
     damage: 'Damage check',
     lostItem: 'Lost item check',
-    room_inventory: 'Kiểm tra vật tư phòng',
+    room_inventory: 'Kiá»ƒm tra váº­t tÆ° phÃ²ng',
     photo: 'Photo evidence',
   };
   return labels[key] || key;
@@ -451,7 +451,7 @@ const HousekeepingTasksPage = () => {
               className={`housekeeping-task-tab${taskTab === 'active' ? ' is-active' : ''}`}
               onClick={() => setTaskTab('active')}
             >
-              Đang xử lý
+              Äang xá»­ lÃ½
               <span>{taskTabCounts.active}</span>
             </button>
             <button
@@ -459,7 +459,7 @@ const HousekeepingTasksPage = () => {
               className={`housekeeping-task-tab${taskTab === 'completed' ? ' is-active' : ''}`}
               onClick={() => setTaskTab('completed')}
             >
-              Hoàn thành
+              HoÃ n thÃ nh
               <span>{taskTabCounts.completed}</span>
             </button>
             <button
@@ -467,7 +467,7 @@ const HousekeepingTasksPage = () => {
               className={`housekeeping-task-tab${taskTab === 'all' ? ' is-active' : ''}`}
               onClick={() => setTaskTab('all')}
             >
-              Tất cả
+              Táº¥t cáº£
               <span>{taskTabCounts.all}</span>
             </button>
           </div>
@@ -748,3 +748,4 @@ const HousekeepingTasksPage = () => {
 };
 
 export default HousekeepingTasksPage;
+

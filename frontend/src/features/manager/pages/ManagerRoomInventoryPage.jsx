@@ -7,6 +7,7 @@ const categories = ['Đồ uống', 'Đồ ăn nhẹ', 'Đồ dùng phòng tắm
 const emptyForm = { name: '', category: categories[0], price: 0, quantity: 0, stock_status: 'in_stock', image_url: '', description: '' };
 const stockLabels = { in_stock: 'Còn hàng', low_stock: 'Sắp hết', out_of_stock: 'Hết hàng' };
 const stockTone = { in_stock: 'is-good', low_stock: 'is-warning', out_of_stock: 'is-danger' };
+const LOW_STOCK_THRESHOLD = 10;
 
 const getErrorMessage = (error) => error?.response?.data?.message || error.message || 'Đã có lỗi xảy ra';
 const formatCurrency = (value) => Number(value || 0).toLocaleString('vi-VN');
@@ -26,6 +27,14 @@ const getQuantityPercent = (quantity = 0) => {
   return Math.min(100, Math.max(10, value));
 };
 
+const getStockStatusFromQuantity = (quantity) => {
+  const value = Number(quantity);
+  if (!Number.isInteger(value) || value < 0) return '';
+  if (value === 0) return 'out_of_stock';
+  if (value <= LOW_STOCK_THRESHOLD) return 'low_stock';
+  return 'in_stock';
+};
+
 const ManagerRoomInventoryPage = () => {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -34,6 +43,8 @@ const ManagerRoomInventoryPage = () => {
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imageError, setImageError] = useState('');
 
   const selectedItem = items.find((item) => item._id === selectedId);
   const isEditing = mode === 'edit' && selectedItem;
@@ -84,6 +95,8 @@ const ManagerRoomInventoryPage = () => {
     setForm(toForm(item));
     setMode('edit');
     setMessage('');
+    setImageFile(null);
+    setImageError('');
   };
 
   const openCreateModal = () => {
@@ -91,20 +104,55 @@ const ManagerRoomInventoryPage = () => {
     setForm(emptyForm);
     setMode('create');
     setMessage('');
+    setImageFile(null);
+    setImageError('');
   };
 
   const closeModal = () => {
     setSelectedId('');
     setForm(emptyForm);
     setMode('idle');
+    setImageFile(null);
+    setImageError('');
   };
 
-  const handleChange = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => {
+      const next = { ...current, [name]: value };
+      if (name === 'quantity') next.stock_status = getStockStatusFromQuantity(value) || current.stock_status;
+      return next;
+    });
+  };
+
+  const handleImageFileChange = (event) => {
+    const file = event.target.files?.[0];
+    setImageError('');
+    setImageFile(null);
+    if (!file) return;
+    const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!acceptedTypes.includes(file.type)) {
+      setImageError('Ảnh phải có định dạng JPG, PNG hoặc WebP.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('Ảnh không được vượt quá 5 MB.');
+      event.target.value = '';
+      return;
+    }
+    setImageFile(file);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const payload = { ...form, price: Number(form.price), quantity: Number(form.quantity) };
+      const quantity = Number(form.quantity);
+      const calculatedStatus = getStockStatusFromQuantity(quantity);
+      if (!Number.isInteger(quantity) || quantity < 0) throw new Error('Số lượng phải là số nguyên không âm.');
+      if (!imageFile) throw new Error('Vui lòng tải lên ảnh vật tư JPG, PNG hoặc WebP.');
+      const imageUrl = await managerApi.uploadRoomInventoryImage(imageFile);
+      const payload = { ...form, image_url: imageUrl, price: Number(form.price), quantity, stock_status: calculatedStatus };
       const saved = isEditing
         ? await managerApi.updateRoomInventoryItem(selectedItem._id, payload)
         : await managerApi.createRoomInventoryItem(payload);
@@ -232,9 +280,9 @@ const ManagerRoomInventoryPage = () => {
               <label>Danh mục<select name="category" onChange={handleChange} value={form.category}>{categories.map((category) => <option key={category}>{category}</option>)}</select></label>
               <label>Giá<input min="0" name="price" onChange={handleChange} required type="number" value={form.price} /></label>
               <label>Số lượng<input min="0" name="quantity" onChange={handleChange} required step="1" type="number" value={form.quantity} /></label>
-              <label>Tồn kho<select name="stock_status" onChange={handleChange} value={form.stock_status}><option value="in_stock">Còn hàng</option><option value="low_stock">Sắp hết</option><option value="out_of_stock">Hết hàng</option></select></label>
-              <label className="manager-ops-wide">URL ảnh vật tư<input name="image_url" onChange={handleChange} placeholder="https://example.com/room-inventory-item.jpg" type="url" value={form.image_url} /></label>
-              {form.image_url && <div className="manager-ops-preview manager-ops-wide"><img alt={form.name || 'Vật tư phòng'} src={form.image_url} /></div>}
+              <label>Tồn kho<input aria-label="Tồn kho được tính tự động" disabled value={stockLabels[getStockStatusFromQuantity(form.quantity)] || 'Nhập số lượng hợp lệ'} /></label>
+              <label className="manager-ops-wide">Tải ảnh vật tư<input accept="image/jpeg,image/png,image/webp" onChange={handleImageFileChange} required type="file" />{imageFile && <small>Đã chọn: {imageFile.name}</small>}<small>Chỉ nhận JPG, PNG hoặc WebP; dung lượng tối đa 5 MB.</small>{imageError && <small className="manager-ops-field-error">{imageError}</small>}</label>
+              {isEditing && selectedItem?.image_url && <div className="manager-ops-preview manager-ops-wide"><img alt={form.name || 'Vật tư phòng'} src={selectedItem.image_url} /><small>Chọn ảnh mới để thay thế ảnh hiện tại.</small></div>}
               <label className="manager-ops-wide">Mô tả<input name="description" onChange={handleChange} value={form.description} /></label>
               <div className="manager-ops-actions">
                 <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo vật tư'}</button>

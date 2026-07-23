@@ -61,6 +61,13 @@ export const managerApi = {
   updateRoomInventoryItem: (id, data) => axiosClient.put(`/manager/room-inventory-items/${id}`, data).then(unwrap),
   activateRoomInventoryItem: (id) => axiosClient.patch(`/manager/room-inventory-items/${id}/activate`).then(unwrap),
   deactivateRoomInventoryItem: (id) => axiosClient.patch(`/manager/room-inventory-items/${id}/deactivate`).then(unwrap),
+  uploadRoomInventoryImage: (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return axiosClient.post('/upload/rooms', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(unwrap).then((payload) => payload.url);
+  },
 
   getCustomerFeedbacks: (params) => axiosClient.get('/manager/customer-feedbacks', { params }).then(unwrap),
   respondCustomerFeedback: (id, responseText) => axiosClient.patch(`/manager/customer-feedbacks/${id}/respond`, { responseText }).then(unwrap),
