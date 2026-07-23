@@ -170,6 +170,23 @@ const checkinService = {
     const subtotal = Number(invoice?.subtotal ?? (roomCharge + extraCharges));
     const finalTotal = Number(invoice?.final_total ?? Math.max(0, subtotal - depositDeducted));
 
+    // Compute canCheckin and blocking reasons
+    const blockingReasons = [];
+    
+    if (booking.payment_status !== 'Paid') {
+      blockingReasons.push('Booking not fully paid');
+    }
+
+    // Assigned rooms check
+    const roomIds = rooms.map(r => r.room_id).filter(Boolean);
+    const assignedRooms = await Room.find({ _id: { $in: roomIds } });
+
+    assignedRooms.forEach(room => {
+      if (!room.isActive) {
+        blockingReasons.push(`Room ${room.roomName} is inactive`);
+      }
+    });
+
     // Date validation
     const getStartOfDay = (d) => {
       const date = new Date(d);
