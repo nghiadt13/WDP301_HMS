@@ -487,6 +487,8 @@
 .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
 /* Walk-in Wizard Specific Styles */
 .walkin-wizard-card {
   background: white;
@@ -693,6 +695,8 @@
   color: #16a34a;
   display: flex;
   align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
 }
 
 /* Stay Guest Form Custom styling */
