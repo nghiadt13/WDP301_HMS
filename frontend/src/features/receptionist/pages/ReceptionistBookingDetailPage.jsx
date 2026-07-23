@@ -106,7 +106,7 @@ const ReceptionistBookingDetailPage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ fontSize: '22px', margin: 0 }}>Mã Đặt Phòng: {booking.bookingCode}</h2>
-            <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>Nguồn: {booking.source} | Ngày tạo: {formatDateTime(booking.createdAt)}</p>
+            <p style={{ color: 'var(--muted)', margin: '4px 0 0 0' }}>Ngày tạo: {formatDateTime(booking.createdAt)}</p>
           </div>
           <div>
             <span className={`receptionist-status ${booking.bookingStatus === 'CheckedIn' ? 'checked-in' : booking.bookingStatus === 'Canceled' ? 'check-out' : 'pending'}`} style={{ fontSize: '14px', padding: '10px 16px' }}>

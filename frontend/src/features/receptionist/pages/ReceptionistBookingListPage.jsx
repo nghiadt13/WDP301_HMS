@@ -160,6 +160,7 @@ const ReceptionistBookingListPage = () => {
             <table>
               <thead>
                 <tr>
+                  <th style={{ width: '60px' }}>STT</th>
                   <th>Mã Booking</th>
                   <th>Khách hàng</th>
                   <th>Loại phòng</th>
@@ -171,13 +172,14 @@ const ReceptionistBookingListPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.data.map((b) => (
+                {data.data.map((b, index) => (
                   <tr 
                     key={b.id} 
                     style={{ cursor: 'pointer' }}
                     onClick={() => navigate(`/receptionist/bookings/${b.id}`)}
                   >
-                    <td><strong>{b.bookingCode}</strong><small>Nguồn: {b.source}</small></td>
+                    <td>{(params.page - 1) * params.limit + index + 1}</td>
+                    <td><strong>{b.bookingCode}</strong>{b.source ? <small style={{ display: 'block', color: 'var(--muted)', fontSize: '12px' }}>Nguồn: {b.source}</small> : null}</td>
                     <td><strong>{b.customerName}</strong>{b.customerPhone ? <small style={{ display: 'block', color: 'var(--muted)', fontSize: '12px' }}>SĐT: {b.customerPhone}</small> : null}</td>
                     <td><strong>{b.roomTypeName}</strong><small>{b.roomQuantity} phòng / {b.guestCount} khách</small></td>
                     <td>{formatDate(b.checkInDate)} - {formatDate(b.checkOutDate)}</td>

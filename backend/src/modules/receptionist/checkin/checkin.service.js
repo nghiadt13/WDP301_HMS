@@ -258,6 +258,7 @@ const checkinService = {
         phoneNumber: sg.phone_number,
         idCardNumber: sg.id_card_number,
         passportNumber: sg.passport_number,
+        idCardImage: sg.id_card_image || '',
         documentType: sg.document_type
       })),
       payments: payments.map(p => ({
@@ -422,6 +423,7 @@ const checkinService = {
           phone_number: guest.phoneNumber || '',
           id_card_number: guest.idCardNumber || '',
           passport_number: guest.passportNumber || '',
+          id_card_image: guest.idCardImage || '',
           document_type: guest.documentType || 'ID_CARD'
         });
         await newGuest.save();

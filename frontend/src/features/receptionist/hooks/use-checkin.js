@@ -21,6 +21,8 @@ export const useCheckIn = () => {
     onSuccess: (res, variables) => {
       qc.invalidateQueries({ queryKey: ['receptionist-bookings'] });
       qc.invalidateQueries({ queryKey: ['receptionist-booking', variables.id] });
+      // Invalidate rooms so manager room management view updates status to Occupied
+      qc.invalidateQueries({ queryKey: ['rooms'] });
     },
   });
 };
