@@ -2,6 +2,15 @@
 import { Search, Pencil, PackageCheck, PackageX, Plus, X } from 'lucide-react';
 import { managerApi } from '../services/manager-api.js';
 import './manager-operations.css';
+const resolveInventoryImageUrl = (url) => {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  if (/^(https?:)?\/\//i.test(value) || value.startsWith('data:') || value.startsWith('blob:')) return value;
+
+  const apiUrl = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:9999/api`;
+  const origin = apiUrl.replace(/\/api\/?$/i, '');
+  return `${origin}${value.startsWith('/') ? value : `/${value}`}`;
+};
 
 const categories = ['Đồ uống', 'Đồ ăn nhẹ', 'Đồ dùng phòng tắm', 'Tiện ích phòng', 'Đồ cá nhân', 'Khác'];
 const emptyForm = { name: '', category: categories[0], price: 0, quantity: 0, stock_status: 'in_stock', image_url: '', description: '' };
@@ -245,7 +254,7 @@ const ManagerRoomInventoryPage = () => {
             <tbody>
               {filteredItems.length ? filteredItems.map((item) => (
                 <tr className={`manager-ops-row ${selectedId === item._id ? 'is-selected' : ''}`} key={item._id} onClick={() => openEditModal(item)}>
-                  <td>{item.image_url ? <img className="inventory-thumb" alt={item.name} src={item.image_url} /> : <span className="inventory-thumb is-empty"><PackageCheck size={18} /></span>}</td>
+                  <td>{item.image_url ? <img className="inventory-thumb" alt={item.name} src={resolveInventoryImageUrl(item.image_url)} /> : <span className="inventory-thumb is-empty"><PackageCheck size={18} /></span>}</td>
                   <td><strong>{item.name}</strong><small>{item.description || 'Chưa có mô tả'}</small></td>
                   <td>{item.category}</td>
                   <td><strong>{Number(item.quantity || 0)}</strong><small>sản phẩm</small></td>
@@ -282,7 +291,7 @@ const ManagerRoomInventoryPage = () => {
               <label>Số lượng<input min="0" name="quantity" onChange={handleChange} required step="1" type="number" value={form.quantity} /></label>
               <label>Tồn kho<input aria-label="Tồn kho được tính tự động" disabled value={stockLabels[getStockStatusFromQuantity(form.quantity)] || 'Nhập số lượng hợp lệ'} /></label>
               <label className="manager-ops-wide">Tải ảnh vật tư<input accept="image/jpeg,image/png,image/webp" onChange={handleImageFileChange} required type="file" />{imageFile && <small>Đã chọn: {imageFile.name}</small>}<small>Chỉ nhận JPG, PNG hoặc WebP; dung lượng tối đa 5 MB.</small>{imageError && <small className="manager-ops-field-error">{imageError}</small>}</label>
-              {isEditing && selectedItem?.image_url && <div className="manager-ops-preview manager-ops-wide"><img alt={form.name || 'Vật tư phòng'} src={selectedItem.image_url} /><small>Chọn ảnh mới để thay thế ảnh hiện tại.</small></div>}
+              {isEditing && selectedItem?.image_url && <div className="manager-ops-preview manager-ops-wide"><img alt={form.name || 'Vật tư phòng'} src={resolveInventoryImageUrl(selectedItem.image_url)} /><small>Chọn ảnh mới để thay thế ảnh hiện tại.</small></div>}
               <label className="manager-ops-wide">Mô tả<input name="description" onChange={handleChange} value={form.description} /></label>
               <div className="manager-ops-actions">
                 <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo vật tư'}</button>
@@ -299,3 +308,4 @@ const ManagerRoomInventoryPage = () => {
 };
 
 export default ManagerRoomInventoryPage;
+
