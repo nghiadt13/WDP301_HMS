@@ -1,5 +1,10 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import './ReceptionistDashboardPage.css';
-import { bookings, kpis, menuItems, quickActions, roomStatus, serviceRequests } from '../data/receptionistDashboardData.js';
+import '../../manager/styles/manager-layout.css';
+import { receptionistApi } from '../services/receptionist-api.js';
+import { bookings, kpis, quickActions, roomStatus, serviceRequests } from '../data/receptionistDashboardData.js';
 
 const iconPaths = {
   dashboard: 'M3 13h8V3H3v10Zm10 8h8V3h-8v18ZM3 21h8v-6H3v6Z',
@@ -24,12 +29,6 @@ const Icon = ({ name, size = 20, className = '' }) => (
   </svg>
 );
 
-const SidebarItem = ({ label, icon, active }) => (
-  <button className={`receptionist-sidebar-item ${active ? 'is-active' : ''}`} type="button">
-    <span><Icon name={icon} />{label}</span>
-  </button>
-);
-
 const KpiCard = ({ title, value, subtitle, icon, tone }) => (
   <article className="receptionist-card receptionist-kpi-card">
     <span className={`receptionist-kpi-icon ${tone}`}><Icon name={icon} /></span>
@@ -41,42 +40,127 @@ const KpiCard = ({ title, value, subtitle, icon, tone }) => (
   </article>
 );
 
+const toStatusClass = (status) => {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'completed') return 'checked-in';
+  if (normalized === 'waitingmaintenance') return 'check-out';
+  if (normalized === 'cleaning') return 'arriving';
+  if (normalized === 'accepted') return 'walk-in';
+  return 'pending';
+};
+
 const ReceptionistDashboardPage = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [priority, setPriority] = useState('high');
+  const [receptionistNote, setReceptionistNote] = useState('Guest checked out. Please clean this room.');
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState('');
+
+  const housekeepingBoardQuery = useQuery({
+    queryKey: ['receptionist-operational-board'],
+    queryFn: receptionistApi.getOperationalBoard,
+    refetchInterval: 5_000,
+    staleTime: 5_000,
+    retry: 1,
+    enabled: activeTab === 'housekeeping',
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: receptionistApi.createCleaningTask,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['receptionist-operational-board'] }),
+      ]);
+    },
+  });
+
+  const roomsRequiringCleaning = useMemo(
+    () => (housekeepingBoardQuery.data?.rooms || []).filter((room) => String(room.status || '').toLowerCase() === 'dirty'),
+    [housekeepingBoardQuery.data?.rooms]
+  );
+
+  const housekeepingTasks = useMemo(() => {
+    const rows = housekeepingBoardQuery.data?.tasks || [];
+    return [...rows].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  }, [housekeepingBoardQuery.data?.tasks]);
+
+  const roomCounts = useMemo(() => {
+    return (housekeepingBoardQuery.data?.rooms || []).reduce((accumulator, room) => {
+      const key = String(room.status || '').toLowerCase();
+      accumulator[key] = (accumulator[key] || 0) + 1;
+      return accumulator;
+    }, {});
+  }, [housekeepingBoardQuery.data?.rooms]);
+
+  useEffect(() => {
+    if (!roomsRequiringCleaning.length) {
+      setSelectedRoomNumber('');
+      return;
+    }
+
+    if (!selectedRoomNumber || !roomsRequiringCleaning.some((room) => room.roomNumber === selectedRoomNumber)) {
+      setSelectedRoomNumber(roomsRequiringCleaning[0].roomNumber);
+    }
+  }, [roomsRequiringCleaning, selectedRoomNumber]);
+
+  const onAssignCleaningTask = async (roomNumberOverride = '') => {
+    const roomNumber = roomNumberOverride || selectedRoomNumber;
+    if (!roomNumber) {
+      window.alert('Please select a room to assign.');
+      return;
+    }
+
+    await createTaskMutation.mutateAsync({
+      room_number: roomNumber,
+      priority,
+      receptionistNote,
+      cleaningType: 'Checkout Cleaning',
+      checkoutTime: new Date().toISOString(),
+    });
+
+    await housekeepingBoardQuery.refetch();
+  };
+
   return (
-    <div className="receptionist-dashboard">
-      <aside className="receptionist-sidebar">
-        <div className="receptionist-brand">
-          <span className="receptionist-brand-mark"><Icon name="dashboard" /></span>
-          <span>Hotelify</span>
-        </div>
-        <p className="receptionist-section-label">2. Receptionist</p>
-        <nav className="receptionist-nav" aria-label="Receptionist navigation">
-          {menuItems.map(([label, icon], index) => (
-            <SidebarItem key={label} label={`${index + 1}. ${label}`} icon={icon} active={index === 0} />
-          ))}
-        </nav>
-      </aside>
+    <div className="receptionist-dashboard-page">
+      <div className="receptionist-tab-bar" style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        <button
+          type="button"
+          className="receptionist-link-button"
+          onClick={() => setActiveTab('dashboard')}
+          style={{
+            border: activeTab === 'dashboard' ? '1px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: '999px',
+            padding: '6px 16px',
+            fontWeight: activeTab === 'dashboard' ? '600' : 'normal',
+            color: activeTab === 'dashboard' ? '#2563eb' : '#4b5563',
+            background: activeTab === 'dashboard' ? '#eff6ff' : '#fff',
+            cursor: 'pointer',
+          }}
+        >
+          Dashboard
+        </button>
+        <button
+          type="button"
+          className="receptionist-link-button"
+          onClick={() => setActiveTab('housekeeping')}
+          style={{
+            border: activeTab === 'housekeeping' ? '1px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: '999px',
+            padding: '6px 16px',
+            fontWeight: activeTab === 'housekeeping' ? '600' : 'normal',
+            color: activeTab === 'housekeeping' ? '#2563eb' : '#4b5563',
+            background: activeTab === 'housekeeping' ? '#eff6ff' : '#fff',
+            cursor: 'pointer',
+          }}
+        >
+          Housekeeping Tasks
+        </button>
+      </div>
 
-      <main className="receptionist-workspace">
-        <header className="receptionist-header">
-          <div>
-            <span>Saturday, 27 June 2026</span>
-            <h1>Receptionist Dashboard</h1>
-          </div>
-          <div className="receptionist-header-actions">
-            <label className="receptionist-search">
-              <Icon name="search" size={18} />
-              <input placeholder="Search booking, guest, room..." />
-            </label>
-            <button className="receptionist-circle-button" type="button"><Icon name="message" /></button>
-            <button className="receptionist-circle-button" type="button"><Icon name="bell" /></button>
-            <div className="receptionist-profile">
-              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=96&q=80" alt="Receptionist profile" />
-              <div><strong>Reception Desk</strong><small>Morning Shift</small></div>
-            </div>
-          </div>
-        </header>
-
+      {activeTab === 'dashboard' ? (
         <section className="receptionist-content">
           <div className="receptionist-main-column">
             <section className="receptionist-grid receptionist-kpis">
@@ -86,22 +170,24 @@ const ReceptionistDashboardPage = () => {
             <section className="receptionist-card receptionist-bookings-card">
               <div className="receptionist-card-heading">
                 <div>
-                  <h2>View Booking List</h2>
-                  <p>Manage reservations, walk-in bookings, deposits, and check-in status.</p>
+                  <h2>Xem danh sách đặt phòng</h2>
+                  <p>Quản lý các lượt đặt phòng, khách vãng lai, số tiền đặt cọc và trạng thái nhận phòng của khách hàng.</p>
                 </div>
-                <button type="button"><Icon name="plus" size={16} />Create Walk-in Booking</button>
+                <button type="button" onClick={() => navigate('/receptionist/walkin')}>
+                  <Icon name="plus" size={16} />Tạo đặt phòng trực tiếp
+                </button>
               </div>
               <div className="receptionist-table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Booking</th>
-                      <th>Guest</th>
-                      <th>Room</th>
-                      <th>Stay Dates</th>
-                      <th>Payment</th>
-                      <th>Status</th>
-                      <th>Action</th>
+                      <th>Đặt phòng</th>
+                      <th>Khách hàng</th>
+                      <th>Loại phòng</th>
+                      <th>Thời gian lưu trú</th>
+                      <th>Thanh toán</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -109,11 +195,15 @@ const ReceptionistDashboardPage = () => {
                       <tr key={code}>
                         <td><strong>{code}</strong></td>
                         <td>{guest}</td>
-                        <td><strong>{room}</strong><small>Room {roomNo}</small></td>
+                        <td><strong>{room}</strong><small>Phòng {roomNo}</small></td>
                         <td>{dates}</td>
                         <td>{payment}</td>
-                        <td><span className={`receptionist-status ${status.toLowerCase().replaceAll(' ', '-')}`}>{status}</span></td>
-                        <td><button className="receptionist-link-button" type="button">View Detail</button></td>
+                        <td><span className="receptionist-status">{status}</span></td>
+                        <td>
+                          <button className="receptionist-link-button" type="button" onClick={() => navigate('/receptionist/bookings')}>
+                            Chi tiết
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -135,7 +225,7 @@ const ReceptionistDashboardPage = () => {
           <aside className="receptionist-side-column">
             <section className="receptionist-card">
               <div className="receptionist-card-heading compact">
-                <h2>Room Status Board</h2>
+                <h2>Sơ đồ phòng</h2>
                 <button type="button"><Icon name="dots" size={16} /></button>
               </div>
               <div className="receptionist-room-bars">
@@ -150,27 +240,202 @@ const ReceptionistDashboardPage = () => {
 
             <section className="receptionist-card">
               <div className="receptionist-card-heading compact">
-                <h2>Service Requests</h2>
+                <h2>Yêu cầu dịch vụ</h2>
                 <button type="button"><Icon name="plus" size={16} /></button>
               </div>
               <div className="receptionist-request-list">
                 {serviceRequests.map(([title, room, owner]) => (
                   <article key={title}>
                     <strong>{title}</strong>
-                    <span>{room} - Route to {owner}</span>
+                    <span>{room} - Chuyển giao: {owner}</span>
                   </article>
                 ))}
               </div>
             </section>
 
             <section className="receptionist-card receptionist-shift-card">
-              <h2>Today Focus</h2>
-              <p>Prioritize arrivals, deposits, room assignment, and check-out inspection follow-up.</p>
-              <button type="button">Open Work Queue</button>
+              <h2>Trọng tâm hôm nay</h2>
+              <p>Ưu tiên khách đến nhận phòng, đối soát tiền đặt cọc, xếp phòng trống sạch sẽ và phối hợp kiểm tra phòng trả.</p>
+              <button type="button" onClick={() => navigate('/receptionist/bookings')}>Mở danh sách công việc</button>
             </section>
           </aside>
         </section>
-      </main>
+      ) : (
+        <section className="receptionist-content">
+          <div className="receptionist-main-column">
+            <section className="receptionist-card receptionist-bookings-card">
+              <div className="receptionist-card-heading">
+                <div>
+                  <h2>Housekeeping Tasks</h2>
+                  <p>View dirty rooms after checkout and assign cleaning tasks to housekeeping.</p>
+                </div>
+                <button type="button" onClick={() => housekeepingBoardQuery.refetch()}>
+                  Refresh
+                </button>
+              </div>
+
+              {housekeepingBoardQuery.isLoading ? (
+                <p>Loading housekeeping board...</p>
+              ) : null}
+
+              {housekeepingBoardQuery.isError ? (
+                <p>Cannot load housekeeping board. Please check backend connection.</p>
+              ) : null}
+
+              {!housekeepingBoardQuery.isLoading && !housekeepingBoardQuery.isError ? (
+                <>
+                  <div className="receptionist-table-wrap" style={{ marginBottom: '16px' }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Room</th>
+                          <th>Type</th>
+                          <th>Status</th>
+                          <th>Assign</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roomsRequiringCleaning.map((room) => (
+                          <tr key={room.id}>
+                            <td><strong>{room.roomNumber}</strong></td>
+                            <td>{room.roomType}</td>
+                            <td><span className="receptionist-status pending">{room.status}</span></td>
+                            <td>
+                              <button
+                                className="receptionist-link-button"
+                                type="button"
+                                disabled={createTaskMutation.isPending}
+                                onClick={() => onAssignCleaningTask(room.roomNumber)}
+                              >
+                                Assign Cleaning Task
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {!roomsRequiringCleaning.length ? (
+                          <tr>
+                            <td colSpan={4}>No dirty rooms waiting for assignment.</td>
+                          </tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="receptionist-card" style={{ border: '1px solid #f3f4f6', boxShadow: 'none' }}>
+                    <div className="receptionist-card-heading compact">
+                      <h2>Create Cleaning Task</h2>
+                    </div>
+                    <div style={{ display: 'grid', gap: '12px' }}>
+                      <label>
+                        <span>Room</span>
+                        <select
+                          value={selectedRoomNumber}
+                          onChange={(event) => setSelectedRoomNumber(event.target.value)}
+                          style={{ width: '100%', marginTop: '6px', padding: '10px', borderRadius: '10px', border: '1px solid #e5e7eb' }}
+                        >
+                          {roomsRequiringCleaning.map((room) => (
+                            <option key={room.id} value={room.roomNumber}>{room.roomNumber}</option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label>
+                        <span>Priority</span>
+                        <select
+                          value={priority}
+                          onChange={(event) => setPriority(event.target.value)}
+                          style={{ width: '100%', marginTop: '6px', padding: '10px', borderRadius: '10px', border: '1px solid #e5e7eb' }}
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        <span>Receptionist Notes</span>
+                        <input
+                          value={receptionistNote}
+                          onChange={(event) => setReceptionistNote(event.target.value)}
+                          placeholder="Notes for housekeeping"
+                          style={{ width: '100%', marginTop: '6px', padding: '10px', borderRadius: '10px', border: '1px solid #e5e7eb' }}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        disabled={createTaskMutation.isPending || !selectedRoomNumber}
+                        onClick={() => onAssignCleaningTask()}
+                      >
+                        {createTaskMutation.isPending ? 'Assigning...' : 'Assign Cleaning Task'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </section>
+
+            <section className="receptionist-card receptionist-bookings-card">
+              <div className="receptionist-card-heading compact">
+                <h2>Housekeeping Tasks</h2>
+              </div>
+              <div className="receptionist-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Room</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Receptionist Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {housekeepingTasks.slice(0, 12).map((task) => (
+                      <tr key={task.id}>
+                        <td><strong>{task.roomNumber}</strong></td>
+                        <td><span className={`receptionist-status ${toStatusClass(task.status)}`}>{task.status}</span></td>
+                        <td>{task.priority}</td>
+                        <td>{task.receptionistNote || 'No note'}</td>
+                      </tr>
+                    ))}
+                    {!housekeepingTasks.length ? (
+                      <tr>
+                        <td colSpan={4}>No housekeeping tasks available.</td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside className="receptionist-side-column">
+            <section className="receptionist-card">
+              <div className="receptionist-card-heading compact">
+                <h2>Room Status (Live)</h2>
+              </div>
+              <div className="receptionist-room-bars">
+                <div>
+                  <span><b>{roomCounts.available || 0}</b>Available</span>
+                  <i><em className="available" style={{ width: `${Math.min(roomCounts.available || 0, 80)}%` }} /></i>
+                </div>
+                <div>
+                  <span><b>{roomCounts.dirty || 0}</b>Dirty</span>
+                  <i><em className="dirty" style={{ width: `${Math.min(roomCounts.dirty || 0, 80)}%` }} /></i>
+                </div>
+                <div>
+                  <span><b>{roomCounts.cleaning || 0}</b>Cleaning</span>
+                  <i><em className="occupied" style={{ width: `${Math.min(roomCounts.cleaning || 0, 80)}%` }} /></i>
+                </div>
+                <div>
+                  <span><b>{roomCounts.maintenance || 0}</b>Maintenance</span>
+                  <i><em className="maintenance" style={{ width: `${Math.min(roomCounts.maintenance || 0, 80)}%` }} /></i>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </section>
+      )}
     </div>
   );
 };

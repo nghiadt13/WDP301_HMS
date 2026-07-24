@@ -17,6 +17,13 @@
   font-size: 14px;
 }
 
+.receptionist-dashboard-page {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+}
+
 .receptionist-icon { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; flex: 0 0 auto; }
 .receptionist-sidebar { width: 280px; min-height: 100vh; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--line); padding-bottom: 20px; }
 .receptionist-brand, .receptionist-sidebar-item span, .receptionist-header, .receptionist-header-actions, .receptionist-search, .receptionist-profile, .receptionist-card-heading, .receptionist-kpi-card, .receptionist-action-card span, .receptionist-room-bars span { display: flex; align-items: center; }
@@ -38,7 +45,7 @@
 .receptionist-profile { gap: 12px; border-left: 1px solid #e5e7eb; padding-left: 16px; }
 .receptionist-profile img { width: 42px; height: 42px; border-radius: 999px; object-fit: cover; }
 .receptionist-profile strong, .receptionist-profile small { display: block; }
-.receptionist-content { display: flex; gap: 24px; padding: 32px; max-height: calc(100vh - 80px); overflow-y: auto; }
+.receptionist-content { display: flex; gap: 24px; padding: 0; }
 .receptionist-main-column { flex: 1; min-width: 760px; display: grid; gap: 24px; }
 .receptionist-side-column { width: 340px; flex: 0 0 340px; display: grid; align-content: start; gap: 24px; }
 .receptionist-grid { display: grid; gap: 16px; }
@@ -73,7 +80,7 @@
 .receptionist-status.pending { background: #fef3c7; color: #b45309; }
 .receptionist-status.checked-in { background: #dcfce7; color: #15803d; }
 .receptionist-status.check-out { background: #fee2e2; color: #dc2626; }
-.receptionist-link-button { border: 0; background: transparent; color: var(--blue-dark); cursor: pointer; font-weight: 800; }
+.receptionist-link-button { border: 0; background: transparent; color: var(--blue-dark); cursor: pointer; font-weight: normal; }
 .receptionist-action-card { min-height: 164px; }
 .receptionist-action-card span { width: 40px; height: 40px; margin-bottom: 16px; background: #eff6ff; color: var(--blue-dark); }
 .receptionist-action-card p { margin: 8px 0 0; line-height: 1.5; font-size: 13px; }
