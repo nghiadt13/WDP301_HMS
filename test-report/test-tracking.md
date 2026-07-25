@@ -1,6 +1,6 @@
 # Test Tracking - Hotelify (WDP101)
 
-> Cập nhật: 2026-07-25 | Người thực hiện: QuanNM
+> Cập nhật gần nhất: 7/18/2026 | Người thực hiện: nghiadt
 
 ## Tổng Quan Tiến Độ
 
@@ -25,16 +25,19 @@
 | Check-in (Receptionist) | 8 | 0 | 8 | ⬜ 0% |
 | Check-out (Receptionist) | 6 | 0 | 6 | ⬜ 0% |
 | Profile | 4 | 0 | 4 | ⬜ 0% |
+| Upload & Image Security (Mới) | 5 | 0 | 5 | ⬜ 0% |
+| Auth Middleware & Guard (Mới) | 4 | 0 | 4 | ⬜ 0% |
+| Password Validation Utils (Mới) | 4 | 0 | 4 | ⬜ 0% |
 | Homepage / Room List (FE) | 6 | 0 | 6 | ⬜ 0% |
 | Booking Page (FE) | 5 | 0 | 5 | ⬜ 0% |
 | Manager Pages (FE) | 8 | 0 | 8 | ⬜ 0% |
 | Admin Pages (FE) | 4 | 0 | 4 | ⬜ 0% |
 | Receptionist Pages (FE) | 6 | 0 | 6 | ⬜ 0% |
-| **TỔNG CỘNG** | **152** | **24** | **128** | **16%** |
+| **TỔNG CỘNG** | **165** | **24** | **141** | **14.5%** |
 
 ---
 
-## Chi Tết Từng Module
+## Chi Tiết Từng Module
 
 ### ✅ Module 1: Customer Auth Backend (HOÀN THÀNH)
 - [x] UT001 - Đăng ký tài khoản mới thành công
@@ -299,90 +302,125 @@
 
 ---
 
-### ⬜ Module 20: Homepage / Room List (Frontend) - CHƯA TEST
+### ⬜ Module 20: Upload & Image Security (MỚI BỔ SUNG) - CHƯA TEST
+**Files:** `backend/src/routes/upload.route.js`, `backend/src/middlewares/upload.middleware.js`
+
+**Test Cases cần viết:**
+- [ ] UT124 - Upload ảnh hợp lệ (PNG/JPG/WEBP) thành công
+- [ ] UT125 - Chặn file không phải ảnh (PDF/EXE/TXT) (400)
+- [ ] UT126 - Kiểm tra Magic Bytes ngăn chặn đổi đuôi file giả mạo (400)
+- [ ] UT127 - Chặn upload file vượt quá dung lượng cho phép (400)
+- [ ] UT128 - Upload không gửi file (400)
+
+---
+
+### ⬜ Module 21: Auth Middleware & Guard (MỚI BỔ SUNG) - CHƯA TEST
+**Files:** `backend/src/middlewares/auth.middleware.js`
+
+**Test Cases cần viết:**
+- [ ] UT129 - Truy cập API bảo vệ với Token hợp lệ (200)
+- [ ] UT130 - Truy cập API bảo vệ không có Header Authorization (401)
+- [ ] UT131 - Truy cập API bảo vệ với Token sai/hết hạn (401)
+- [ ] UT132 - Truy cập API vượt quá quyền hạn của Role (403)
+
+---
+
+### ⬜ Module 22: Password Validation Utils (MỚI BỔ SUNG) - CHƯA TEST
+**Files:** `frontend/src/utils/passwordValidation.js`
+
+**Test Cases cần viết:**
+- [ ] UT133 - Validate mật khẩu mạnh trả về hợp lệ
+- [ ] UT134 - Validate mật khẩu ngắn hơn 8 ký tự trả về lỗi
+- [ ] UT135 - Validate mật khẩu thiếu chữ hoa/thường/số trả về lỗi
+- [ ] UT136 - Validate mật khẩu thiếu ký tự đặc biệt trả về lỗi
+
+---
+
+### ⬜ Module 23: Homepage / Room List (Frontend) - CHƯA TEST
 **Files:** `frontend/src/pages/HomePage.jsx`, `frontend/src/pages/RoomListPage.jsx`
 
 **Test Cases cần viết:**
-- [ ] UT124 - HomePage render đúng heading
-- [ ] UT125 - RoomListPage hiển thị danh sách phòng
-- [ ] UT126 - RoomListPage filter theo loại phòng
-- [ ] UT127 - RoomListPage search theo tên
-- [ ] UT128 - RoomDetailPage hiển thị thông tin chi tiết
-- [ ] UT129 - RoomSearchResultsPage hiển thị kết quả
+- [ ] UT137 - HomePage render đúng heading
+- [ ] UT138 - RoomListPage hiển thị danh sách phòng
+- [ ] UT139 - RoomListPage filter theo loại phòng
+- [ ] UT140 - RoomListPage search theo tên
+- [ ] UT141 - RoomDetailPage hiển thị thông tin chi tiết
+- [ ] UT142 - RoomSearchResultsPage hiển thị kết quả
 
 ---
 
-### ⬜ Module 21: Booking Page (Frontend) - CHƯA TEST
+### ⬜ Module 24: Booking Page (Frontend) - CHƯA TEST
 **Files:** `frontend/src/pages/BookingPage.jsx`, `frontend/src/pages/PaymentPage.jsx`
 
 **Test Cases cần viết:**
-- [ ] UT130 - BookingPage render form đặt phòng
-- [ ] UT131 - BookingPage validation ngày check-in/out
-- [ ] UT132 - BookingPage submit thành công
-- [ ] UT133 - PaymentPage hiển thị thông tin thanh toán
-- [ ] UT134 - PaymentPage xử lý thanh toán thành công
+- [ ] UT143 - BookingPage render form đặt phòng
+- [ ] UT144 - BookingPage validation ngày check-in/out
+- [ ] UT145 - BookingPage submit thành công
+- [ ] UT146 - PaymentPage hiển thị thông tin thanh toán
+- [ ] UT147 - PaymentPage xử lý thanh toán thành công
 
 ---
 
-### ⬜ Module 22: Manager Pages (Frontend) - CHƯA TEST
+### ⬜ Module 25: Manager Pages (Frontend) - CHƯA TEST
 **Files:** `frontend/src/features/manager/pages/*.jsx`
 
 **Test Cases cần viết:**
-- [ ] UT135 - ManagerDashboardPage render thống kê
-- [ ] UT136 - RoomManagePage hiển thị danh sách phòng
-- [ ] UT137 - AddRoomPage render form thêm phòng
-- [ ] UT138 - EditRoomPage load dữ liệu phòng
-- [ ] UT139 - HousekeepingTasksPage hiển thị task list
-- [ ] UT140 - HousekeepingSchedulePage hiển thị lịch
-- [ ] UT141 - ManagerStaffTasksPage hiển thị staff tasks
-- [ ] UT142 - ManagerCustomerFeedbackPage hiển thị feedback
+- [ ] UT148 - ManagerDashboardPage render thống kê
+- [ ] UT149 - RoomManagePage hiển thị danh sách phòng
+- [ ] UT150 - AddRoomPage render form thêm phòng
+- [ ] UT151 - EditRoomPage load dữ liệu phòng
+- [ ] UT152 - HousekeepingTasksPage hiển thị task list
+- [ ] UT153 - HousekeepingSchedulePage hiển thị lịch
+- [ ] UT154 - ManagerStaffTasksPage hiển thị staff tasks
+- [ ] UT155 - ManagerCustomerFeedbackPage hiển thị feedback
 
 ---
 
-### ⬜ Module 23: Admin Pages (Frontend) - CHƯA TEST
+### ⬜ Module 26: Admin Pages (Frontend) - CHƯA TEST
 **Files:** `frontend/src/features/admin/pages/*.jsx`
 
 **Test Cases cần viết:**
-- [ ] UT143 - AdminDashboardPage render thống kê
-- [ ] UT144 - AdminAccountsPage hiển thị danh sách accounts
-- [ ] UT145 - AdminRolesPage hiển thị danh sách roles
-- [ ] UT146 - AdminProfilePage hiển thị thông tin admin
+- [ ] UT156 - AdminDashboardPage render thống kê
+- [ ] UT157 - AdminAccountsPage hiển thị danh sách accounts
+- [ ] UT158 - AdminRolesPage hiển thị danh sách roles
+- [ ] UT159 - AdminProfilePage hiển thị thông tin admin
 
 ---
 
-### ⬜ Module 24: Receptionist Pages (Frontend) - CHƯA TEST
+### ⬜ Module 27: Receptionist Pages (Frontend) - CHƯA TEST
 **Files:** `frontend/src/features/receptionist/pages/*.jsx`, `components/*.jsx`
 
 **Test Cases cần viết:**
-- [ ] UT147 - ReceptionistDashboardPage render
-- [ ] UT148 - ReceptionistBookingListPage hiển thị bookings
-- [ ] UT149 - ReceptionistBookingDetailPage hiển thị chi tiết
-- [ ] UT150 - CheckinWizard render các bước
-- [ ] UT151 - CheckoutWizard render các bước
-- [ ] UT152 - WalkinBookingForm render form
+- [ ] UT160 - ReceptionistDashboardPage render
+- [ ] UT161 - ReceptionistBookingListPage hiển thị bookings
+- [ ] UT162 - ReceptionistBookingDetailPage hiển thị chi tiết
+- [ ] UT163 - CheckinWizard render các bước
+- [ ] UT164 - CheckoutWizard render các bước
+- [ ] UT165 - WalkinBookingForm render form
 
 ---
 
-## Thứ Tự Ưu Tiên Test
+## Thứ Tự Ưu Tiên Test (Priority Roadmap)
 
-### 🔴 Priority 1 (Critical) - Test ngay
-1. Room Management (Backend) - Core business logic
-2. Reservation (Customer) - Core booking flow
-3. Check-in / Check-out (Receptionist) - Core operations
-4. Payment - Revenue critical
+### 🔴 Priority 1 (Critical) - Thực hiện trước
+1. **Room Management (Backend)** - Quản lý phòng
+2. **Reservation (Customer)** - Luồng đặt phòng
+3. **Check-in / Check-out (Receptionist)** - Nghiệp vụ lễ tân
+4. **Payment** - Thanh toán
+5. **Auth Middleware & Guard** - Bảo mật phân quyền API
 
-### 🟡 Priority 2 (High) - Test sau
-5. Room Type Management
-6. Housekeeping
-7. Staff Tasks
-8. Profile
-9. Customer Feedback
+### 🟡 Priority 2 (High) - Thực hiện tiếp theo
+6. **Room Type Management**
+7. **Housekeeping**
+8. **Staff Tasks**
+9. **Upload & Image Security**
+10. **Profile & Password Validation**
+11. **Customer Feedback**
 
-### 🟢 Priority 3 (Medium) - Test khi có thời gian
-10. Admin Accounts / Roles / Dashboard
-11. Policies
-12. Room Inventory
-13. Frontend pages (UI tests)
+### 🟢 Priority 3 (Medium) - Thực hiện sau cùng
+12. **Admin Accounts / Roles / Dashboard**
+13. **Policies & Room Inventory**
+14. **Frontend UI Integration Pages**
 
 ---
 
