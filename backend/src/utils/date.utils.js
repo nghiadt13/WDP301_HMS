@@ -11,16 +11,37 @@ const parsePositiveInteger = (value, fallback = 0) => {
 
 /**
  * Parse a date string in YYYY-MM-DD format to a Date object.
- * @param {string} value - Date string
+ * @param {string|Date} value - Date string or object
  * @returns {Date|null}
  */
 const parseDateOnly = (value) => {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  if (!value) {
     return null;
   }
-  const date = new Date(`${value}T00:00:00.000Z`);
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 };
+
+/**
+ * Parse a hotel check-in date (or date string YYYY-MM-DD).
+ * @param {string|Date} value
+ * @returns {Date|null}
+ */
+const parseHotelCheckInDate = (value) => parseDateOnly(value);
+
+/**
+ * Parse a hotel check-out date (or date string YYYY-MM-DD).
+ * @param {string|Date} value
+ * @returns {Date|null}
+ */
+const parseHotelCheckOutDate = (value) => parseDateOnly(value);
 
 /**
  * Convert a Date to YYYY-MM-DD string.
@@ -61,6 +82,8 @@ module.exports = {
   addMonths,
   getMonthStart,
   parseDateOnly,
+  parseHotelCheckInDate,
+  parseHotelCheckOutDate,
   parsePositiveInteger,
   toDateKey,
 };

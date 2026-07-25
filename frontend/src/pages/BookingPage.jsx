@@ -56,6 +56,15 @@ const buildQueryString = (query, roomId = '') => {
 const BookingPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const storedUserStr = localStorage.getItem('hotelify_user');
+  let isReceptionist = false;
+  try {
+    const userObj = storedUserStr ? JSON.parse(storedUserStr) : null;
+    const roleVal = userObj?.role?.name || userObj?.role_name || userObj?.role || '';
+    isReceptionist = String(roleVal).toLowerCase().includes('receptionist');
+  } catch {}
+
   const query = useMemo(
     () => ({
       checkIn: searchParams.get('checkIn') || '',
@@ -238,6 +247,18 @@ const BookingPage = () => {
 
   return (
     <section className="booking-page" aria-label="Đặt phòng">
+      {isReceptionist && (
+        <div style={{ background: '#eff6ff', borderBottom: '1px solid #bfdbfe', padding: '12px 24px', color: '#1e40af', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, position: 'relative' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>🛎️</span>
+            <span><strong>Chế độ Lễ tân:</strong> Đang tạo đặt phòng Walk-in trực tiếp tại quầy</span>
+          </span>
+          <Link to="/receptionist" style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none', background: 'white', padding: '6px 14px', borderRadius: '6px', border: '1px solid #93c5fd', fontWeight: 700 }}>
+            Quay lại Bảng điều khiển Lễ tân &rarr;
+          </Link>
+        </div>
+      )}
+
       <div className="booking-hero">
         <img src={BOOKING_HERO_IMAGE} alt="Hotel booking" />
       </div>
@@ -434,7 +455,7 @@ const BookingPage = () => {
           </div>
 
           <button type="button" disabled={!hasSearchDates || !selectedRoom || !selectedAvailability?.canBook || isBooking} onClick={handleBook}>
-            {isBooking ? 'Đang đặt...' : 'Book'}
+            {isBooking ? 'Đang tạo...' : isReceptionist ? 'Tạo đặt phòng Walk-in' : 'Book'}
           </button>
           {bookingMessage ? <p>{bookingMessage}</p> : null}
         </aside>

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const asyncHandler = require('../utils/async-handler');
+const { createHttpError } = require('../utils/error.utils');
 
 const toDate = (value) => (value ? new Date(value) : null);
 
@@ -218,6 +219,47 @@ const getProfileDashboard = asyncHandler(async (req, res) => {
   });
 });
 
+const normalizeText = (value) => String(value || '').trim();
+
+const updateProfile = asyncHandler(async (req, res) => {
+  const fullName = normalizeText(req.body.full_name || req.body.fullName);
+  const phoneNumber = normalizeText(req.body.phone_number || req.body.phoneNumber);
+  const address = normalizeText(req.body.address);
+  const avatar = normalizeText(req.body.avatar);
+
+  if (!fullName) {
+    throw createHttpError('Full name is required.', 400);
+  }
+
+  if (fullName.length > 120) {
+    throw createHttpError('Full name must be 120 characters or less.', 400);
+  }
+
+  if (phoneNumber && !/^[0-9+\-\s().]{8,20}$/.test(phoneNumber)) {
+    throw createHttpError('Phone number is invalid.', 400);
+  }
+
+  if (address.length > 240) {
+    throw createHttpError('Address must be 240 characters or less.', 400);
+  }
+
+  if (avatar.length > 500) {
+    throw createHttpError('Avatar URL must be 500 characters or less.', 400);
+  }
+
+  req.user.full_name = fullName;
+  req.user.phone_number = phoneNumber;
+  req.user.address = address;
+  req.user.avatar = avatar;
+  await req.user.save();
+
+  res.send({
+    message: 'Profile updated successfully.',
+    user: req.user.toSafeObject(req.role)
+  });
+});
+
 module.exports = {
-  getProfileDashboard
+  getProfileDashboard,
+  updateProfile
 };

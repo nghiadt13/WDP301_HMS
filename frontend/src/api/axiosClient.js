@@ -29,4 +29,17 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Force logout if token is invalid or session is revoked
+      localStorage.removeItem('hotelify_token');
+      localStorage.removeItem('hotelify_user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosClient;

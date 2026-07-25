@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Building2, CalendarDays, Search } from 'lucide-react';
+
+import { getCustomerFeedbackStatus } from '../features/customer/api/customerApi';
 
 const readStoredUser = () => {
   try {
@@ -12,8 +14,10 @@ const readStoredUser = () => {
 };
 
 const AppHeader = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(readStoredUser);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
   const profileMenuRef = useRef(null);
 
   useEffect(() => {
@@ -74,12 +78,37 @@ const AppHeader = () => {
   const hasDashboard = isManager || isReceptionist;
   const dashboardUrl = isManager ? '/manager' : isReceptionist ? '/receptionist' : '';
 
+  useEffect(() => {
+    if (!isCustomer || !localStorage.getItem('hotelify_token')) {
+      setPendingFeedbackCount(0);
+      return;
+    }
+
+    let isMounted = true;
+    getCustomerFeedbackStatus()
+      .then((status) => {
+        if (isMounted) {
+          setPendingFeedbackCount(Number(status.pendingCount || 0));
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setPendingFeedbackCount(0);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isCustomer, user?._id]);
+
   const handleLogout = () => {
     localStorage.removeItem('hotelify_token');
     localStorage.removeItem('hotelify_user');
     setUser(null);
     setIsProfileMenuOpen(false);
     window.dispatchEvent(new Event('hotelify-auth-change'));
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -93,10 +122,14 @@ const AppHeader = () => {
         <Link to="/">Trang chủ</Link>
         <Link to="/listRoom">Danh sách phòng</Link>
         <Link to="/booking">Đặt phòng</Link>
+        <Link to="/policies">Chính sách</Link>
         {isCustomer ? (
           <>
-            <Link to="/customer/services">Dịch vụ</Link>
-            <Link to="/customer/feedback">Góp ý</Link>
+            <Link to="/customer/policies">Chính sách</Link>
+            <Link className={pendingFeedbackCount > 0 ? 'header-feedback-link has-review-alert' : 'header-feedback-link'} to="/customer/feedback">
+              Góp ý
+              {pendingFeedbackCount > 0 ? <span>{pendingFeedbackCount}</span> : null}
+            </Link>
           </>
         ) : null}
       </nav>

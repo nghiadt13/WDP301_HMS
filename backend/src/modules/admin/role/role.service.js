@@ -48,6 +48,7 @@ const roleService = {
 
     const role = await Role.create({
       name: data.name,
+      description: data.description || '',
       permission_sets: data.permission_sets || [],
       is_active: data.is_active !== undefined ? data.is_active : true
     });
@@ -74,6 +75,10 @@ const roleService = {
 
     if (data.permission_sets !== undefined) {
       role.permission_sets = data.permission_sets;
+    }
+
+    if (data.description !== undefined) {
+      role.description = data.description;
     }
     
     if (data.is_active !== undefined) {

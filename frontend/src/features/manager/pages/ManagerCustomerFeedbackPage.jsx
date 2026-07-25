@@ -1,19 +1,20 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Search, Star, MessageSquare, Archive } from 'lucide-react';
+import { Search, Star, MessageSquare } from 'lucide-react';
 import { managerApi } from '../services/manager-api.js';
 import './manager-operations.css';
 
-const statusLabels = { submitted: 'Chưa phản hồi', Submitted: 'Chưa phản hồi', responded: 'Đã phản hồi', Responded: 'Đã phản hồi', archived: 'Đã lưu trữ', Archived: 'Đã lưu trữ' };
+const statusLabels = { submitted: 'Chưa phản hồi', Submitted: 'Chưa phản hồi', responded: 'Đã phản hồi', Responded: 'Đã phản hồi' };
 const statusTone = (status) => {
   const normalized = String(status || '').toLowerCase();
   if (normalized === 'responded') return 'is-good';
-  if (normalized === 'archived') return 'is-muted';
   return 'is-info';
 };
 const getErrorMessage = (error) => error?.response?.data?.message || error.message || 'Đã có lỗi xảy ra';
 const formatDate = (value) => (value ? new Intl.DateTimeFormat('vi-VN').format(new Date(value)) : '-');
 const normalizeStatus = (status) => String(status || '').toLowerCase();
 const getCustomerKey = (feedback) => feedback.customer_email || feedback.customer_id || feedback.customer_name || feedback._id;
+const FEEDBACK_SEEN_STORAGE_KEY = 'hotelify_manager_seen_feedback_ids';
+const FEEDBACK_SEEN_EVENT = 'hotelify-manager-feedback-seen';
 const renderStars = (rating) => {
   const value = Math.max(0, Math.min(5, Number(rating || 0)));
   return `${'★'.repeat(value)}${'☆'.repeat(5 - value)}`;
@@ -37,10 +38,16 @@ const ManagerCustomerFeedbackPage = () => {
 
   const selectedFeedback = feedbacks.find((feedback) => feedback._id === selectedId);
   const responses = getResponses(selectedFeedback);
+  const hasResponse = responses.length > 0 || normalizeStatus(selectedFeedback?.status) === 'responded';
 
   const loadFeedbacks = async (nextId = selectedId) => {
     const data = await managerApi.getCustomerFeedbacks();
     setFeedbacks(data);
+    const feedbackIds = (Array.isArray(data) ? data : [])
+      .map((feedback) => feedback._id || feedback.id)
+      .filter(Boolean);
+    localStorage.setItem(FEEDBACK_SEEN_STORAGE_KEY, JSON.stringify(feedbackIds));
+    window.dispatchEvent(new Event(FEEDBACK_SEEN_EVENT));
     if (nextId) {
       const nextFeedback = data.find((feedback) => feedback._id === nextId);
       if (nextFeedback) setSelectedId(nextFeedback._id);
@@ -87,21 +94,14 @@ const ManagerCustomerFeedbackPage = () => {
       setMessage('Vui lòng chọn một góp ý trước khi phản hồi.');
       return;
     }
+    if (hasResponse) {
+      setMessage('Góp ý này đã được phản hồi.');
+      return;
+    }
     try {
       const feedback = await managerApi.respondCustomerFeedback(selectedFeedback._id, responseText);
       setMessage('Gửi phản hồi cho khách hàng thành công.');
       setResponseText('');
-      await loadFeedbacks(feedback._id);
-    } catch (error) {
-      setMessage(getErrorMessage(error));
-    }
-  };
-
-  const handleArchive = async () => {
-    if (!selectedFeedback) return;
-    try {
-      const feedback = await managerApi.archiveCustomerFeedback(selectedFeedback._id);
-      setMessage('Lưu trữ góp ý thành công.');
       await loadFeedbacks(feedback._id);
     } catch (error) {
       setMessage(getErrorMessage(error));
@@ -150,7 +150,6 @@ const ManagerCustomerFeedbackPage = () => {
             <option value="">Tất cả trạng thái</option>
             <option value="submitted">Chưa phản hồi</option>
             <option value="responded">Đã phản hồi</option>
-            <option value="archived">Đã lưu trữ</option>
           </select>
         </div>
 
@@ -184,16 +183,19 @@ const ManagerCustomerFeedbackPage = () => {
                   <small>Ngày gửi: {formatDate(selectedFeedback.submitted_at || selectedFeedback.createdAt)}</small>
                 </div>
                 <div className="manager-ops-summary manager-ops-wide">
-                  <strong>Các phản hồi đã gửi</strong>
+                  <strong>Phản hồi đã gửi</strong>
                   {responses.length ? responses.map((response, index) => (
                     <p key={`${response.respondedAt || index}-${index}`}>{response.responseText}<small> - {response.responderName || 'Quản lý'} {response.respondedAt ? `(${formatDate(response.respondedAt)})` : ''}</small></p>
                   )) : <p>Chưa có phản hồi nào.</p>}
                 </div>
-                <label className="manager-ops-wide">Thêm phản hồi mới<textarea onChange={(event) => setResponseText(event.target.value)} placeholder="Nhập phản hồi cho khách hàng..." required rows="6" value={responseText} /></label>
-                <div className="manager-ops-actions">
-                  <button className="manager-ops-button" type="submit"><Star size={15} /> {responses.length ? 'Thêm phản hồi' : 'Gửi phản hồi'}</button>
-                  <button className="manager-ops-danger" onClick={handleArchive} type="button"><Archive size={15} /> Lưu trữ</button>
-                </div>
+                {!hasResponse ? (
+                  <>
+                    <label className="manager-ops-wide">Nội dung phản hồi<textarea onChange={(event) => setResponseText(event.target.value)} placeholder="Nhập phản hồi cho khách hàng..." required rows="6" value={responseText} /></label>
+                    <div className="manager-ops-actions">
+                      <button className="manager-ops-button" type="submit"><Star size={15} /> Gửi phản hồi</button>
+                    </div>
+                  </>
+                ) : null}
               </form>
             ) : <div className="manager-ops-detail-empty">Chọn một góp ý để xem chi tiết và phản hồi.</div>}
           </article>

@@ -1,57 +1,71 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const customerServiceRequestSchema = new mongoose.Schema(
   {
     customer_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-    },
-    hotel_service_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'HotelService',
       default: null,
     },
-    reservation_id: {
+    booking_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Reservation',
+      ref: 'Booking',
       default: null,
     },
-    service_code: {
+    room_number: {
       type: String,
       trim: true,
       default: '',
     },
     service_name: {
       type: String,
-      required: true,
       trim: true,
+      required: true,
     },
     service_category: {
       type: String,
       trim: true,
-      default: '',
+      default: 'Housekeeping',
     },
-    room_number: {
+    assigned_department: {
       type: String,
-      required: true,
       trim: true,
+      default: 'Housekeeping',
+    },
+    assigned_staff_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    assigned_to: {
+      type: String,
+      trim: true,
+      default: 'Housekeeping Team',
+    },
+    status: {
+      type: String,
+      enum: ['requested', 'accepted', 'in_progress', 'handled', 'canceled'],
+      default: 'requested',
     },
     note: {
       type: String,
       trim: true,
       default: '',
     },
-    status: {
+    internal_note: {
       type: String,
-      enum: ['requested', 'canceled', 'handled'],
-      default: 'requested',
+      trim: true,
+      default: '',
     },
     requested_at: {
       type: Date,
       default: Date.now,
     },
-    canceled_at: {
+    accepted_at: {
+      type: Date,
+      default: null,
+    },
+    started_at: {
       type: Date,
       default: null,
     },
@@ -59,14 +73,18 @@ const customerServiceRequestSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    canceled_at: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
-    collection: 'service_requests',
+    collection: 'customer_service_requests',
   }
 );
 
+customerServiceRequestSchema.index({ assigned_department: 1, status: 1, room_number: 1 });
 customerServiceRequestSchema.index({ customer_id: 1, requested_at: -1 });
-customerServiceRequestSchema.index({ status: 1 });
 
 module.exports = mongoose.model('CustomerServiceRequest', customerServiceRequestSchema);

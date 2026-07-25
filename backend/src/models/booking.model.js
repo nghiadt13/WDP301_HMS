@@ -21,6 +21,8 @@ const bookingSchema = new mongoose.Schema({
     default: 'Pending'
   },
   source:             { type: String, enum: ['Website', 'OTA', 'Walk-in', 'Phone', 'Other'], default: 'Website' },
+  guest_name:         { type: String, default: '' },
+  guest_phone:        { type: String, default: '' },
   canceled_at:        { type: Date, default: null },
   created_at:         { type: Date, default: Date.now },
   updated_at:         { type: Date, default: Date.now }

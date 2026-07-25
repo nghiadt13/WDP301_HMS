@@ -34,6 +34,14 @@ export const uploadApi = {
     }).then((res) => res.data);
   },
 
+  uploadImages: (files) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+    return axiosClient.post('/upload/rooms/multiple', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((res) => res.data);
+  },
+
   deleteImage: (filename) => {
     return axiosClient.delete(`/upload/rooms/${filename}`).then((res) => res.data);
   },

@@ -8,5 +8,6 @@ router.get('/:id', accountController.getById);
 router.post('/', accountController.create);
 router.put('/:id', accountController.update);
 router.put('/:id/reset-password', accountController.resetPassword);
+router.delete('/:id', accountController.delete);
 
 module.exports = router;

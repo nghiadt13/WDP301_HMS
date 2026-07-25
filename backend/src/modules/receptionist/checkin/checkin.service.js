@@ -7,6 +7,8 @@ const RoomType = require('../../../models/room-type.model');
 const Room = require('../../../models/room.model');
 const BookingRoom = require('../../../models/booking-room.model');
 const StayGuest = require('../../../models/stay-guest.model');
+const BookingCharge = require('../../../models/booking-charge.model');
+const Invoice = require('../../../models/invoice.model');
 
 const generateWalkInCode = () => {
   const suffix = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -81,21 +83,28 @@ const checkinService = {
       Booking.countDocuments(filter)
     ]);
 
-    const mappedData = bookings.map(b => ({
-      id: b._id.toString(),
-      bookingCode: b.booking_code,
-      customerName: b.customer_id ? b.customer_id.full_name : 'Walk-in Guest',
-      roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
-      checkInDate: b.check_in_date,
-      checkOutDate: b.check_out_date,
-      guestCount: b.guest_count,
-      roomQuantity: b.room_quantity,
-      totalAmount: b.total_amount,
-      depositAmount: b.deposit_amount,
-      paymentStatus: b.payment_status,
-      bookingStatus: b.booking_status,
-      source: b.source
-    }));
+    const mappedData = bookings.map(b => {
+      const isReceptionistAccount = b.customer_id && (b.customer_id.full_name === 'Front Desk Receptionist' || b.customer_id.role === 'receptionist');
+      const customerName = b.guest_name || (!isReceptionistAccount && b.customer_id ? b.customer_id.full_name : 'Walk-in Guest');
+      const customerPhone = b.guest_phone || (!isReceptionistAccount && b.customer_id ? b.customer_id.phone_number : '');
+
+      return {
+        id: b._id.toString(),
+        bookingCode: b.booking_code,
+        customerName,
+        customerPhone,
+        roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
+        checkInDate: b.check_in_date,
+        checkOutDate: b.check_out_date,
+        guestCount: b.guest_count,
+        roomQuantity: b.room_quantity,
+        totalAmount: b.total_amount,
+        depositAmount: b.deposit_amount,
+        paymentStatus: b.payment_status,
+        bookingStatus: b.booking_status,
+        source: b.source
+      };
+    });
 
     return {
       data: mappedData,
@@ -151,6 +160,15 @@ const checkinService = {
 
     // Related payment info
     const payments = await db.collection('payments').find({ reservation_id: booking._id }).toArray();
+    const [charges, invoice] = await Promise.all([
+      BookingCharge.find({ booking_id: booking._id }).lean(),
+      Invoice.findOne({ booking_id: booking._id }).lean(),
+    ]);
+    const extraCharges = charges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
+    const roomCharge = Number(booking.total_amount || 0);
+    const depositDeducted = Number(booking.deposit_amount || 0);
+    const subtotal = Number(invoice?.subtotal ?? (roomCharge + extraCharges));
+    const finalTotal = Number(invoice?.final_total ?? Math.max(0, subtotal - depositDeducted));
 
     // Compute canCheckin and blocking reasons
     const blockingReasons = [];
@@ -159,18 +177,35 @@ const checkinService = {
       blockingReasons.push('Booking not fully paid');
     }
 
-    // Check if every assigned room has status = Available
+    // Assigned rooms check
     const roomIds = rooms.map(r => r.room_id).filter(Boolean);
     const assignedRooms = await Room.find({ _id: { $in: roomIds } });
-    
+
     assignedRooms.forEach(room => {
-      if (room.status !== 'Available') {
-        blockingReasons.push(`Room ${room.roomName} is currently ${room.status}`);
-      }
       if (!room.isActive) {
         blockingReasons.push(`Room ${room.roomName} is inactive`);
       }
     });
+
+    // Date validation
+    const getStartOfDay = (d) => {
+      const date = new Date(d);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
+    const todayStart = getStartOfDay(new Date());
+    const checkInStart = getStartOfDay(booking.check_in_date);
+    const checkOutStart = getStartOfDay(booking.check_out_date);
+
+    if (todayStart < checkInStart) {
+      const day = String(checkInStart.getDate()).padStart(2, '0');
+      const month = String(checkInStart.getMonth() + 1).padStart(2, '0');
+      const year = checkInStart.getFullYear();
+      blockingReasons.push(`Chưa đến ngày nhận phòng (Ngày nhận phòng: ${day}/${month}/${year})`);
+    } else if (todayStart >= checkOutStart) {
+      blockingReasons.push('Đã quá ngày trả phòng của đơn đặt này');
+    }
 
     const isCheckedIn = booking.booking_status === 'CheckedIn' || booking.booking_status === 'Checked-in';
     const isCanceled = booking.booking_status === 'Canceled';
@@ -182,21 +217,29 @@ const checkinService = {
       blockingReasons.push(`Booking is already ${booking.booking_status}`);
     } else if (booking.payment_status !== 'Paid') {
       canCheckin = false;
-    } else if (roomIds.length > 0 && assignedRooms.some(r => r.status !== 'Available' || !r.isActive)) {
+    } else if (roomIds.length > 0 && assignedRooms.some(r => !r.isActive)) {
+      canCheckin = false;
+    } else if (todayStart < checkInStart || todayStart >= checkOutStart) {
       canCheckin = false;
     }
+
+    const isReceptionistAccount = booking.customer_id && (booking.customer_id.full_name === 'Front Desk Receptionist' || booking.customer_id.role === 'receptionist');
+    const customerName = booking.guest_name || (!isReceptionistAccount && booking.customer_id ? booking.customer_id.full_name : 'Walk-in Guest');
+    const customerPhone = booking.guest_phone || (!isReceptionistAccount && booking.customer_id ? booking.customer_id.phone_number : '');
+    const customerEmail = !isReceptionistAccount && booking.customer_id ? booking.customer_id.email : '';
+    const customerIdCard = !isReceptionistAccount && booking.customer_id ? booking.customer_id.id_card_number : '';
 
     return {
       booking: {
         id: booking._id.toString(),
         bookingCode: booking.booking_code,
-        customer: booking.customer_id ? {
-          id: booking.customer_id._id,
-          fullName: booking.customer_id.full_name,
-          email: booking.customer_id.email,
-          phoneNumber: booking.customer_id.phone_number,
-          idCardNumber: booking.customer_id.id_card_number
-        } : null,
+        customer: {
+          id: isReceptionistAccount ? null : (booking.customer_id ? booking.customer_id._id : null),
+          fullName: customerName,
+          email: customerEmail,
+          phoneNumber: customerPhone,
+          idCardNumber: customerIdCard
+        },
         roomType: booking.room_type_id ? {
           id: booking.room_type_id._id,
           name: booking.room_type_id.name
@@ -246,6 +289,17 @@ const checkinService = {
         status: p.status,
         paidAt: p.paid_at || p.created_at
       })),
+      billing: {
+        invoiceCode: invoice?.invoice_code || null,
+        roomCharge,
+        extraCharges: Number(invoice?.extra_charges ?? extraCharges),
+        subtotal,
+        depositDeducted,
+        finalTotal,
+        status: invoice?.status || booking.payment_status,
+        paymentMethod: invoice?.payment_method || null,
+        paymentDate: invoice?.payment_date || null,
+      },
       canCheckin,
       blockingReasons
     };
@@ -254,12 +308,9 @@ const checkinService = {
   async processCheckIn(bookingId, body) {
     const { stayGuests, roomAssignments } = body;
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
       // 1. Fetch booking within transaction
-      const booking = await Booking.findById(bookingId).session(session);
+      const booking = await Booking.findById(bookingId);
       if (!booking) {
         throw createHttpError('Booking not found', 404);
       }
@@ -270,8 +321,25 @@ const checkinService = {
       if (booking.booking_status === 'Canceled') {
         throw createHttpError('Booking is canceled', 400);
       }
-      if (booking.booking_status === 'Completed') {
-        throw createHttpError('Booking is completed', 400);
+      // Check check-in date
+      const getStartOfDay = (d) => {
+        const date = new Date(d);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      };
+
+      const todayStart = getStartOfDay(new Date());
+      const checkInStart = getStartOfDay(booking.check_in_date);
+      const checkOutStart = getStartOfDay(booking.check_out_date);
+
+      if (todayStart < checkInStart) {
+        const day = String(checkInStart.getDate()).padStart(2, '0');
+        const month = String(checkInStart.getMonth() + 1).padStart(2, '0');
+        const year = checkInStart.getFullYear();
+        throw createHttpError(`Chưa đến ngày nhận phòng (Ngày nhận phòng: ${day}/${month}/${year})`, 400);
+      }
+      if (todayStart >= checkOutStart) {
+        throw createHttpError('Đã quá ngày trả phòng của đơn đặt này', 400);
       }
 
       // BR-01: Re-check paymentStatus = Paid
@@ -280,7 +348,7 @@ const checkinService = {
       }
 
       // 2. Fetch all BookingRoom records for this booking
-      let bookingRooms = await BookingRoom.find({ booking_id: bookingId }).session(session);
+      let bookingRooms = await BookingRoom.find({ booking_id: bookingId });
       
       // If none exist, we initialize them now (safe POST action)
       if (bookingRooms.length === 0) {
@@ -289,14 +357,14 @@ const checkinService = {
           newRooms.push({
             booking_id: booking._id,
             room_id: null,
-            room_type_id: booking.room_type_id._id,
+            room_type_id: booking.room_type_id,
             room_number: '',
             status: 'Pending',
             check_in_date: booking.check_in_date,
             check_out_date: booking.check_out_date
           });
         }
-        bookingRooms = await BookingRoom.insertMany(newRooms, { session });
+        bookingRooms = await BookingRoom.insertMany(newRooms);
 
         // Map virtual client-provided bookingRoomIds to the database IDs in order
         const uniqueClientRoomIds = [...new Set([
@@ -334,7 +402,7 @@ const checkinService = {
           throw createHttpError(`BookingRoom ${assignment.bookingRoomId} not found in this booking`, 400);
         }
 
-        const room = await Room.findById(assignment.roomId).session(session);
+        const room = await Room.findById(assignment.roomId);
         if (!room) {
           throw createHttpError(`Room ${assignment.roomId} not found`, 404);
         }
@@ -360,7 +428,7 @@ const checkinService = {
         bRoom.room_id = room._id;
         bRoom.room_number = room.roomName;
         bRoom.status = 'CheckedIn';
-        await bRoom.save({ session });
+        await bRoom.save();
 
         roomsToUpdate.push(room);
       }
@@ -377,7 +445,7 @@ const checkinService = {
 
       // Delete existing stay guests for this booking ONCE before loop (REST-safe batch delete)
       const bookingRoomIds = bookingRooms.map(r => r._id);
-      await StayGuest.deleteMany({ booking_room_id: { $in: bookingRoomIds } }).session(session);
+      await StayGuest.deleteMany({ booking_room_id: { $in: bookingRoomIds } });
 
       // Insert StayGuest records
       for (const guest of stayGuests) {
@@ -396,18 +464,18 @@ const checkinService = {
           id_card_image: guest.idCardImage || '',
           document_type: guest.documentType || 'ID_CARD'
         });
-        await newGuest.save({ session });
+        await newGuest.save();
 
         // BR-10: First-time ID entry for booking contact (names must match exactly)
         if (booking.customer_id) {
-          const user = await User.findById(booking.customer_id).session(session);
+          const user = await User.findById(booking.customer_id);
           if (user && !user.id_card_number && guest.idCardNumber) {
             if (user.full_name.toLowerCase() === guest.fullName.toLowerCase()) {
               user.id_card_number = guest.idCardNumber;
               if (guest.phoneNumber && !user.phone_number) {
                 user.phone_number = guest.phoneNumber;
               }
-              await user.save({ session });
+              await user.save();
             }
           }
         }
@@ -418,15 +486,13 @@ const checkinService = {
       if (assignedRoomIds.length === 1) {
         booking.room_id = assignedRoomIds[0];
       }
-      await booking.save({ session });
+      await booking.save();
 
       for (const room of roomsToUpdate) {
         room.status = 'Occupied';
-        await room.save({ session });
+        await room.save();
       }
 
-      await session.commitTransaction();
-      session.endSession();
 
       const updatedBooking = await Booking.findById(bookingId)
         .populate('customer_id', 'full_name email phone_number')
@@ -446,14 +512,24 @@ const checkinService = {
       };
 
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       throw error;
     }
   },
 
   async createWalkInBooking(body) {
-    const { roomTypeId, roomCount, checkInDate, checkOutDate, guestCount, adultCount, childCount, specialRequest } = body;
+    const {
+      roomTypeId,
+      roomCount,
+      checkInDate,
+      checkOutDate,
+      guestCount,
+      adultCount,
+      childCount,
+      specialRequest,
+      paymentMethod,
+      selectedRoomIds,
+      guestInfo
+    } = body;
 
     const roomType = await RoomType.findById(roomTypeId);
     if (!roomType) {
@@ -473,11 +549,28 @@ const checkinService = {
     const totalAmount = (roomType.base_price || 0) * nights * roomCount;
 
     const now = new Date();
+
+    // Look up existing customer if guestInfo is provided
+    let customerId = null;
+    if (guestInfo && (guestInfo.idCardNumber || guestInfo.phone)) {
+      const queryCond = [];
+      if (guestInfo.idCardNumber) queryCond.push({ id_card_number: guestInfo.idCardNumber.trim() });
+      if (guestInfo.phone) queryCond.push({ phone_number: guestInfo.phone.trim() });
+      const existingUser = await User.findOne({ $or: queryCond });
+      if (existingUser) {
+        customerId = existingUser._id;
+      }
+    }
+
+    const firstSelectedRoomId = (Array.isArray(selectedRoomIds) && selectedRoomIds.length === 1 && mongoose.Types.ObjectId.isValid(selectedRoomIds[0]))
+      ? selectedRoomIds[0]
+      : null;
+
     const booking = new Booking({
       booking_code: generateWalkInCode(),
-      customer_id: null,
+      customer_id: customerId,
       room_type_id: roomTypeId,
-      room_id: null,
+      room_id: firstSelectedRoomId,
       check_in_date: new Date(checkInDate),
       check_out_date: new Date(checkOutDate),
       guest_count: guestCount || 1,
@@ -496,14 +589,29 @@ const checkinService = {
 
     await booking.save();
 
+    // Fetch pre-selected room documents if provided
+    let roomDocsMap = {};
+    if (Array.isArray(selectedRoomIds) && selectedRoomIds.length > 0) {
+      const validRoomIds = selectedRoomIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+      if (validRoomIds.length > 0) {
+        const roomDocs = await Room.find({ _id: { $in: validRoomIds } });
+        roomDocs.forEach(r => {
+          roomDocsMap[r._id.toString()] = r;
+        });
+      }
+    }
+
     // Create BookingRoom records
     const newRooms = [];
     for (let i = 0; i < roomCount; i++) {
+      const selectedId = (Array.isArray(selectedRoomIds) && selectedRoomIds[i]) ? selectedRoomIds[i] : null;
+      const roomDoc = selectedId ? roomDocsMap[selectedId] : null;
+
       newRooms.push({
         booking_id: booking._id,
-        room_id: null,
+        room_id: roomDoc ? roomDoc._id : null,
         room_type_id: roomTypeId,
-        room_number: '',
+        room_number: roomDoc ? roomDoc.roomName : '',
         status: 'Pending',
         check_in_date: booking.check_in_date,
         check_out_date: booking.check_out_date
@@ -512,12 +620,37 @@ const checkinService = {
 
     const rooms = await BookingRoom.insertMany(newRooms);
 
+    // Create Payment record
+    const db = mongoose.connection.db;
+    const paymentMethodVal = ['Cash', 'BankTransfer'].includes(paymentMethod) ? paymentMethod : 'Cash';
+    const payment = {
+      _id: new mongoose.Types.ObjectId(),
+      reservation_id: booking._id,
+      payment_method: paymentMethodVal,
+      amount: totalAmount,
+      transaction_id: `WALKIN-${Date.now().toString(36).toUpperCase()}`,
+      status: 'Completed',
+      paid_at: now,
+      created_at: now
+    };
+    await db.collection('payments').insertOne(payment);
+
     return {
       booking,
       rooms: rooms.map(r => ({
         id: r._id.toString(),
+        roomId: r.room_id ? r.room_id.toString() : null,
+        roomNumber: r.room_number || '',
         status: r.status
-      }))
+      })),
+      payment: {
+        id: payment._id.toString(),
+        amount: payment.amount,
+        paymentMethod: payment.payment_method,
+        transactionId: payment.transaction_id,
+        status: payment.status,
+        paidAt: payment.paid_at
+      }
     };
   },
 
@@ -549,6 +682,133 @@ const checkinService = {
 
   async getRoomTypes() {
     return RoomType.find({ is_active: true }).sort({ display_order: 1 });
+  },
+
+  async confirmWalkInBooking(bookingId, body) {
+    const { guestName, guestPhone, paymentMethod, selectedRoomIds } = body;
+
+    const db = mongoose.connection.db;
+    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+      throw createHttpError('Invalid booking ID format', 400);
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      throw createHttpError('Booking not found', 404);
+    }
+
+    const now = new Date();
+    const cleanName = guestName ? guestName.trim() : '';
+    const cleanPhone = guestPhone ? guestPhone.trim() : '';
+
+    let customerId = booking.customer_id;
+
+    if (cleanPhone || cleanName) {
+      let user = null;
+      if (cleanPhone) {
+        user = await User.findOne({ phone_number: cleanPhone });
+      }
+
+      if (user) {
+        customerId = user._id;
+        if (cleanName && (!user.full_name || user.full_name === 'Walk-in Guest' || user.full_name === 'Front Desk Receptionist')) {
+          user.full_name = cleanName;
+          await user.save();
+        }
+      } else {
+        const Role = require('../../../models/role.model');
+        const customerRole = await Role.findOne({ name: /customer/i });
+        const roleId = customerRole ? customerRole._id : booking.customer_id;
+
+        if (cleanName || cleanPhone) {
+          const generatedEmail = `walkin_${Date.now()}@guest.hotelify.com`;
+          user = new User({
+            role_id: roleId,
+            email: generatedEmail,
+            password_hash: 'walkin_no_password',
+            full_name: cleanName || 'Walk-in Guest',
+            phone_number: cleanPhone,
+            status: 'active'
+          });
+          await user.save();
+          customerId = user._id;
+        }
+      }
+    }
+
+    booking.guest_name = cleanName;
+    booking.guest_phone = cleanPhone;
+    booking.customer_id = customerId;
+    booking.booking_status = 'Confirmed';
+    booking.payment_status = 'Paid';
+    booking.deposit_amount = booking.total_amount;
+    booking.source = 'Walk-in';
+    booking.updated_at = now;
+
+    // If selectedRoomIds provided and valid
+    if (Array.isArray(selectedRoomIds) && selectedRoomIds.length > 0) {
+      const validRoomIds = selectedRoomIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+      if (validRoomIds.length > 0) {
+        booking.room_id = validRoomIds[0];
+        const roomDocs = await Room.find({ _id: { $in: validRoomIds } });
+        const roomMap = {};
+        roomDocs.forEach(r => { roomMap[r._id.toString()] = r; });
+
+        let bookingRooms = await BookingRoom.find({ booking_id: booking._id });
+        if (bookingRooms.length === 0) {
+          const newRooms = [];
+          for (let i = 0; i < booking.room_quantity; i++) {
+            newRooms.push({
+              booking_id: booking._id,
+              room_id: null,
+              room_type_id: booking.room_type_id,
+              room_number: '',
+              status: 'Pending',
+              check_in_date: booking.check_in_date,
+              check_out_date: booking.check_out_date
+            });
+          }
+          bookingRooms = await BookingRoom.insertMany(newRooms);
+        }
+
+        for (let i = 0; i < bookingRooms.length; i++) {
+          const selId = validRoomIds[i];
+          if (selId && roomMap[selId]) {
+            bookingRooms[i].room_id = roomMap[selId]._id;
+            bookingRooms[i].room_number = roomMap[selId].roomName;
+            await bookingRooms[i].save();
+          }
+        }
+      }
+    }
+
+    await booking.save();
+
+    // Record Payment
+    const paymentMethodVal = ['Cash', 'BankTransfer'].includes(paymentMethod) ? paymentMethod : 'Cash';
+    const payment = {
+      _id: new mongoose.Types.ObjectId(),
+      reservation_id: booking._id,
+      payment_method: paymentMethodVal,
+      amount: booking.total_amount,
+      transaction_id: `WALKIN-${Date.now().toString(36).toUpperCase()}`,
+      status: 'Completed',
+      paid_at: now,
+      created_at: now
+    };
+    await db.collection('payments').insertOne(payment);
+
+    return {
+      booking,
+      payment: {
+        id: payment._id.toString(),
+        amount: payment.amount,
+        paymentMethod: payment.payment_method,
+        transactionId: payment.transaction_id,
+        status: payment.status,
+        paidAt: payment.paid_at
+      }
+    };
   },
 
   async getDashboardStats() {
@@ -612,17 +872,21 @@ const checkinService = {
         maintenance: maintenanceRooms,
         outOfService: outOfServiceRooms
       },
-      recentBookings: recentBookings.map(b => ({
-        id: b._id.toString(),
-        bookingCode: b.booking_code,
-        customerName: b.customer_id ? b.customer_id.full_name : 'Walk-in Guest',
-        roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
-        roomName: b.room_id ? b.room_id.roomName : 'Chưa gán',
-        checkInDate: b.check_in_date,
-        checkOutDate: b.check_out_date,
-        paymentStatus: b.payment_status,
-        bookingStatus: b.booking_status
-      })),
+      recentBookings: recentBookings.map(b => {
+        const isReceptionistAccount = b.customer_id && (b.customer_id.full_name === 'Front Desk Receptionist' || b.customer_id.role === 'receptionist');
+        const customerName = b.guest_name || (!isReceptionistAccount && b.customer_id ? b.customer_id.full_name : 'Walk-in Guest');
+        return {
+          id: b._id.toString(),
+          bookingCode: b.booking_code,
+          customerName,
+          roomTypeName: b.room_type_id ? b.room_type_id.name : 'Unknown Room Type',
+          roomName: b.room_id ? b.room_id.roomName : 'Chưa gán',
+          checkInDate: b.check_in_date,
+          checkOutDate: b.check_out_date,
+          paymentStatus: b.payment_status,
+          bookingStatus: b.booking_status
+        };
+      }),
       serviceRequests: activeRequests.map(req => ({
         serviceName: req.service_name,
         roomNumber: req.room_number,

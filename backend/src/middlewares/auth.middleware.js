@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user.model');
+const SecurityLog = require('../models/security-log.model');
 const asyncHandler = require('../utils/async-handler');
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
@@ -27,8 +28,16 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     return res.status(401).send({ message: 'Authenticated user is not available' });
   }
 
+  if (payload.session_id) {
+    const sessionLog = await SecurityLog.findOne({ session_id: payload.session_id });
+    if (sessionLog && sessionLog.is_revoked) {
+      return res.status(401).send({ message: 'Session has been revoked' });
+    }
+  }
+
   req.user = user;
   req.role = user.role_id;
+  req.user_session_id = payload.session_id;
   next();
 });
 

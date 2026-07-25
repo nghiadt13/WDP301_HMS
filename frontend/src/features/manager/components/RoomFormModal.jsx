@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, Upload, Image as ImageIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useRoomTypes, useAmenities, useFeatures } from '../hooks/use-rooms';
-import { uploadApi } from '../services/room-api';
+import ImageUploadField from '@/components/ImageUploadField.jsx';
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:9999';
 
@@ -26,8 +26,6 @@ const defaultValues = {
 function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
   const [form, setForm] = useState(defaultValues);
   const [errors, setErrors] = useState({});
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef(null);
 
   const { data: rtData } = useRoomTypes();
   const { data: amData } = useAmenities();
@@ -84,49 +82,6 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
           : [...prev.feature_ids, id],
       };
     });
-  };
-
-  const handleFileSelect = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    setUploading(true);
-    try {
-      const uploadedUrls = [];
-      for (const file of files) {
-        const res = await uploadApi.uploadImage(file);
-        uploadedUrls.push(res.data.url);
-      }
-      setForm((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uploadedUrls],
-      }));
-    } catch (err) {
-      console.error('Upload failed:', err);
-      const msg = err.response?.data?.message || 'Tải ảnh lên thất bại. Vui lòng thử lại.';
-      alert(msg);
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveImage = async (index) => {
-    const imageUrl = form.images[index];
-    const filename = imageUrl.split('/').pop();
-
-    // Remove from UI immediately
-    setForm((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-
-    // Delete file from server
-    try {
-      await uploadApi.deleteImage(filename);
-    } catch (err) {
-      console.error('Failed to delete image file:', err);
-    }
   };
 
   const validate = () => {
@@ -218,46 +173,14 @@ function RoomFormModal({ isOpen, onClose, onSubmit, room, isSubmitting }) {
 
           {/* Image Upload */}
           <div className="rm-form-group">
-            <label>Hình ảnh</label>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              multiple
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
+            <ImageUploadField
+              label="Hình ảnh"
+              value={form.images}
+              onChange={(images) => setForm((prev) => ({ ...prev, images }))}
+              buttonLabel="Chọn hình ảnh"
+              emptyStateLabel="Chưa có hình ảnh nào được tải lên."
+              renderImageUrl={toFullUrl}
             />
-            <button
-              type="button"
-              className="rm-btn-upload"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? (
-                <>Đang tải lên...</>
-              ) : (
-                <>
-                  <Upload size={14} /> Chọn hình ảnh
-                </>
-              )}
-            </button>
-            {form.images.length > 0 && (
-              <div className="rm-image-preview-grid">
-                {form.images.map((url, i) => (
-                  <div key={i} className="rm-image-preview-item">
-                    <img src={toFullUrl(url)} alt={`Hình ảnh phòng ${i + 1}`} />
-                    <button
-                      type="button"
-                      className="rm-image-remove-btn"
-                      onClick={() => handleRemoveImage(i)}
-                      title="Xóa hình ảnh"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Amenities (checkboxes) */}

@@ -9,6 +9,5 @@ router.use(authMiddleware, authorize('manager'));
 
 router.get('/customer-feedbacks', customerFeedbackController.getCustomerFeedbacks);
 router.patch('/customer-feedbacks/:feedbackId/respond', customerFeedbackController.respondCustomerFeedback);
-router.patch('/customer-feedbacks/:feedbackId/archive', customerFeedbackController.archiveCustomerFeedback);
 
 module.exports = router;

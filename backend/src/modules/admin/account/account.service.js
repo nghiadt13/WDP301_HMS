@@ -144,6 +144,18 @@ const accountService = {
     user.password_hash = await bcrypt.hash(newPassword, 10);
     await user.save();
     return { message: 'Password reset successfully' };
+  },
+
+  async deleteAccount(id) {
+    const user = await User.findById(id);
+    if (!user) {
+      const error = new Error('Account not found');
+      error.statusCode = 404;
+      throw error;
+    }
+    
+    await User.findByIdAndDelete(id);
+    return { message: 'Account deleted successfully' };
   }
 };
 

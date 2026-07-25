@@ -2,8 +2,18 @@ const mongoose = require('mongoose');
 
 const asyncHandler = require('../../../utils/async-handler');
 const { createHttpError } = require('../../../utils/error.utils');
-const { parseDateOnly, parsePositiveInteger, addDays, getMonthStart, addMonths, toDateKey } = require('../../../utils/date.utils');
+const {
+  parseDateOnly,
+  parseHotelCheckInDate,
+  parseHotelCheckOutDate,
+  parsePositiveInteger,
+  addDays,
+  getMonthStart,
+  addMonths,
+  toDateKey
+} = require('../../../utils/date.utils');
 const { normalizeRoomName, getRoomOrder, getRoomQuantity } = require('../../../utils/room.utils');
+const { buildActiveReservationQuery, expirePendingReservations } = require('../../../utils/reservation-status.utils');
 
 const { ObjectId } = mongoose.Types;
 
@@ -21,14 +31,15 @@ const REVIEWABLE_STATUS_PATTERN = /checkedin|checkedout|completed/i;
 const toObjectId = (value) => (ObjectId.isValid(value) ? new ObjectId(value) : null);
 
 const getBookedRooms = async (db, roomTypeId, checkInDate, checkOutDate) => {
+  await expirePendingReservations(db);
+
   const reservations = await db
     .collection('reservations')
-    .find({
-      room_type_id: roomTypeId,
-      booking_status: { $not: /cancel/i },
-      check_in_date: { $lt: checkOutDate },
-      check_out_date: { $gt: checkInDate }
-    })
+    .find(buildActiveReservationQuery({
+      roomTypeId,
+      checkInDate,
+      checkOutDate
+    }))
     .project({ room_quantity: 1, room_count: 1, rooms_count: 1 })
     .toArray();
 
@@ -42,8 +53,8 @@ const getTotalRoomsByType = (db, roomTypeId) =>
   });
 
 const buildOccupancy = (query) => {
-  const checkIn = parseDateOnly(query.checkIn);
-  const checkOut = parseDateOnly(query.checkOut);
+  const checkIn = parseHotelCheckInDate(query.checkIn);
+  const checkOut = parseHotelCheckOutDate(query.checkOut);
   const adults = parsePositiveInteger(query.adults, 1);
   const children = parsePositiveInteger(query.children, 0);
 
@@ -234,6 +245,7 @@ const findReviewableReservation = async (db, customerId, roomTypeId) =>
 
 const searchRooms = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
+  await expirePendingReservations(db);
   const occupancy = buildOccupancy(req.query);
   const rooms = await getRoomsWithAvailability(db, occupancy);
 
@@ -255,6 +267,7 @@ const searchRooms = asyncHandler(async (req, res) => {
 
 const listRooms = asyncHandler(async (_req, res) => {
   const db = mongoose.connection.db;
+  await expirePendingReservations(db);
   const roomTypes = await db.collection('room_types').find(ACTIVE_ROOM_TYPE_QUERY).toArray();
   const sortedRoomTypes = sortRoomTypes(roomTypes);
 
@@ -280,6 +293,7 @@ const listRooms = asyncHandler(async (_req, res) => {
 
 const getRoomDetail = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
+  await expirePendingReservations(db);
   const roomTypeId = toObjectId(req.params.roomId || req.params.id);
 
   if (!roomTypeId) {
@@ -334,6 +348,7 @@ const getRoomDetail = asyncHandler(async (req, res) => {
 
 const getRoomCalendar = asyncHandler(async (req, res) => {
   const db = mongoose.connection.db;
+  await expirePendingReservations(db);
   const roomTypeId = toObjectId(req.params.roomId || req.params.id);
 
   if (!roomTypeId) {
@@ -361,12 +376,11 @@ const getRoomCalendar = asyncHandler(async (req, res) => {
 
   const reservations = await db
     .collection('reservations')
-    .find({
-      room_type_id: roomType._id,
-      booking_status: { $not: /cancel/i },
-      check_in_date: { $lt: rangeEnd },
-      check_out_date: { $gt: monthStart }
-    })
+    .find(buildActiveReservationQuery({
+      roomTypeId: roomType._id,
+      checkInDate: monthStart,
+      checkOutDate: rangeEnd
+    }))
     .project({ check_in_date: 1, check_out_date: 1, room_quantity: 1, room_count: 1, rooms_count: 1 })
     .toArray();
 
@@ -374,9 +388,10 @@ const getRoomCalendar = asyncHandler(async (req, res) => {
 
   for (let cursor = new Date(monthStart); cursor < rangeEnd; cursor = addDays(cursor, 1)) {
     const bookedRooms = reservations.reduce((total, reservation) => {
-      const checkIn = new Date(reservation.check_in_date);
-      const checkOut = new Date(reservation.check_out_date);
-      return checkIn <= cursor && checkOut > cursor ? total + getRoomQuantity(reservation) : total;
+      const checkInKey = toDateKey(new Date(reservation.check_in_date));
+      const checkOutKey = toDateKey(new Date(reservation.check_out_date));
+      const cursorKey = toDateKey(cursor);
+      return checkInKey <= cursorKey && checkOutKey > cursorKey ? total + getRoomQuantity(reservation) : total;
     }, 0);
     const availableRooms = Math.max(0, totalRooms - bookedRooms);
     const isPast = cursor < today;
@@ -506,3 +521,6 @@ module.exports = {
   submitRoomReview,
   getById,
 };
+
+
+

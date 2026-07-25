@@ -65,10 +65,19 @@ const userSchema = new mongoose.Schema(
       enum: ['local', 'google'],
       default: 'local'
     },
+    auth_providers: {
+      type: [
+        {
+          type: String,
+          enum: ['local', 'google']
+        }
+      ],
+      default: ['local']
+    },
     google_id: {
       type: String,
       trim: true,
-      default: null
+      default: undefined
     },
     email_verified: {
       type: Boolean,
@@ -80,6 +89,14 @@ const userSchema = new mongoose.Schema(
       default: ''
     },
     accepted_terms_at: {
+      type: Date,
+      default: null
+    },
+    password_reset_token_hash: {
+      type: String,
+      default: ''
+    },
+    password_reset_expires_at: {
       type: Date,
       default: null
     }
@@ -103,6 +120,7 @@ userSchema.methods.toSafeObject = function toSafeObject(role) {
     avatar: this.avatar,
     status: this.status,
     auth_provider: this.auth_provider,
+    auth_providers: this.auth_providers || [this.auth_provider || 'local'],
     email_verified: this.email_verified,
     hotel_name: this.hotel_name,
     createdAt: this.createdAt,
@@ -117,4 +135,13 @@ userSchema.methods.toSafeObject = function toSafeObject(role) {
   };
 };
 
+userSchema.index(
+  { google_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      google_id: { $type: 'string' }
+    }
+  }
+);
 module.exports = mongoose.model('User', userSchema);

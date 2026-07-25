@@ -6,8 +6,8 @@ const authorize = require('../../../middlewares/authorize.middleware');
 
 const router = express.Router();
 
-router.get('/', authMiddleware, authorize('manager'), managerRoomController.getAll);
-router.get('/:id', authMiddleware, authorize('manager'), managerRoomController.getById);
+router.get('/', authMiddleware, authorize('manager', 'housekeeping', 'receptionist'), managerRoomController.getAll);
+router.get('/:id', authMiddleware, authorize('manager', 'housekeeping', 'receptionist'), managerRoomController.getById);
 router.post('/', authMiddleware, authorize('manager'), validateRoom, managerRoomController.create);
 router.put('/:id', authMiddleware, authorize('manager'), managerRoomController.update);
 router.delete('/:id', authMiddleware, authorize('manager'), managerRoomController.remove);

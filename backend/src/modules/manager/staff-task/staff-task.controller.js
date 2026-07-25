@@ -28,7 +28,7 @@ const staffTaskController = {
 
   async createStaffTask(req, res) {
     try {
-      const data = await staffTaskService.createStaffTask(req.body);
+      const data = await staffTaskService.createStaffTask(req.body, req.user);
       res.status(201).json({ success: true, data, message: 'Staff task created successfully' });
     } catch (err) {
       sendError(res, err);
@@ -37,7 +37,7 @@ const staffTaskController = {
 
   async updateStaffTask(req, res) {
     try {
-      const data = await staffTaskService.updateStaffTask(req.params.taskId, req.body);
+      const data = await staffTaskService.updateStaffTask(req.params.taskId, req.body, req.user);
       res.status(200).json({ success: true, data, message: 'Staff task updated successfully' });
     } catch (err) {
       sendError(res, err);

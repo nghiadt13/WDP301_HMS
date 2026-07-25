@@ -1,17 +1,76 @@
-﻿import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ClipboardList, Plus, Search, Wrench, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardList, Plus, Search, Users, X } from 'lucide-react';
 import { managerApi } from '../services/manager-api.js';
 import './manager-operations.css';
 
-const emptyForm = { title: '', description: '', staff_type: 'housekeeping', assigned_staff_id: '', assigned_to: '', room_number: '', priority: 'medium', status: 'assigned', deadline: '' };
-const staffTypes = { housekeeping: 'Nhân viên dọn phòng', technical: 'Nhân viên kỹ thuật' };
-const priorities = { low: 'Thấp', medium: 'Trung bình', high: 'Cao' };
-const statuses = { assigned: 'Đã giao', in_progress: 'Đang xử lý', closed: 'Hoàn thành', canceled: 'Đã hủy', cancelled: 'Đã hủy' };
+const emptyForm = {
+  title: '',
+  description: '',
+  staff_type: 'housekeeping',
+  assigned_staff_id: '',
+  assigned_to: '',
+  room_number: '',
+  room_type: '',
+  status: 'assigned',
+  deadline: '',
+  start_time: '08:00',
+  end_time: '09:00',
+};
 
-const todayInput = () => new Date().toISOString().slice(0, 10);
-const formatDate = (value) => (value ? new Intl.DateTimeFormat('vi-VN').format(new Date(value)) : 'Chưa có hạn');
+const staffTypes = { housekeeping: 'Nhân viên dọn phòng' };
+const statuses = {
+  assigned: 'Đã lên lịch',
+  completed: 'Hoàn thành',
+};
+
+const pad = (value) => String(value).padStart(2, '0');
+const toInputDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+const todayInput = () => toInputDate(new Date());
+const toInputTime = (minutes) => `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+const toMinutes = (value) => {
+  const [hours, minutes] = String(value || '').split(':').map(Number);
+  return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : null;
+};
+const hasStaffBreakConflict = (firstStart, firstEnd, secondStart, secondEnd) => (
+  firstStart < secondEnd + 15 && firstEnd + 15 > secondStart
+);
+const timeOptions = [
+  ...Array.from({ length: 24 * 4 }, (_, index) => toInputTime(index * 15)),
+  '23:59',
+];
+const getInitialTimes = (dateValue) => {
+  if (dateValue !== todayInput()) return { start_time: '08:00', end_time: '09:00' };
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = Math.ceil((currentMinutes + 1) / 15) * 15;
+  if (startMinutes > 23 * 60 + 44) return null;
+  const endMinutes = Math.min(startMinutes + 60, 23 * 60 + 59);
+  return { start_time: toInputTime(startMinutes), end_time: toInputTime(endMinutes) };
+};
+const toDate = (value) => {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+const addDays = (date, days) => {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  nextDate.setHours(0, 0, 0, 0);
+  return nextDate;
+};
+const getWeekStart = (date) => {
+  const target = toDate(date);
+  const day = target.getDay() || 7;
+  return addDays(target, 1 - day);
+};
+const formatDate = (value) => (value ? new Intl.DateTimeFormat('vi-VN').format(new Date(value)) : 'Chưa có ngày');
+const formatWeekday = (date) => new Intl.DateTimeFormat('vi-VN', { weekday: 'long' }).format(date);
+const formatShortDate = (date) => new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(date);
+const formatWeekRange = (startDate) => `${formatDate(startDate)} - ${formatDate(addDays(startDate, 6))}`;
 const getErrorMessage = (error) => error?.response?.data?.message || error.message || 'Đã có lỗi xảy ra';
-const normalizeStatus = (status) => String(status || '').toLowerCase();
+const normalizeStatus = (status) => String(status || '').toLowerCase().replace(/\s+/g, '');
+const getScheduleStatus = (status) => (normalizeStatus(status) === 'completed' ? 'completed' : 'assigned');
 const toForm = (task) => ({
   title: task.title || '',
   description: task.description || '',
@@ -19,12 +78,16 @@ const toForm = (task) => ({
   assigned_staff_id: task.assigned_staff_id || '',
   assigned_to: task.assigned_to || '',
   room_number: task.room_number || '',
-  priority: task.priority || 'medium',
-  status: task.status || 'assigned',
-  deadline: task.deadline ? task.deadline.slice(0, 10) : '',
+  room_type: task.room_type || '',
+  status: normalizeStatus(task.status || 'assigned'),
+  deadline: task.work_date || task.deadline ? toInputDate(toDate(task.work_date || task.deadline)) : '',
+  start_time: task.start_time || '08:00',
+  end_time: task.end_time || '09:00',
 });
-const statusTone = (status) => ['closed'].includes(status) ? 'is-good' : ['canceled', 'cancelled'].includes(status) ? 'is-muted' : status === 'in_progress' ? 'is-warning' : 'is-info';
-const priorityTone = (priority) => priority === 'high' ? 'is-danger' : priority === 'medium' ? 'is-warning' : 'is-good';
+const statusTone = (status) => {
+  if (['completed'].includes(status)) return 'is-good';
+  return 'is-info';
+};
 
 const ManagerStaffTasksPage = () => {
   const [tasks, setTasks] = useState([]);
@@ -36,13 +99,20 @@ const ManagerStaffTasksPage = () => {
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [staffTypeFilter, setStaffTypeFilter] = useState('');
+  const [weekStart, setWeekStart] = useState(getWeekStart(new Date()));
+  const currentWeekKeyRef = useRef(toInputDate(getWeekStart(new Date())));
 
   const selectedTask = tasks.find((task) => task._id === selectedId);
   const isEditing = mode === 'edit' && selectedTask;
   const isCreating = mode === 'create';
   const isModalOpen = isCreating || isEditing;
-  const assignableStaff = staffMembers.filter((member) => member.role === form.staff_type);
+  const canEditSelected = isCreating || ['assigned', 'notstarted'].includes(normalizeStatus(selectedTask?.status));
+  const assignableStaff = staffMembers.filter((member) => member.role === 'housekeeping');
+  const weekDays = useMemo(() => Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)), [weekStart]);
+  const weekStartKey = toInputDate(weekStart);
+  const weekEndKey = toInputDate(addDays(weekStart, 6));
+  const todayKey = todayInput();
+  const defaultCreateDate = weekStartKey < todayKey ? todayKey : weekStartKey;
 
   const loadTasks = async (nextId = selectedId) => {
     const data = await managerApi.getStaffTasks();
@@ -58,27 +128,63 @@ const ManagerStaffTasksPage = () => {
   };
 
   useEffect(() => {
-    Promise.all([managerApi.getStaffMembers().then(setStaffMembers), managerApi.getRooms({ limit: 200 }).then((result) => setRooms(result.data || result || [])), loadTasks('')]).catch((error) => setMessage(getErrorMessage(error)));
+    Promise.all([
+      managerApi.getStaffMembers().then(setStaffMembers),
+      managerApi.getRooms({ limit: 200 }).then((result) => setRooms(result.data || result || [])),
+      loadTasks('')
+    ]).catch((error) => setMessage(getErrorMessage(error)));
   }, []);
 
-  const stats = useMemo(() => {
-    const total = tasks.length;
-    const active = tasks.filter((task) => !['closed', 'canceled', 'cancelled'].includes(normalizeStatus(task.status))).length;
-    const inProgress = tasks.filter((task) => normalizeStatus(task.status) === 'in_progress').length;
-    const highPriority = tasks.filter((task) => task.priority === 'high').length;
-    return { total, active, inProgress, highPriority };
-  }, [tasks]);
+  useEffect(() => {
+    const syncCurrentWeek = () => {
+      const currentWeekStart = getWeekStart(new Date());
+      const currentWeekKey = toInputDate(currentWeekStart);
+      if (currentWeekKey !== currentWeekKeyRef.current) {
+        currentWeekKeyRef.current = currentWeekKey;
+        setWeekStart(currentWeekStart);
+      }
+    };
+
+    const timer = window.setInterval(syncCurrentWeek, 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const filteredTasks = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
     return tasks.filter((task) => {
-      const matchesKeyword = !keyword || [task.title, task.description, task.assigned_to, task.room_number]
+      const matchesKeyword = !keyword || [task.title, task.description, task.assigned_to, task.room_number, task.room_type]
         .some((value) => String(value || '').toLowerCase().includes(keyword));
-      const matchesStatus = !statusFilter || normalizeStatus(task.status) === statusFilter;
-      const matchesStaffType = !staffTypeFilter || task.staff_type === staffTypeFilter;
-      return matchesKeyword && matchesStatus && matchesStaffType;
+      const matchesStatus = !statusFilter || getScheduleStatus(task.status) === statusFilter;
+      return matchesKeyword && matchesStatus;
     });
-  }, [tasks, searchTerm, statusFilter, staffTypeFilter]);
+  }, [tasks, searchTerm, statusFilter]);
+
+  const weekTasks = useMemo(() => filteredTasks.filter((task) => {
+    const taskDate = task.deadline ? toInputDate(toDate(task.deadline)) : '';
+    return taskDate >= weekStartKey && taskDate <= weekEndKey;
+  }), [filteredTasks, weekEndKey, weekStartKey]);
+
+  const tasksByDate = useMemo(() => {
+    const groupedTasks = {};
+    weekDays.forEach((day) => {
+      groupedTasks[toInputDate(day)] = [];
+    });
+    weekTasks.forEach((task) => {
+      const key = task.deadline ? toInputDate(toDate(task.deadline)) : '';
+      if (groupedTasks[key]) groupedTasks[key].push(task);
+    });
+    Object.values(groupedTasks).forEach((dayTasks) => {
+      dayTasks.sort((first, second) => String(first.start_time || '').localeCompare(String(second.start_time || '')));
+    });
+    return groupedTasks;
+  }, [weekDays, weekTasks]);
+
+  const stats = useMemo(() => {
+    const completed = weekTasks.filter((task) => getScheduleStatus(task.status) === 'completed').length;
+    const active = weekTasks.filter((task) => getScheduleStatus(task.status) !== 'completed').length;
+    const staffCount = new Set(weekTasks.map((task) => task.assigned_staff_id || task.assigned_to).filter(Boolean)).size;
+    return { total: weekTasks.length, active, completed, staffCount };
+  }, [weekTasks]);
 
   const openEditModal = (task) => {
     setSelectedId(task._id);
@@ -87,9 +193,18 @@ const ManagerStaffTasksPage = () => {
     setMessage('');
   };
 
-  const openCreateModal = () => {
+  const openCreateModal = (dateValue = todayInput()) => {
+    if (dateValue < todayInput()) {
+      setMessage('Không thể tạo lịch cho ngày đã qua.');
+      return;
+    }
+    const initialTimes = getInitialTimes(dateValue);
+    if (!initialTimes) {
+      setMessage('Hôm nay không còn khung giờ hợp lệ để tạo lịch. Vui lòng chọn ngày tiếp theo.');
+      return;
+    }
     setSelectedId('');
-    setForm({ ...emptyForm, deadline: todayInput() });
+    setForm({ ...emptyForm, ...initialTimes, deadline: dateValue });
     setMode('create');
     setMessage('');
   };
@@ -103,10 +218,14 @@ const ManagerStaffTasksPage = () => {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((current) => {
-      if (name === 'staff_type') return { ...current, staff_type: value, assigned_staff_id: '', assigned_to: '' };
       if (name === 'assigned_staff_id') {
         const staff = staffMembers.find((member) => member._id === value);
         return { ...current, assigned_staff_id: value, assigned_to: staff?.full_name || '' };
+      }
+      if (name === 'room_number') {
+        const room = rooms.find((item) => item.roomName === value);
+        const roomType = room?.room_type_id?.name || room?.roomTypeName || '';
+        return { ...current, room_number: value, room_type: roomType };
       }
       return { ...current, [name]: value };
     });
@@ -114,31 +233,45 @@ const ManagerStaffTasksPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!form.start_time || !form.end_time || form.end_time <= form.start_time) {
+      setMessage('Giờ kết thúc phải sau giờ bắt đầu.');
+      return;
+    }
+    const startMinutes = toMinutes(form.start_time);
+    const endMinutes = toMinutes(form.end_time);
+    const staffConflict = tasks.find((task) => (
+      task._id !== selectedTask?._id
+      && String(task.assigned_staff_id || '') === String(form.assigned_staff_id || '')
+      && toInputDate(toDate(task.work_date || task.deadline)) === form.deadline
+      && toMinutes(task.start_time) !== null
+      && toMinutes(task.end_time) !== null
+      && hasStaffBreakConflict(
+        startMinutes,
+        endMinutes,
+        toMinutes(task.start_time),
+        toMinutes(task.end_time)
+      )
+    ));
+    if (staffConflict) {
+      setMessage(`Nhân viên đã có lịch ${staffConflict.start_time}-${staffConflict.end_time} tại phòng ${staffConflict.room_number}. Mỗi lịch phải cách nhau ít nhất 15 phút.`);
+      return;
+    }
     try {
-      const payload = { ...form, status: isCreating ? 'assigned' : form.status, room_number: form.room_number.trim() };
+      const payload = {
+        ...form,
+        staff_type: 'housekeeping',
+        status: isCreating ? 'Assigned' : form.status,
+        room_number: form.room_number.trim(),
+        room_type: form.room_type.trim(),
+      };
       const saved = isEditing ? await managerApi.updateStaffTask(selectedTask._id, payload) : await managerApi.createStaffTask(payload);
-      setMessage(isEditing ? 'Lưu thay đổi nhiệm vụ thành công.' : 'Tạo nhiệm vụ thành công.');
+      setMessage(isEditing ? 'Lưu lịch làm việc thành công.' : 'Tạo lịch làm việc thành công.');
       await loadTasks(saved._id);
+      setWeekStart(getWeekStart(toDate(saved.deadline)));
       closeModal();
     } catch (error) {
       setMessage(getErrorMessage(error));
     }
-  };
-
-  const handleClose = async () => {
-    if (!selectedTask) return;
-    const task = await managerApi.closeStaffTask(selectedTask._id);
-    setMessage('Đã đánh dấu nhiệm vụ hoàn thành.');
-    await loadTasks(task._id);
-    closeModal();
-  };
-
-  const handleCancel = async () => {
-    if (!selectedTask) return;
-    const task = await managerApi.cancelStaffTask(selectedTask._id);
-    setMessage('Hủy nhiệm vụ thành công.');
-    await loadTasks(task._id);
-    closeModal();
   };
 
   return (
@@ -148,78 +281,111 @@ const ManagerStaffTasksPage = () => {
       <section className="staff-task-stat-grid">
         <article className="figma-card staff-stat-card is-primary">
           <ClipboardList size={24} />
-          <span>Tổng nhiệm vụ</span>
+          <span>Lịch trong tuần</span>
           <strong>{stats.total}</strong>
-          <small>Tất cả công việc đã tạo</small>
+          <small>{formatWeekRange(weekStart)}</small>
         </article>
         <article className="figma-card staff-stat-card">
-          <Wrench size={24} />
-          <span>Đang cần xử lý</span>
-          <strong>{stats.active}</strong>
-          <small>Chưa hoàn thành hoặc chưa hủy</small>
+          <Users size={24} />
+          <span>Nhân viên có lịch</span>
+          <strong>{stats.staffCount}</strong>
+          <small>Nhân viên dọn phòng được phân công</small>
         </article>
         <article className="figma-card staff-stat-card">
           <CheckCircle2 size={24} />
-          <span>Đang thực hiện</span>
-          <strong>{stats.inProgress}</strong>
-          <small>Nhiệm vụ đang xử lý</small>
+          <span>Đã hoàn thành</span>
+          <strong>{stats.completed}</strong>
+          <small>Nhân viên đã cập nhật trạng thái done</small>
         </article>
-        <article className="figma-card staff-stat-card is-danger">
-          <AlertTriangle size={24} />
-          <span>Ưu tiên cao</span>
-          <strong>{stats.highPriority}</strong>
-          <small>Cần quản lý theo dõi sát</small>
+        <article className="figma-card staff-stat-card">
+          <CalendarDays size={24} />
+          <span>Cần theo dõi</span>
+          <strong>{stats.active}</strong>
+          <small>Lịch chưa được nhân viên xác nhận hoàn thành</small>
         </article>
       </section>
 
-      <section className="figma-card staff-task-table-card">
-        <div className="inventory-toolbar">
-          <label className="figma-search-box">
-            <Search size={17} />
-            <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Tìm nhiệm vụ, nhân viên, phòng..." />
-          </label>
-          <select value={staffTypeFilter} onChange={(event) => setStaffTypeFilter(event.target.value)}>
-            <option value="">Tất cả bộ phận</option>
-            <option value="housekeeping">Dọn phòng</option>
-            <option value="technical">Kỹ thuật</option>
-          </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            <option value="">Tất cả trạng thái</option>
-            <option value="assigned">Đã giao</option>
-            <option value="in_progress">Đang xử lý</option>
-            <option value="closed">Hoàn thành</option>
-            <option value="canceled">Đã hủy</option>
-          </select>
-          <button className="manager-ops-button" onClick={openCreateModal} type="button"><Plus size={16} /> Thêm nhiệm vụ</button>
+      <section className="figma-card staff-schedule-card">
+        <div className="staff-schedule-heading">
+          <div>
+            <span className="figma-eyebrow">Lịch làm việc nhân viên dọn phòng</span>
+            <h2>Bảng lịch tuần</h2>
+          </div>
+          <div className="staff-week-controls">
+            <button className="manager-ops-secondary" type="button" onClick={() => setWeekStart(addDays(weekStart, -7))}>
+              <ChevronLeft size={15} /> Tuần trước
+            </button>
+            <button className="manager-ops-secondary" type="button" onClick={() => setWeekStart(getWeekStart(new Date()))}>
+              <CalendarDays size={15} /> Tuần này
+            </button>
+            <button className="manager-ops-secondary" type="button" onClick={() => setWeekStart(addDays(weekStart, 7))}>
+              Tuần sau <ChevronRight size={15} />
+            </button>
+            <button className="manager-ops-button" type="button" onClick={() => openCreateModal(defaultCreateDate)}>
+              <Plus size={16} /> Thêm lịch
+            </button>
+          </div>
         </div>
 
-        <div className="manager-ops-table-wrap">
-          <table className="manager-ops-table figma-inventory-table">
-            <thead>
-              <tr>
-                <th>Nhiệm vụ</th>
-                <th>Bộ phận</th>
-                <th>Nhân viên</th>
-                <th>Phòng</th>
-                <th>Ưu tiên</th>
-                <th>Hạn hoàn thành</th>
-                <th>Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTasks.length ? filteredTasks.map((task) => (
-                <tr className={`manager-ops-row ${selectedId === task._id ? 'is-selected' : ''}`} key={task._id} onClick={() => openEditModal(task)}>
-                  <td><strong>{task.title}</strong><small>{task.description || 'Chưa có mô tả'}</small></td>
-                  <td>{staffTypes[task.staff_type] || task.staff_type}</td>
-                  <td>{task.assigned_to || 'Chưa phân công'}</td>
-                  <td>{task.room_number || '-'}</td>
-                  <td><span className={`manager-ops-status ${priorityTone(task.priority)}`}>{priorities[task.priority] || task.priority}</span></td>
-                  <td>{formatDate(task.deadline)}</td>
-                  <td><span className={`manager-ops-status ${statusTone(normalizeStatus(task.status))}`}>{statuses[task.status] || task.status}</span></td>
-                </tr>
-              )) : <tr><td className="manager-ops-empty" colSpan="7">Không tìm thấy nhiệm vụ phù hợp.</td></tr>}
-            </tbody>
-          </table>
+        <div className="inventory-toolbar staff-schedule-toolbar">
+          <label className="figma-search-box">
+            <Search size={17} />
+            <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Tìm theo nhân viên, phòng, ghi chú..." />
+          </label>
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+            <option value="">Tất cả trạng thái</option>
+            <option value="assigned">Đã lên lịch</option>
+            <option value="completed">Hoàn thành</option>
+          </select>
+        </div>
+
+        <div className="staff-week-grid">
+          {weekDays.map((day) => {
+            const key = toInputDate(day);
+            const dayTasks = tasksByDate[key] || [];
+            return (
+              <article className="staff-day-column" key={key}>
+                <header className="staff-day-header">
+                  <div>
+                    <strong>{formatWeekday(day)}</strong>
+                    <span>{formatShortDate(day)}</span>
+                  </div>
+                  <button className="icon-action-button" type="button" disabled={key < todayKey} onClick={() => openCreateModal(key)} aria-label={`Thêm lịch ngày ${formatShortDate(day)}`}>
+                    <Plus size={16} />
+                  </button>
+                </header>
+
+                <div className="staff-day-task-list">
+                  {dayTasks.map((task) => {
+                    const status = getScheduleStatus(task.status);
+                    const note = task.description || task.receptionistNote || '';
+                    return (
+                      <button className="staff-schedule-item" key={task._id} type="button" onClick={() => openEditModal(task)}>
+                        <div className="staff-schedule-item-head">
+                          <strong>{task.title || 'Lịch làm việc'}</strong>
+                          <span className={`manager-ops-status ${statusTone(status)}`}>{statuses[status] || task.status}</span>
+                        </div>
+                        <div className="staff-schedule-meta">
+                          <span className="staff-schedule-time">
+                            {task.start_time && task.end_time ? `${task.start_time} - ${task.end_time}` : 'Chưa có khung giờ'}
+                          </span>
+                          <span>{task.assigned_to || 'Chưa phân công'}</span>
+                          <span>Phòng {task.room_number || '-'}</span>
+                          <span>{task.room_type || 'Chưa có loại phòng'}</span>
+                        </div>
+                        {note ? <p>{note}</p> : <p className="is-muted">Chưa có ghi chú.</p>}
+                        {task.completion_note ? <p className="staff-completion-note">Hoàn thành: {task.completion_note}</p> : null}
+                      </button>
+                    );
+                  })}
+
+                  {!dayTasks.length ? (
+                    <div className="staff-day-empty">Chưa có lịch</div>
+                  ) : null}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -228,29 +394,26 @@ const ManagerStaffTasksPage = () => {
           <section className="manager-modal-card" role="dialog" aria-modal="true" aria-labelledby="staff-task-modal-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="manager-modal-heading">
               <div>
-                <span className="figma-eyebrow">Quản lý nhiệm vụ nhân viên</span>
-                <h2 id="staff-task-modal-title">{isCreating ? 'Thêm nhiệm vụ mới' : selectedTask?.title}</h2>
-                <p>{isEditing ? `Hạn hoàn thành: ${formatDate(selectedTask.deadline)}` : 'Giao việc cho nhân viên dọn phòng hoặc kỹ thuật.'}</p>
+                <span className="figma-eyebrow">Lịch làm việc nhân viên</span>
+                <h2 id="staff-task-modal-title">{isCreating ? 'Thêm lịch làm việc mới' : selectedTask?.title}</h2>
+                <p>{isEditing ? `Ngày làm việc: ${formatDate(selectedTask.deadline)}` : 'Xếp lịch làm việc cho nhân viên dọn phòng theo phòng và ngày.'}</p>
               </div>
               <button className="icon-action-button" type="button" onClick={closeModal}><X size={18} /></button>
             </div>
 
             <form className="manager-ops-form" onSubmit={handleSubmit}>
-              <label>Tiêu đề<input name="title" onChange={handleChange} required value={form.title} /></label>
-              <label>Loại nhân viên<select name="staff_type" onChange={handleChange} value={form.staff_type}><option value="housekeeping">{staffTypes.housekeeping}</option><option value="technical">{staffTypes.technical}</option></select></label>
-              <label>Giao cho<select name="assigned_staff_id" onChange={handleChange} required value={form.assigned_staff_id}><option value="">Chọn nhân viên</option>{assignableStaff.map((staff) => <option key={staff._id} value={staff._id}>{staff.full_name}</option>)}</select></label>
-              <label>Số phòng<select name="room_number" onChange={handleChange} required value={form.room_number}><option value="">Chọn phòng</option>{rooms.map((room) => <option key={room._id || room.id} value={room.roomName}>{room.roomName} - {room.status}</option>)}</select></label>
-              <label>Mức ưu tiên<select name="priority" onChange={handleChange} value={form.priority}><option value="low">{priorities.low}</option><option value="medium">{priorities.medium}</option><option value="high">{priorities.high}</option></select></label>
-              {isEditing && <label>Trạng thái<select name="status" onChange={handleChange} value={form.status}>{Object.entries(statuses).filter(([value]) => value !== 'cancelled').map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
-              <label>Hạn hoàn thành<input min={todayInput()} name="deadline" onChange={handleChange} required type="date" value={form.deadline} /></label>
-              <label>Mô tả<input name="description" onChange={handleChange} value={form.description} /></label>
-              {isEditing && <p className="manager-action-note manager-ops-wide">Hoàn thành nghĩa là nhân viên đã xử lý xong công việc. Hủy nghĩa là nhiệm vụ tạo nhầm, bị trùng hoặc không còn cần thực hiện.</p>}
-              <div className="manager-ops-actions">
-                <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo nhiệm vụ'}</button>
-                {isEditing && <button className="manager-ops-secondary" onClick={handleClose} type="button">Đánh dấu hoàn thành</button>}
-                {isEditing && <button className="manager-ops-danger" onClick={handleCancel} type="button">Hủy nhiệm vụ</button>}
-
-              </div>
+              <label>Tên ca / công việc<input disabled={!canEditSelected} maxLength="120" name="title" onChange={handleChange} required value={form.title} placeholder="Ví dụ: Dọn phòng CDT301" /></label>
+              <label>Giao cho<select disabled={!canEditSelected} name="assigned_staff_id" onChange={handleChange} required value={form.assigned_staff_id}><option value="">Chọn nhân viên</option>{assignableStaff.map((staff) => <option key={staff._id} value={staff._id}>{staff.full_name}</option>)}</select></label>
+              <label>Số phòng<select disabled={!canEditSelected} name="room_number" onChange={handleChange} required value={form.room_number}><option value="">Chọn số phòng</option>{rooms.map((room) => <option key={room._id || room.id} value={room.roomName}>{room.roomName}</option>)}</select></label>
+              <label>Loại phòng<input readOnly value={form.room_type || 'Chọn số phòng để hiển thị loại phòng'} /></label>
+              <label>Ngày làm việc<input readOnly value={form.deadline ? formatDate(form.deadline) : 'Chưa có ngày'} /></label>
+              <label>Giờ bắt đầu<select disabled={!canEditSelected} name="start_time" onChange={handleChange} required value={form.start_time}>{timeOptions.map((time) => <option key={`start-${time}`} value={time}>{time}</option>)}</select></label>
+              <label>Giờ kết thúc<select disabled={!canEditSelected} name="end_time" onChange={handleChange} required value={form.end_time}>{timeOptions.map((time) => <option key={`end-${time}`} value={time}>{time}</option>)}</select></label>
+              <label className="manager-ops-wide">Ghi chú công việc<textarea disabled={!canEditSelected} maxLength="1000" name="description" onChange={handleChange} rows="4" value={form.description} placeholder="Ví dụ: ưu tiên lau phòng tắm, bổ sung khăn, kiểm tra ban công..." /></label>
+              {selectedTask?.completion_note ? <label className="manager-ops-wide">Ghi chú hoàn thành<textarea readOnly rows="3" value={selectedTask.completion_note} /></label> : null}
+              {canEditSelected ? <div className="manager-ops-actions">
+                <button className="manager-ops-button" type="submit">{isEditing ? 'Lưu thay đổi' : 'Tạo lịch làm việc'}</button>
+              </div> : null}
             </form>
           </section>
         </div>
@@ -260,8 +423,3 @@ const ManagerStaffTasksPage = () => {
 };
 
 export default ManagerStaffTasksPage;
-
-
-
-
-

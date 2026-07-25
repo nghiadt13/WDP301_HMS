@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBooking } from '../hooks/use-checkin';
 import CheckinWizard from '../components/CheckinWizard.jsx';
+import CheckoutWizard from '../components/CheckoutWizard.jsx';
 import { Calendar, User, CreditCard, BedDouble, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 const ReceptionistBookingDetailPage = () => {
@@ -9,6 +10,7 @@ const ReceptionistBookingDetailPage = () => {
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useBooking(id);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isCheckoutWizardOpen, setIsCheckoutWizardOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -26,8 +28,23 @@ const ReceptionistBookingDetailPage = () => {
     );
   }
 
-  const { booking, rooms, stayGuests, payments, canCheckin, blockingReasons } = data.data;
+  const { 
+    booking = {}, 
+    rooms = [], 
+    stayGuests = [], 
+    payments = [], 
+    billing = null,
+    canCheckin = false, 
+    blockingReasons = [] 
+  } = data?.data || {};
 
+  if (!booking || Object.keys(booking).length === 0) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+        Không tìm thấy thông tin đặt phòng.
+      </div>
+    );
+  }
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -43,6 +60,12 @@ const ReceptionistBookingDetailPage = () => {
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
   };
+
+  const billingSummary = billing || {};
+  const displayTotal = Number(billingSummary.subtotal ?? booking.totalAmount ?? 0);
+  const displayExtraCharges = Number(billingSummary.extraCharges ?? 0);
+  const displayDeposit = Number(billingSummary.depositDeducted ?? booking.depositAmount ?? 0);
+  const displayFinalTotal = Number(billingSummary.finalTotal ?? Math.max(0, displayTotal - displayDeposit));
 
   const getStatusLabel = (status) => {
     switch (status) {
@@ -66,7 +89,7 @@ const ReceptionistBookingDetailPage = () => {
   };
 
   const isCheckinBtnVisible = !['CheckedIn', 'CheckedOut', 'Completed', 'Canceled'].includes(booking.bookingStatus);
-
+  const isCheckoutBtnVisible = booking.bookingStatus === 'CheckedIn';
   return (
     <div className="booking-detail-container">
       <button
@@ -226,12 +249,24 @@ const ReceptionistBookingDetailPage = () => {
             </div>
             <div className="info-row">
               <span className="info-label">Tổng số tiền:</span>
-              <span className="info-value" style={{ color: 'var(--blue-dark)' }}>{formatCurrency(booking.totalAmount)}</span>
+              <span className="info-value" style={{ color: 'var(--blue-dark)' }}>{formatCurrency(displayTotal)}</span>
             </div>
+            {displayExtraCharges > 0 && (
+              <div className="info-row">
+                <span className="info-label">Phụ phí phát sinh:</span>
+                <span className="info-value" style={{ color: 'var(--red)' }}>{formatCurrency(displayExtraCharges)}</span>
+              </div>
+            )}
             <div className="info-row">
               <span className="info-label">Đã đặt cọc:</span>
-              <span className="info-value" style={{ color: 'var(--green)' }}>{formatCurrency(booking.depositAmount)}</span>
+              <span className="info-value" style={{ color: 'var(--green)' }}>{formatCurrency(displayDeposit)}</span>
             </div>
+            {displayExtraCharges > 0 && (
+              <div className="info-row">
+                <span className="info-label">Còn phải thu:</span>
+                <span className="info-value" style={{ color: displayFinalTotal > 0 ? 'var(--red)' : 'var(--green)' }}>{formatCurrency(displayFinalTotal)}</span>
+              </div>
+            )}
             <div className="info-row">
               <span className="info-label">Trạng thái:</span>
               <span className={`receptionist-status ${booking.paymentStatus === 'Paid' ? 'checked-in' : booking.paymentStatus === 'DepositPaid' ? 'pending' : 'check-out'}`}>
@@ -272,6 +307,21 @@ const ReceptionistBookingDetailPage = () => {
                 )}
               </div>
             )}
+
+            {/* Nút hành động Check-out */}
+            {isCheckoutBtnVisible && (
+              <div className="checkin-action-area" style={{ marginTop: '16px' }}>
+                <button
+                  type="button"
+                  className="btn-checkin-primary"
+                  style={{ background: 'var(--orange)', borderColor: 'var(--orange)' }}
+                  onClick={() => setIsCheckoutWizardOpen(true)}
+                >
+                  <CheckCircle2 size={18} />
+                  Tiến hành trả phòng (Check-out)
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -282,6 +332,17 @@ const ReceptionistBookingDetailPage = () => {
           onClose={() => setIsWizardOpen(false)}
           onComplete={() => {
             setIsWizardOpen(false);
+            refetch(); // reload booking details
+          }}
+        />
+      )}
+
+      {isCheckoutWizardOpen && (
+        <CheckoutWizard
+          bookingId={id}
+          onClose={() => setIsCheckoutWizardOpen(false)}
+          onComplete={() => {
+            setIsCheckoutWizardOpen(false);
             refetch(); // reload booking details
           }}
         />
