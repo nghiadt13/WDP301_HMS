@@ -40,22 +40,20 @@ const RoomListPage = () => {
 
   return (
     <section className="min-h-screen bg-[#FDFBF7] dark:bg-[#0A1120] pb-24 transition-colors duration-300" aria-label="Danh sách phòng">
-      {/* Luxury Hero Banner */}
-      <div className="relative h-[45vh] sm:h-[55vh] min-h-[350px] w-full overflow-hidden rounded-b-[40px] shadow-2xl">
-        <img
-          src={pageData.hero?.image || 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/slide_1.jpg'}
-          alt={pageData.hero?.title || 'Phòng nghỉ'}
-          className="w-full h-full object-cover scale-105 animate-pulse-slow"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1120] via-[#0A1120]/40 to-transparent flex flex-col justify-end items-center text-center p-8 sm:p-16">
-          <span className="text-xs uppercase tracking-[0.25em] font-bold text-shimmer-gold mb-3 font-mono">
+      {/* Bright White & Ivory Royalty Hero Banner */}
+      <div className="relative overflow-hidden rounded-b-[40px] bg-gradient-to-b from-[#FFFDF9] via-[#F5F2EB] to-white py-14 sm:py-20 px-6 border-b border-[#E8E4DB] shadow-md text-center">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#C5A880]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-4xl mx-auto space-y-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-white border border-[#C5A880] text-xs uppercase tracking-[0.25em] font-extrabold text-[#92703E] shadow-xs font-mono">
             ✦ KHÔNG GIAN LƯU TRÚ HIỆN ĐẠI & TIỆN NGHI ✦
           </span>
-          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-3d-white max-w-4xl leading-tight mb-4">
+          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#111A15] max-w-4xl leading-tight mx-auto">
             {pageData.hero?.title || 'DANH SÁCH PHÒNG NGHỈ'}
           </h1>
-          <div className="w-24 h-1 bg-gradient-to-r from-[#D4AF37] to-[#C5A880] rounded-full mb-4 shadow-sm" />
-          <p className="font-sans text-base sm:text-lg text-gray-200 max-w-2xl font-medium drop-shadow-md">
+          <div className="w-24 h-1 bg-gradient-to-r from-[#C5A880] to-[#D4AF37] rounded-full mx-auto shadow-xs" />
+          <p className="font-sans text-base sm:text-lg text-[#525966] max-w-2xl font-medium leading-relaxed mx-auto">
             {pageData.hero?.description || 'Tận hưởng không gian phòng nghỉ thoải mái, sạch sẽ với tầm nhìn hướng ra biển hoặc thành phố cùng hệ thống trang thiết bị hiện đại cho kỳ nghỉ của bạn.'}
           </p>
         </div>

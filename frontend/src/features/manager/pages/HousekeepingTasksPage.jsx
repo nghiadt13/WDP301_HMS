@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -76,7 +76,7 @@ const toChecklistLabel = (key) => {
     amenities: 'Amenities',
     damage: 'Damage check',
     lostItem: 'Lost item check',
-    room_inventory: 'Kiá»ƒm tra váº­t tÆ° phÃ²ng',
+    room_inventory: 'Kiểm tra vật tư phòng',
     photo: 'Photo evidence',
   };
   return labels[key] || key;
@@ -355,11 +355,11 @@ const HousekeepingTasksPage = () => {
     const waitingMaintenance = all.filter((task) => normalizeStatus(task.status) === 'waitingmaintenance').length;
     const completed = all.filter((task) => normalizeStatus(task.status) === 'completed').length;
     return [
-      { label: 'Total tasks', value: all.length },
-      { label: 'New assigned', value: assigned },
-      { label: 'In cleaning', value: cleaning },
-      { label: 'Waiting maintenance', value: waitingMaintenance },
-      { label: 'Completed', value: completed },
+      { label: 'Tổng ca phân công', value: all.length },
+      { label: 'Mới phân công', value: assigned },
+      { label: 'Đang dọn dẹp', value: cleaning },
+      { label: 'Chờ bảo trì', value: waitingMaintenance },
+      { label: 'Đã hoàn thành', value: completed },
     ];
   }, [data]);
 
@@ -387,8 +387,8 @@ const HousekeepingTasksPage = () => {
     return (
       <div className="housekeeping-page">
         <div className="housekeeping-state-card">
-          <h3>Loading cleaning tasks</h3>
-          <p>Fetching receptionist-assigned cleaning tasks from MongoDB.</p>
+          <h3>Đang tải danh sách ca dọn phòng...</h3>
+          <p>Đang đồng bộ dữ liệu công việc từ hệ thống.</p>
         </div>
       </div>
     );
@@ -398,9 +398,9 @@ const HousekeepingTasksPage = () => {
     return (
       <div className="housekeeping-page">
         <div className="housekeeping-state-card">
-          <h3>Cannot load cleaning tasks</h3>
-          <p>The API request failed. Retry when backend is running.</p>
-          <button className="housekeeping-btn" type="button" onClick={() => refetch()}>Retry</button>
+          <h3>Không thể tải ca dọn phòng</h3>
+          <p>Lỗi kết nối máy chủ. Vui lòng thử lại sau.</p>
+          <button className="housekeeping-btn" type="button" onClick={() => refetch()}>Thử lại</button>
         </div>
       </div>
     );
@@ -410,11 +410,11 @@ const HousekeepingTasksPage = () => {
     <div className="housekeeping-page">
       <div className="housekeeping-page-header">
         <div>
-          <h2>Cleaning Tasks</h2>
-          <p>Rooms assigned by the receptionist or manager with real-time housekeeping progress.</p>
+          <h2>Danh Sách Ca Dọn Phòng</h2>
+          <p>Quản lý ca dọn phòng được phân công bởi Lễ tân hoặc Quản lý với cập nhật tiến độ real-time.</p>
         </div>
         <div className="housekeeping-task-actions">
-          <button className="housekeeping-outline-btn" type="button" onClick={() => refetch()}><RefreshCw size={14} /> Refresh</button>
+          <button className="housekeeping-outline-btn" type="button" onClick={() => refetch()}><RefreshCw size={14} /> Làm mới</button>
         </div>
       </div>
 
@@ -426,22 +426,22 @@ const HousekeepingTasksPage = () => {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search room, task type, note"
+                placeholder="Tìm số phòng, loại ca, ghi chú..."
               />
             </label>
             <select value={filter} onChange={(event) => setFilter(event.target.value)}>
-              <option value="all">All status</option>
-              <option value="assigned">Assigned</option>
-              <option value="accepted">Accepted</option>
-              <option value="cleaning">Cleaning</option>
-              <option value="waitingmaintenance">Waiting Maintenance</option>
-              <option value="completed">Completed</option>
+              <option value="all">Tất cả trạng thái</option>
+              <option value="assigned">Đã phân công (Assigned)</option>
+              <option value="accepted">Đã nhận ca (Accepted)</option>
+              <option value="cleaning">Đang dọn dẹp (Cleaning)</option>
+              <option value="waitingmaintenance">Chờ bảo trì (Waiting Maintenance)</option>
+              <option value="completed">Hoàn thành (Completed)</option>
             </select>
             <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}>
-              <option value="all">All priorities</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              <option value="all">Tất cả mức ưu tiên</option>
+              <option value="high">Cao (High)</option>
+              <option value="medium">Trung bình (Medium)</option>
+              <option value="low">Thấp (Low)</option>
             </select>
           </div>
 
@@ -451,7 +451,7 @@ const HousekeepingTasksPage = () => {
               className={`housekeeping-task-tab${taskTab === 'active' ? ' is-active' : ''}`}
               onClick={() => setTaskTab('active')}
             >
-              Äang xá»­ lÃ½
+              Đang xử lý
               <span>{taskTabCounts.active}</span>
             </button>
             <button
@@ -459,7 +459,7 @@ const HousekeepingTasksPage = () => {
               className={`housekeeping-task-tab${taskTab === 'completed' ? ' is-active' : ''}`}
               onClick={() => setTaskTab('completed')}
             >
-              HoÃ n thÃ nh
+              Hoàn thành
               <span>{taskTabCounts.completed}</span>
             </button>
             <button
@@ -467,7 +467,7 @@ const HousekeepingTasksPage = () => {
               className={`housekeeping-task-tab${taskTab === 'all' ? ' is-active' : ''}`}
               onClick={() => setTaskTab('all')}
             >
-              Táº¥t cáº£
+              Tất cả
               <span>{taskTabCounts.all}</span>
             </button>
           </div>

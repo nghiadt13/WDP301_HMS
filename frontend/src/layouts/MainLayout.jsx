@@ -57,7 +57,7 @@ const MainLayout = () => {
               <span className="inline-block px-4 py-1.5 rounded-full text-xs uppercase tracking-[0.2em] font-bold bg-[#C5A880]/20 text-[#8B6B3D] dark:text-[#D4AF37] border border-[#C5A880]/30 shadow-sm font-mono">
                 ✦ KHÁM PHÁ HẠ LONG CÙNG CHÚNG TÔI ✦
               </span>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-3d-dark dark:text-3d-white max-w-2xl mx-auto leading-tight">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-3d-dark dark:text-3d-white max-w-2xl mx-auto leading-tight">
                 Sẵn sàng cho một kỳ nghỉ thoải mái bên vịnh biển?
               </h2>
               <p className="font-sans text-sm sm:text-base text-[#525966] dark:text-gray-300 max-w-xl mx-auto leading-relaxed font-medium">
@@ -66,14 +66,14 @@ const MainLayout = () => {
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   to="/booking"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#0F131C] dark:bg-[#D4AF37] text-white dark:text-[#0F131C] font-sans text-sm font-semibold hover:bg-[#1A2234] dark:hover:bg-[#E5B83B] transition-all shadow-md group"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#0F131C] dark:bg-[#D4AF37] !text-white dark:!text-[#0F131C] font-sans text-sm font-semibold hover:bg-[#1A2234] dark:hover:bg-[#E5B83B] transition-all shadow-md group"
                 >
                   <span>Đặt phòng trực tuyến</span>
                   <span className="text-xs font-bold group-hover:translate-x-0.5 transition-transform">↗</span>
                 </Link>
                 <a
                   href="tel:0868729129"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-[#E8E4DB] dark:border-white/20 text-[#1A1D24] dark:text-white hover:border-[#C5A880] hover:bg-black/5 dark:hover:bg-white/5 transition-all font-sans text-sm font-semibold shadow-sm"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-[#E8E4DB] dark:border-white/20 !text-[#1A1D24] dark:!text-white hover:border-[#C5A880] hover:bg-black/5 dark:hover:bg-white/5 transition-all font-sans text-sm font-semibold shadow-sm"
                 >
                   <Phone size={16} className="text-[#C5A880]" />
                   <span>Hotline: 0868.729.129</span>
@@ -82,47 +82,47 @@ const MainLayout = () => {
             </div>
           </div>
 
-          {/* Luxury Resort Coastal Navy Footer (Replacing pitch black) */}
-          <div className="bg-[#0A1326] text-[#A3AAB8] pt-20 pb-12 px-6 sm:px-12 font-sans border-t-2 border-[#C5A880]/30 shadow-2xl">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 border-b border-white/10 pb-16">
+          {/* Bright Ivory & White Luxury Resort Footer */}
+          <div className="bg-[#FFFDF9] text-[#525966] pt-20 pb-12 px-6 sm:px-12 font-sans border-t border-[#E8E4DB] shadow-lg">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 border-b border-[#E8E4DB] pb-16">
               
               {/* Col 1: Brand & VIP Guest Club (5 cols) */}
               <div className="lg:col-span-5 space-y-6">
                 <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-                  <div className="w-9 h-9 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#0A1326] shadow-sm">
+                  <div className="w-9 h-9 rounded-full bg-[#C5A880] flex items-center justify-center text-white shadow-xs">
                     <Building2 size={18} strokeWidth={2} />
                   </div>
-                  <span className="font-display text-2xl font-bold tracking-tight text-white">
-                    Hotelify<span className="text-[#D4AF37] font-sans text-xs ml-1.5 font-semibold tracking-wider uppercase">Khách Sạn 5 Sao</span>
+                  <span className="font-display text-2xl font-bold tracking-tight text-[#111A15]">
+                    Hotelify<span className="text-[#92703E] font-sans text-xs ml-1.5 font-bold tracking-wider uppercase">Khách Sạn 5 Sao</span>
                   </span>
                 </Link>
                 
-                <p className="text-sm text-gray-300 leading-relaxed max-w-sm font-medium">
+                <p className="text-sm text-[#525966] leading-relaxed max-w-sm font-medium">
                   Hệ thống đặt phòng khách sạn trực tuyến hiện đại, nhanh chóng. Mang đến trải nghiệm lưu trú thoải mái, tiện nghi và chu đáo cho kỳ nghỉ tại Vịnh Hạ Long.
                 </p>
 
                 {/* VIP Guest Club Newsletter */}
                 <div className="space-y-3 pt-2">
-                  <p className="text-xs uppercase tracking-[0.15em] font-bold text-shimmer-gold font-mono">
+                  <p className="text-xs uppercase tracking-[0.15em] font-bold text-[#92703E] font-mono">
                     ✦ Đăng Ký Nhận Ưu Đãi & Khuyến Mãi ✦
                   </p>
-                  <form onSubmit={(e) => e.preventDefault()} className="max-w-sm flex items-center bg-white/10 border border-white/20 rounded-full p-1.5 focus-within:border-[#D4AF37] transition-colors shadow-inner">
+                  <form onSubmit={(e) => e.preventDefault()} className="max-w-sm flex items-center bg-white border border-[#E8E4DB] rounded-full p-1.5 focus-within:border-[#C5A880] transition-colors shadow-xs">
                     <input
                       type="email"
                       placeholder="Nhập địa chỉ email của bạn..."
-                      className="bg-transparent text-sm text-white placeholder:text-gray-400 px-4 py-2 flex-1 focus:outline-none font-medium"
+                      className="bg-transparent text-sm text-[#111A15] placeholder:text-gray-400 px-4 py-2 flex-1 focus:outline-none font-medium"
                       required
                     />
                     <button
                       type="submit"
-                      className="w-10 h-10 rounded-full bg-[#D4AF37] text-[#0A1326] font-bold flex items-center justify-center hover:bg-[#E5B83B] transition-all duration-200 shrink-0 shadow-md"
+                      className="w-10 h-10 rounded-full bg-[#111A15] text-white font-bold flex items-center justify-center hover:bg-[#C5A880] transition-all duration-200 shrink-0 shadow-sm"
                       aria-label="Đăng ký nhận ưu đãi"
                       title="Đăng ký nhận ưu đãi"
                     >
                       ↗
                     </button>
                   </form>
-                  <span className="text-[11px] text-gray-400 block font-medium">
+                  <span className="text-[11px] text-gray-500 block font-medium">
                     Nhận đặc quyền giảm 15% cho đặt phòng sớm và ưu đãi ẩm thực độc quyền.
                   </span>
                 </div>
@@ -130,23 +130,23 @@ const MainLayout = () => {
 
               {/* Col 2: Vị Trí & Liên Hệ (3 cols) */}
               <div className="lg:col-span-3 space-y-4">
-                <h3 className="font-display font-extrabold text-3d-white text-base tracking-wide uppercase">
+                <h3 className="font-display font-extrabold text-[#111A15] text-base tracking-wide uppercase">
                   Vị Trí & Liên Hệ
                 </h3>
-                <ul className="space-y-3.5 text-sm text-[#8E96A4]">
+                <ul className="space-y-3.5 text-sm text-[#525966] font-medium">
                   <li className="flex items-start gap-2.5">
-                    <MapPin size={18} className="text-[#C5A880] shrink-0 mt-0.5" />
+                    <MapPin size={18} className="text-[#92703E] shrink-0 mt-0.5" />
                     <span>Bãi Cháy, TP. Hạ Long, Quảng Ninh, Việt Nam</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <Phone size={18} className="text-[#C5A880] shrink-0" />
-                    <a href="tel:0868729129" className="hover:text-white transition-colors font-medium text-gray-200">
+                    <Phone size={18} className="text-[#92703E] shrink-0" />
+                    <a href="tel:0868729129" className="hover:text-[#92703E] transition-colors font-bold text-[#111A15]">
                       0868.729.129
                     </a>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <Mail size={18} className="text-[#C5A880] shrink-0" />
-                    <a href="mailto:tinlatoi2003@gmail.com" className="hover:text-white transition-colors">
+                    <Mail size={18} className="text-[#92703E] shrink-0" />
+                    <a href="mailto:tinlatoi2003@gmail.com" className="hover:text-[#92703E] transition-colors font-bold text-[#111A15]">
                       tinlatoi2003@gmail.com
                     </a>
                   </li>
@@ -155,32 +155,32 @@ const MainLayout = () => {
 
               {/* Col 3: Chính Sách Khách Sạn (2 cols) */}
               <div className="lg:col-span-2 space-y-4">
-                <h3 className="font-display font-extrabold text-3d-white text-base tracking-wide uppercase">
+                <h3 className="font-display font-extrabold text-[#111A15] text-base tracking-wide uppercase">
                   Chính Sách
                 </h3>
-                <ul className="space-y-2.5 text-sm">
+                <ul className="space-y-2.5 text-sm font-medium">
                   <li>
-                    <Link to="/customer/policies" className="hover:text-[#C5A880] transition-colors">
+                    <Link to="/customer/policies" className="text-[#525966] hover:text-[#92703E] transition-colors">
                       Chính sách bảo mật
                     </Link>
                   </li>
                   <li>
-                    <Link to="/customer/policies" className="hover:text-[#C5A880] transition-colors">
+                    <Link to="/customer/policies" className="text-[#525966] hover:text-[#92703E] transition-colors">
                       Điều khoản sử dụng
                     </Link>
                   </li>
                   <li>
-                    <Link to="/customer/policies" className="hover:text-[#C5A880] transition-colors">
+                    <Link to="/customer/policies" className="text-[#525966] hover:text-[#92703E] transition-colors">
                       Chính sách hủy & hoàn tiền
                     </Link>
                   </li>
                   <li>
-                    <Link to="/customer/policies" className="hover:text-[#C5A880] transition-colors">
+                    <Link to="/customer/policies" className="text-[#525966] hover:text-[#92703E] transition-colors">
                       Quy định nhận/trả phòng
                     </Link>
                   </li>
                   <li>
-                    <Link to="/customer/policies" className="hover:text-[#C5A880] transition-colors">
+                    <Link to="/customer/policies" className="text-[#525966] hover:text-[#92703E] transition-colors">
                       Hướng dẫn thanh toán VNPAY
                     </Link>
                   </li>
@@ -189,10 +189,10 @@ const MainLayout = () => {
 
               {/* Col 4: Kết Nối (2 cols) */}
               <div className="lg:col-span-2 space-y-4">
-                <h3 className="font-display font-extrabold text-3d-white text-base tracking-wide uppercase">
+                <h3 className="font-display font-extrabold text-[#111A15] text-base tracking-wide uppercase">
                   Kết Nối
                 </h3>
-                <p className="text-xs text-[#8E96A4]">
+                <p className="text-xs text-[#525966] font-medium">
                   Theo dõi hành trình nghỉ dưỡng và câu chuyện văn hóa biển Hạ Long trên mạng xã hội:
                 </p>
                 <div className="flex items-center gap-3 pt-1" aria-label="Social media links">
@@ -200,7 +200,7 @@ const MainLayout = () => {
                     href="https://facebook.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-gray-300 hover:border-[#C5A880] hover:text-[#C5A880] hover:bg-white/5 transition-all duration-200"
+                    className="w-10 h-10 rounded-full border border-[#E8E4DB] bg-white flex items-center justify-center text-[#525966] hover:border-[#C5A880] hover:text-[#92703E] hover:bg-[#FFFDF9] transition-all duration-200 shadow-xs"
                     aria-label="Facebook Hotelify"
                   >
                     <FacebookIcon size={18} />
@@ -209,7 +209,7 @@ const MainLayout = () => {
                     href="https://instagram.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-gray-300 hover:border-[#C5A880] hover:text-[#C5A880] hover:bg-white/5 transition-all duration-200"
+                    className="w-10 h-10 rounded-full border border-[#E8E4DB] bg-white flex items-center justify-center text-[#525966] hover:border-[#C5A880] hover:text-[#92703E] hover:bg-[#FFFDF9] transition-all duration-200 shadow-xs"
                     aria-label="Instagram Hotelify"
                   >
                     <InstagramIcon size={18} />
@@ -218,7 +218,7 @@ const MainLayout = () => {
                     href="https://zalo.me/0868729129"
                     target="_blank"
                     rel="noreferrer"
-                    className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-gray-300 hover:border-[#C5A880] hover:text-[#C5A880] hover:bg-white/5 transition-all duration-200"
+                    className="w-10 h-10 rounded-full border border-[#E8E4DB] bg-white flex items-center justify-center text-[#525966] hover:border-[#C5A880] hover:text-[#92703E] hover:bg-[#FFFDF9] transition-all duration-200 shadow-xs"
                     aria-label="Zalo Hotelify"
                     title="Chat qua Zalo 0868729129"
                   >
@@ -228,7 +228,7 @@ const MainLayout = () => {
                     href="https://youtube.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-gray-300 hover:border-[#C5A880] hover:text-[#C5A880] hover:bg-white/5 transition-all duration-200"
+                    className="w-10 h-10 rounded-full border border-[#E8E4DB] bg-white flex items-center justify-center text-[#525966] hover:border-[#C5A880] hover:text-[#92703E] hover:bg-[#FFFDF9] transition-all duration-200 shadow-xs"
                     aria-label="YouTube Hotelify"
                   >
                     <YoutubeIcon size={18} />
@@ -239,11 +239,11 @@ const MainLayout = () => {
             </div>
 
             {/* Copyright & Legal */}
-            <div className="max-w-7xl mx-auto pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+            <div className="max-w-7xl mx-auto pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#525966] font-medium">
               <p>© 2026 Hotelify Hotel System. All rights reserved.</p>
               <p className="flex items-center gap-1.5">
                 <span>Dịch vụ lưu trú chất lượng bên vịnh biển.</span>
-                <span className="text-[#C5A880]">✦</span>
+                <span className="text-[#92703E] font-bold">✦</span>
                 <span>Powered by VNPAY & MongoDB Cloud</span>
               </p>
             </div>

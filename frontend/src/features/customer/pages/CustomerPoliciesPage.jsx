@@ -85,31 +85,31 @@ const CustomerPoliciesPage = () => {
     <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#0A0F0D] py-10 px-4 sm:px-8 lg:px-12 font-sans transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-12 sm:space-y-16">
         
-        {/* 1. CINEMATIC LUXURY HERO BANNER */}
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0A1120] via-[#121E36] to-[#0A1120] p-8 sm:p-14 md:p-16 text-center border border-[#D4AF37]/30 shadow-[0_25px_60px_rgba(10,17,32,0.35)]">
+        {/* 1. BRIGHT IVORY & GOLD CROWN HERO BANNER */}
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#FFFDF9] via-[#F5F2EB] to-white p-8 sm:p-14 md:p-16 text-center border border-[#E8E4DB] shadow-lg">
           {/* Subtle Ornamental Background Glows */}
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#C5A880]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#C5A880]/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-3xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] text-xs sm:text-[13px] font-extrabold tracking-[0.2em] uppercase shadow-sm">
-              <Sparkles size={14} className="animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFFDF9] border border-[#C5A880] text-[#92703E] text-xs sm:text-[13px] font-extrabold tracking-[0.2em] uppercase shadow-xs">
+              <Sparkles size={14} className="animate-pulse text-[#92703E]" />
               <span>Quy định & Đặc quyền 5 Sao</span>
             </div>
 
-            <h1 className="font-display italic text-3xl sm:text-5xl md:text-6xl text-white font-normal tracking-wide leading-tight drop-shadow-md">
-              Chính Sách & Nội Quy <span className="not-italic font-semibold text-[#D4AF37]">Hotelify</span>
+            <h1 className="font-display italic text-3xl sm:text-5xl md:text-6xl text-[#111A15] font-normal tracking-wide leading-tight">
+              Chính Sách & Nội Quy <span className="not-italic font-bold text-[#92703E]">Hotelify</span>
             </h1>
 
-            <div className="flex items-center justify-center gap-3 text-[#D4AF37]/70 text-sm">
+            <div className="flex items-center justify-center gap-3 text-[#92703E] text-sm">
               <span>✦</span>
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
+              <span className="h-px w-16 bg-gradient-to-r from-transparent via-[#C5A880] to-transparent" />
               <span>✦</span>
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
+              <span className="h-px w-16 bg-gradient-to-r from-transparent via-[#C5A880] to-transparent" />
               <span>✦</span>
             </div>
 
-            <p className="text-gray-300 text-sm sm:text-base md:text-lg font-normal leading-relaxed max-w-2xl mx-auto">
+            <p className="text-[#525966] text-sm sm:text-base md:text-lg font-medium leading-relaxed max-w-2xl mx-auto">
               Cam kết mang đến không gian nghỉ dưỡng chuẩn mực quốc tế bên vịnh di sản. Nắm rõ các nguyên tắc lưu trú, thủ tục check-in/out và đặc quyền khách hàng để chuyến đi của Quý khách luôn trọn vẹn.
             </p>
           </div>
@@ -248,43 +248,43 @@ const CustomerPoliciesPage = () => {
           </div>
         )}
 
-        {/* 4. VIP CONCIERGE SUPPORT BANNER (HIGH-END CALLOUT) */}
-        <div className="bg-gradient-to-br from-[#0A1120] via-[#14223E] to-[#0A1120] rounded-3xl p-8 sm:p-14 text-center relative overflow-hidden border border-[#D4AF37]/40 shadow-2xl mt-16 max-w-5xl mx-auto">
+        {/* 4. VIP CONCIERGE SUPPORT BANNER (BRIGHT WHITE & IVORY THEME) */}
+        <div className="bg-[#FFFDF9] rounded-3xl p-8 sm:p-14 text-center relative overflow-hidden border border-[#E8E4DB] shadow-lg mt-16 max-w-5xl mx-auto">
           {/* Decorative Background Elements */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#C5A880]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#C5A880]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <div className="w-14 h-14 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center mx-auto text-[#D4AF37] shadow-lg">
+            <div className="w-14 h-14 rounded-full bg-white border border-[#C5A880] flex items-center justify-center mx-auto text-[#92703E] shadow-sm">
               <Award size={28} />
             </div>
 
-            <h3 className="font-display italic text-2xl sm:text-4xl text-white font-normal leading-tight">
+            <h3 className="font-display italic text-2xl sm:text-4xl text-[#111A15] font-bold leading-tight">
               Quý Khách Có Yêu Cầu Đặc Biệt Hoặc Cần Tư Vấn Riêng?
             </h3>
 
-            <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-normal">
+            <p className="text-[#525966] text-sm sm:text-base leading-relaxed font-medium">
               Đội ngũ Quản gia (Butler) và Lễ tân 5 sao của Hotelify Hạ Long luôn túc trực 24/7 để hỗ trợ giải đáp mọi thắc mắc về thủ tục nhận phòng sớm, trả phòng muộn hay các chế độ chăm sóc VIP.
             </p>
 
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="tel:0868729129"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#C5A880] hover:from-[#C5A880] hover:to-[#D4AF37] text-[#0A1120] font-extrabold text-sm tracking-wider uppercase shadow-xl hover:scale-105 transition-all duration-300"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-[#111A15] hover:bg-[#C5A880] text-white font-extrabold text-sm tracking-wider uppercase shadow-md hover:scale-105 transition-all duration-300"
               >
-                <Phone size={18} className="text-[#0A1120]" />
+                <Phone size={18} className="text-[#C5A880]" />
                 <span>Hotline 24/7: 0868 729 129</span>
               </a>
               <a
                 href="mailto:tinlatoi2003@gmail.com"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm tracking-wider uppercase border border-white/20 backdrop-blur-md transition-all duration-300"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-white hover:bg-gray-50 text-[#111A15] font-bold text-sm tracking-wider uppercase border border-[#E8E4DB] shadow-xs transition-all duration-300"
               >
-                <Mail size={18} className="text-[#D4AF37]" />
+                <Mail size={18} className="text-[#92703E]" />
                 <span>Gửi Email Hỗ Trợ</span>
               </a>
             </div>
 
-            <div className="pt-4 flex items-center justify-center gap-6 text-xs font-semibold text-[#D4AF37]/80 uppercase tracking-widest">
+            <div className="pt-4 flex items-center justify-center gap-6 text-xs font-bold text-[#92703E] uppercase tracking-widest">
               <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> Bảo mật thông tin</span>
               <span className="flex items-center gap-1.5"><CheckCircle2 size={14} /> Phản hồi trong 15 phút</span>
             </div>

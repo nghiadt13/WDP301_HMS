@@ -200,19 +200,21 @@ const RoomDetailPage = () => {
         </Link>
       </div>
 
-      {/* Luxury Hero Showcase Banner */}
+      {/* Bright Royalty Showcase Card Banner */}
       <div className="max-w-7xl mx-auto px-6 sm:px-12 mb-12">
-        <div className="relative h-[45vh] sm:h-[60vh] w-full overflow-hidden rounded-[36px] shadow-2xl border border-[#E8E4DB] dark:border-white/10 group">
-          <img
-            src={room.image}
-            alt={room.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1120] via-transparent to-transparent flex flex-col justify-end p-8 sm:p-12">
-            <span className="text-xs uppercase tracking-[0.25em] font-bold text-shimmer-gold mb-2 font-mono">
+        <div className="bg-[#FFFDF9] dark:bg-[#161B26] rounded-[36px] shadow-2xl border border-[#E8E4DB] dark:border-white/10 overflow-hidden">
+          <div className="relative h-[40vh] sm:h-[50vh] w-full overflow-hidden group">
+            <img
+              src={room.image}
+              alt={room.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            />
+          </div>
+          <div className="p-8 sm:p-10 text-center bg-gradient-to-b from-[#FFFDF9] to-white dark:from-[#161B26] dark:to-[#0F131C] border-t border-[#E8E4DB] dark:border-white/10">
+            <span className="inline-block text-xs uppercase tracking-[0.25em] font-bold text-[#92703E] dark:text-[#D4AF37] mb-2 font-mono bg-[#F5F2EB] dark:bg-white/5 py-1 px-4 rounded-full border border-[#E8E4DB] dark:border-white/10">
               ✦ KHÔNG GIAN PHÒNG HIỆN ĐẠI & TIỆN NGHI ✦
             </span>
-            <h1 className="font-display text-4xl sm:text-6xl font-extrabold tracking-tight text-3d-white">
+            <h1 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight text-[#111A15] dark:text-white mt-1">
               {room.name}
             </h1>
           </div>

@@ -242,12 +242,8 @@ const HomePage = () => {
         {/* Top Spacer to push title down toward center-lower */}
         <div className="flex-1" />
 
-        {/* Hero Content: DAEWOO HOTEL SIGNATURE ITALIC SERIF TITLE */}
+        {/* Hero Content */}
         <div className="relative z-10 max-w-6xl mx-auto w-full px-4 sm:px-8 pb-10 sm:pb-16 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <h1 className="font-display italic font-normal text-3xl sm:text-5xl md:text-6xl lg:text-[62px] text-white tracking-wide leading-[1.2] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_15px_black]">
-            Chào mừng đến với Hotelify Hạ Long
-          </h1>
-
           {/* Banner Dots */}
           {banners.length > 1 ? (
             <div className="flex items-center justify-center gap-2.5 mt-8 sm:mt-10">
@@ -275,8 +271,8 @@ const HomePage = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 dark:divide-white/10"
             aria-label="Kiểm tra phòng trống"
           >
-            {/* Col 1 & 2: Check-in and Check-out (6 cols total: 3 + 3) */}
-            <div className="sm:col-span-2 lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 dark:divide-white/10">
+            {/* Col 1 & 2: Check-in and Check-out (5 cols total) */}
+            <div className="sm:col-span-2 lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-200 dark:divide-white/10">
               <DateRangePicker
                 adults={guestCounts.adults}
                 children={guestCounts.children}
@@ -317,17 +313,17 @@ const HomePage = () => {
               />
             </div>
 
-            {/* Col 3: Guests (3 cols) */}
-            <div className="sm:col-span-1 lg:col-span-3 p-5 sm:p-7 flex flex-col justify-center hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors group">
+            {/* Col 3: Guests (4 cols) */}
+            <div className="sm:col-span-1 lg:col-span-4 p-5 sm:p-7 flex flex-col justify-center hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors group">
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-600 dark:text-gray-400 mb-1.5 flex items-center justify-between">
-                <span>Guests</span>
+                <span>Khách lưu trú</span>
                 <Users size={15} className="text-gray-400 group-hover:text-[#D4AF37] transition-colors duration-300" />
               </span>
               <div className="flex items-center gap-1">
                 <select
                   value={guestCounts.adults}
                   onChange={(e) => setGuestCounts((prev) => ({ ...prev, adults: e.target.value }))}
-                  className="font-sans font-bold text-lg sm:text-xl text-[#111A15] dark:text-white bg-transparent p-0 border-0 focus:outline-none cursor-pointer"
+                  className="font-sans font-bold text-base sm:text-[17px] text-[#111A15] dark:text-white bg-transparent p-0 border-0 focus:outline-none cursor-pointer"
                   aria-label="Số lượng người lớn"
                 >
                   {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
@@ -340,7 +336,7 @@ const HomePage = () => {
                 <select
                   value={guestCounts.children}
                   onChange={(e) => setGuestCounts((prev) => ({ ...prev, children: e.target.value }))}
-                  className="font-sans font-bold text-lg sm:text-xl text-[#111A15] dark:text-white bg-transparent p-0 border-0 focus:outline-none cursor-pointer"
+                  className="font-sans font-bold text-base sm:text-[17px] text-[#111A15] dark:text-white bg-transparent p-0 border-0 focus:outline-none cursor-pointer"
                   aria-label="Số lượng trẻ em"
                 >
                   {[0, 1, 2, 3, 4, 5].map((num) => (
@@ -379,10 +375,10 @@ const HomePage = () => {
               <Award size={16} className="text-[#D4AF37]" />
               <span>Tiêu Chuẩn Dịch Vụ Chất Lượng Cao</span>
             </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight text-3d-dark dark:text-3d-white leading-tight">
+            <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-3d-dark dark:text-3d-white leading-tight">
               {homeData.lobby.title || 'Không Gian Lưu Trú Thư Giãn & Tiện Nghi Bên Vịnh Biển'}
             </h2>
-            <p className="text-base text-[#525966] dark:text-gray-300 leading-relaxed font-medium">
+            <p className="text-base sm:text-lg text-[#525966] dark:text-gray-300 leading-relaxed font-normal">
               {homeData.lobby.description || 'Khách sạn sở hữu vị trí giao thông thuận tiện, tầm nhìn thoáng đãng hướng ra biển cùng hệ thống phòng ngủ được trang bị đầy đủ tiện nghi hiện đại cho kỳ nghỉ của bạn.'}
             </p>
           </div>
@@ -406,10 +402,10 @@ const HomePage = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A1120]/85 via-[#0A1120]/25 to-transparent flex flex-col justify-end p-8">
               <span className="text-xs uppercase tracking-widest text-[#D4AF37] font-bold mb-2 font-mono">✦ Vị Trí Đắc Địa ✦</span>
-              <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-3d-white mb-2">
+              <h3 className="font-display text-2xl sm:text-3xl font-bold text-3d-white mb-2">
                 Tầm Nhìn Hướng Biển & Thành Phố
               </h3>
-              <p className="text-sm text-gray-200 max-w-lg font-medium drop-shadow-sm">
+              <p className="text-sm sm:text-base text-gray-100 max-w-lg font-normal leading-relaxed drop-shadow-sm">
                 Không gian ban công thoáng đãng giúp bạn dễ dàng ngắm nhìn trọn vẹn vẻ đẹp lung linh của Vịnh Hạ Long lúc bình minh hay hoàng hôn.
               </p>
             </div>
@@ -422,8 +418,8 @@ const HomePage = () => {
             </div>
             <div>
               <span className="text-[11px] uppercase tracking-widest text-[#92703E] dark:text-[#D4AF37] font-bold block mb-1 font-mono">✦ Nhà Hàng & Cafe ✦</span>
-              <h3 className="font-display text-xl font-extrabold text-3d-dark dark:text-3d-white mb-1">Nhà Hàng Ẩm Thực Phố Biển</h3>
-              <p className="text-xs text-[#525966] dark:text-gray-300 font-medium">Phục vụ điểm tâm sáng phong phú cùng các món đặc sản hải sản Hạ Long tươi ngon trong không gian ấm cúng.</p>
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-3d-dark dark:text-3d-white mb-1.5">Nhà Hàng Ẩm Thực Phố Biển</h3>
+              <p className="text-sm sm:text-[15px] text-[#525966] dark:text-gray-300 font-normal leading-relaxed">Phục vụ điểm tâm sáng phong phú cùng các món đặc sản hải sản Hạ Long tươi ngon trong không gian ấm cúng.</p>
             </div>
           </div>
 
@@ -439,7 +435,7 @@ const HomePage = () => {
                 <Waves size={16} />
                 <span>✦ Tiện Ích ✦</span>
               </div>
-              <h3 className="font-display text-xl font-extrabold text-3d-white">Khu Vực Thư Giãn Chung</h3>
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-3d-white">Khu Vực Thư Giãn Chung</h3>
             </div>
           </div>
 
@@ -450,8 +446,8 @@ const HomePage = () => {
             </div>
             <div>
               <span className="text-[11px] uppercase tracking-widest text-emerald-300 font-bold block mb-1 font-mono">✦ Dịch Vụ Hỗ Trợ ✦</span>
-              <h3 className="font-display text-xl font-extrabold text-3d-white mb-1">Dịch Vụ Đặt Tour & Xe Đưa Đón</h3>
-              <p className="text-xs text-emerald-100 font-medium">Hỗ trợ tư vấn lịch trình tham quan Vịnh Hạ Long, thuê tàu, đặt xe sân bay tiện lợi và nhanh chóng.</p>
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-3d-white mb-1.5">Dịch Vụ Đặt Tour & Xe Đưa Đón</h3>
+              <p className="text-sm sm:text-[15px] text-emerald-100 font-normal leading-relaxed">Hỗ trợ tư vấn lịch trình tham quan Vịnh Hạ Long, thuê tàu, đặt xe sân bay tiện lợi và nhanh chóng.</p>
             </div>
           </div>
 
@@ -465,8 +461,8 @@ const HomePage = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-[#0A1120]/85 via-[#0A1120]/40 to-transparent flex items-center justify-between p-8">
               <div className="max-w-md">
                 <span className="text-xs uppercase tracking-widest text-[#D4AF37] font-bold block mb-1 font-mono">✦ Đón Tiếp Tận Tâm ✦</span>
-                <h3 className="font-display text-2xl font-extrabold text-3d-white mb-1">Sảnh Chờ Khách Sạn Sang Trọng</h3>
-                <p className="text-xs text-gray-200 font-medium">Khu vực sảnh tiếp đón rộng rãi, điều hòa mát lạnh cùng đội ngũ nhân viên nhiệt tình, chuyên nghiệp.</p>
+                <h3 className="font-display text-2xl sm:text-3xl font-bold text-3d-white mb-1.5">Sảnh Chờ Khách Sạn Sang Trọng</h3>
+                <p className="text-sm sm:text-[15px] text-gray-200 font-normal leading-relaxed">Khu vực sảnh tiếp đón rộng rãi, điều hòa mát lạnh cùng đội ngũ nhân viên nhiệt tình, chuyên nghiệp.</p>
               </div>
               <button
                 type="button"
@@ -493,7 +489,7 @@ const HomePage = () => {
               <span className="inline-block px-4 py-1.5 rounded-full bg-[#C5A880]/15 text-[#8B6B3D] dark:text-[#D4AF37] border border-[#C5A880]/30 text-xs font-bold uppercase tracking-widest font-mono">
                 ✦ PHƯƠNG CHÂM PHỤC VỤ ✦
               </span>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight text-3d-dark dark:text-3d-white">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-3d-dark dark:text-3d-white">
                 &ldquo;{homeData.roomIntro.title}&rdquo;
               </h2>
               <div className="w-20 h-1 bg-gradient-to-r from-[#D4AF37] to-[#C5A880] mx-auto rounded-full shadow-sm" />
@@ -512,7 +508,7 @@ const HomePage = () => {
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#92703E] dark:text-[#D4AF37] font-mono block">
               ✦ KHÔNG GIAN LƯU TRÚ ✦
             </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight text-[#0F131C] dark:text-white">
+            <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-[#0F131C] dark:text-white">
               Danh Sách Phòng Nghỉ & Phòng VIP Hiện Đại
             </h2>
           </div>
@@ -572,7 +568,7 @@ const HomePage = () => {
                 <span className="text-xs font-bold text-[#B39260] uppercase tracking-widest block">
                   Đặc Quyền Lựa Chọn
                 </span>
-                <h3 className="font-display text-3xl sm:text-4xl font-extrabold text-3d-dark dark:text-3d-white leading-tight">
+                <h3 className="font-display text-3xl sm:text-4xl font-bold text-3d-dark dark:text-3d-white leading-tight">
                   {activeRoom.name}
                 </h3>
               </div>
@@ -651,10 +647,10 @@ const HomePage = () => {
               <ShieldCheck size={16} className="text-[#D4AF37]" />
               <span>✦ CAM KẾT DỊCH VỤ VÀNG ✦</span>
             </span>
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight text-3d-dark dark:text-3d-white">
+            <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-3d-dark dark:text-3d-white">
               Quy Định & Đặc Quyền Lưu Trú
             </h2>
-            <p className="text-sm sm:text-base text-[#525966] dark:text-gray-300 font-medium">
+            <p className="text-base sm:text-lg text-[#525966] dark:text-gray-300 font-normal leading-relaxed">
               Minh bạch trong mọi quy trình đặt phòng, thanh toán an toàn qua cổng VNPAY và chính sách hoàn hủy linh hoạt dành cho quý khách hàng.
             </p>
           </div>
@@ -673,10 +669,10 @@ const HomePage = () => {
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#C5A880] block">
                       {policy.category || 'Chính sách Hotelify'}
                     </span>
-                    <h3 className="font-display text-xl font-extrabold text-3d-dark dark:text-3d-white group-hover:text-3d-gold transition-all">
+                    <h3 className="font-display text-xl sm:text-2xl font-bold text-3d-dark dark:text-3d-white group-hover:text-3d-gold transition-all leading-snug">
                       {policy.title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-[#525966] dark:text-gray-400 leading-relaxed line-clamp-3">
+                    <p className="text-sm sm:text-[15px] text-[#525966] dark:text-gray-300 font-normal leading-relaxed line-clamp-3">
                       {policy.content}
                     </p>
                   </div>
