@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Báo Cáo Unit Test - Customer Auth Module</title>
+    <title>Báo Cáo Unit Test - Hotelify (WDP101)</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -78,7 +78,6 @@
             vertical-align: middle;
         }
 
-        /* 1. Header màu xanh nước biển đậm theo yêu cầu */
         th {
             background-color: #002060;
             color: #ffffff;
@@ -96,11 +95,9 @@
             background-color: #f1f5f9;
         }
 
-        /* Alignment */
         .text-center { text-align: center; }
         .text-left { text-align: left; }
 
-        /* Style các thẻ Method giống ảnh */
         .method-pill {
             display: inline-block;
             padding: 4px 14px;
@@ -135,7 +132,6 @@
             border: 1px solid #d5a6bd;
         }
 
-        /* Style các thẻ Status giống ảnh (Xanh lá đậm pill) */
         .status-pill {
             display: inline-block;
             padding: 4px 16px;
@@ -155,11 +151,6 @@
             background-color: #b71c1c;
             color: #ffffff;
         }
-
-        .status-notrun {
-            background-color: #757575;
-            color: #ffffff;
-        }
     </style>
 </head>
 <body>
@@ -172,11 +163,11 @@
     <div class="summary-box">
         <div class="summary-card">
             <h4>Tổng Số Test Cases</h4>
-            <div class="number">152</div>
+            <div class="number">165</div>
         </div>
         <div class="summary-card">
             <h4>Đã Đạt (Passed)</h4>
-            <div class="number pass">24 (16%)</div>
+            <div class="number pass">36 (21.8%)</div>
         </div>
         <div class="summary-card">
             <h4>Thất Bại (Failed)</h4>
@@ -184,7 +175,7 @@
         </div>
         <div class="summary-card">
             <h4>Chưa Chạy (Not Run)</h4>
-            <div class="number" style="color: #757575;">128 (84%)</div>
+            <div class="number" style="color: #757575;">129 (78.2%)</div>
         </div>
     </div>
 
@@ -510,6 +501,189 @@
                     <td class="text-left">Lưu hotelify_token vào localStorage và chuyển hướng</td>
                     <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
                     <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+
+                <!-- Room Management Unit Tests (UT021 - UT032) -->
+                <tr>
+                    <td class="text-center">UT021</td>
+                    <td rowspan="12" class="text-center" style="font-weight: bold; vertical-align: middle; background-color: #ffffff;">Room Management</td>
+                    <td class="text-center">getAll</td>
+                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
+                    <td class="text-left">Lấy danh sách phòng thành công (phân trang)</td>
+                    <td></td>
+                    <td class="text-left">page=1, limit=10</td>
+                    <td class="text-left">Gửi GET /api/manager/rooms</td>
+                    <td class="text-left">Trả về danh sách phòng & pagination (200)</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td class="text-left">Lọc isActive=true</td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT022</td>
+                    <td class="text-center">getAll</td>
+                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
+                    <td class="text-left">Lọc danh sách phòng theo roomTypeId</td>
+                    <td class="text-left">Có phòng tồn tại</td>
+                    <td class="text-left">roomTypeId="room_type_101"</td>
+                    <td class="text-left">Gửi GET /api/manager/rooms?roomTypeId=101</td>
+                    <td class="text-left">Trả về danh sách phòng thuộc room_type_101</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT023</td>
+                    <td class="text-center">getAll</td>
+                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
+                    <td class="text-left">Lọc danh sách phòng theo trạng thái status</td>
+                    <td></td>
+                    <td class="text-left">status="Occupied"</td>
+                    <td class="text-left">Gửi GET /api/manager/rooms?status=Occupied</td>
+                    <td class="text-left">Trả về danh sách phòng có status Occupied</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT024</td>
+                    <td class="text-center">getById</td>
+                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
+                    <td class="text-left">Lấy chi tiết thông tin phòng theo ID</td>
+                    <td class="text-left">ID phòng tồn tại</td>
+                    <td class="text-left">id="room_001"</td>
+                    <td class="text-left">Gửi GET /api/manager/rooms/room_001</td>
+                    <td class="text-left">Trả về thông tin chi tiết phòng (200)</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT025</td>
+                    <td class="text-center">getById</td>
+                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
+                    <td class="text-left">Lấy phòng theo ID không tồn tại</td>
+                    <td class="text-left">ID không có trong DB</td>
+                    <td class="text-left">id="nonexistent_id"</td>
+                    <td class="text-left">Gửi GET /api/manager/rooms/nonexistent</td>
+                    <td class="text-left">Báo lỗi 404 Room not found</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT026</td>
+                    <td class="text-center">create</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Tạo mới thông tin phòng thành công</td>
+                    <td class="text-left">Tên phòng chưa trùng</td>
+                    <td class="text-left">roomName, room_type_id, status</td>
+                    <td class="text-left">Gửi POST /api/manager/rooms</td>
+                    <td class="text-left">Tạo phòng mới thành công (201)</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT027</td>
+                    <td class="text-center">create</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Tạo phòng trùng tên đã có</td>
+                    <td class="text-left">Tên phòng đã tồn tại</td>
+                    <td class="text-left">roomName="PHONG 101"</td>
+                    <td class="text-left">Gửi POST /api/manager/rooms</td>
+                    <td class="text-left">Báo lỗi 409 Room name already exists</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT028</td>
+                    <td class="text-center">create</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Tạo phòng với room_type_id không tồn tại</td>
+                    <td></td>
+                    <td class="text-left">room_type_id="invalid"</td>
+                    <td class="text-left">Gửi POST /api/manager/rooms</td>
+                    <td class="text-left">Báo lỗi 400 Invalid room type ID</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT029</td>
+                    <td class="text-center">update</td>
+                    <td class="text-center"><span class="method-pill method-put">PUT &#9660;</span></td>
+                    <td class="text-left">Cập nhật thông tin phòng thành công</td>
+                    <td class="text-left">ID phòng tồn tại</td>
+                    <td class="text-left">id, roomName, room_inventory</td>
+                    <td class="text-left">Gửi PUT /api/manager/rooms/:id</td>
+                    <td class="text-left">Cập nhật thành công (Status 200)</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td class="text-left">Normalize inventory payload</td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT030</td>
+                    <td class="text-center">update</td>
+                    <td class="text-center"><span class="method-pill method-put">PUT &#9660;</span></td>
+                    <td class="text-left">Cập nhật phòng không tồn tại</td>
+                    <td class="text-left">ID không tồn tại</td>
+                    <td class="text-left">id="nonexistent"</td>
+                    <td class="text-left">Gửi PUT /api/manager/rooms/:id</td>
+                    <td class="text-left">Báo lỗi 404 Room not found</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT031</td>
+                    <td class="text-center">remove</td>
+                    <td class="text-center"><span class="method-pill method-delete">DELETE &#9660;</span></td>
+                    <td class="text-left">Xóa mềm phòng (deactivate) thành công</td>
+                    <td class="text-left">ID phòng tồn tại</td>
+                    <td class="text-left">id="room_001"</td>
+                    <td class="text-left">Gửi DELETE /api/manager/rooms/:id</td>
+                    <td class="text-left">Cập nhật isActive=false (200)</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">nghiadt</td>
+                    <td class="text-center">7/18/2026</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT032</td>
+                    <td class="text-center">remove</td>
+                    <td class="text-center"><span class="method-pill method-delete">DELETE &#9660;</span></td>
+                    <td class="text-left">Xóa mềm phòng không tồn tại</td>
+                    <td class="text-left">ID không tồn tại</td>
+                    <td class="text-left">id="nonexistent"</td>
+                    <td class="text-left">Gửi DELETE /api/manager/rooms/:id</td>
+                    <td class="text-left">Báo lỗi 404 Room not found</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
                     <td class="text-center">nghiadt</td>
                     <td class="text-center">7/18/2026</td>
                     <td></td>

@@ -9,7 +9,7 @@
 | Customer Auth (Backend) | 17 | 17 | 0 | ✅ 100% |
 | Customer Auth UI (Frontend) | 3 | 3 | 0 | ✅ 100% |
 | Date Utils | 4 | 4 | 0 | ✅ 100% |
-| Room Management (Manager) | 12 | 0 | 12 | ⬜ 0% |
+| Room Management (Manager) | 12 | 12 | 0 | ✅ 100% |
 | Room Type Management | 8 | 0 | 8 | ⬜ 0% |
 | Housekeeping | 10 | 0 | 10 | ⬜ 0% |
 | Staff Tasks | 8 | 0 | 8 | ⬜ 0% |
@@ -33,7 +33,7 @@
 | Manager Pages (FE) | 8 | 0 | 8 | ⬜ 0% |
 | Admin Pages (FE) | 4 | 0 | 4 | ⬜ 0% |
 | Receptionist Pages (FE) | 6 | 0 | 6 | ⬜ 0% |
-| **TỔNG CỘNG** | **165** | **24** | **141** | **14.5%** |
+| **TỔNG CỘNG** | **165** | **36** | **129** | **21.8%** |
 
 ---
 
@@ -69,30 +69,20 @@
 - [x] parseDateOnly - Parse YYYY-MM-DD đúng
 - [x] addDays - Cộng ngày đúng
 
----
-
-### ⬜ Module 4: Room Management (Manager) - CHƯA TEST
-**Files:** `backend/src/modules/manager/room/room.service.js`, `room.controller.js`, `room.route.js`
-**API Endpoints:**
-- GET /api/manager/rooms - Lấy danh sách phòng
-- GET /api/manager/rooms/:id - Lấy chi tiết phòng
-- POST /api/manager/rooms - Tạo phòng mới
-- PUT /api/manager/rooms/:id - Cập nhật phòng
-- DELETE /api/manager/rooms/:id - Xóa phòng (soft delete)
-
-**Test Cases cần viết:**
-- [ ] UT021 - Lấy danh sách phòng thành công (có phân trang)
-- [ ] UT022 - Lọc phòng theo roomTypeId
-- [ ] UT023 - Lọc phòng theo status
-- [ ] UT024 - Lấy chi tiết phòng theo ID
-- [ ] UT025 - Lấy phòng không tồn tại (404)
-- [ ] UT026 - Tạo phòng mới thành công
-- [ ] UT027 - Tạo phòng trùng tên (409)
-- [ ] UT028 - Tạo phòng với room_type_id không hợp lệ (400)
-- [ ] UT029 - Cập nhật phòng thành công
-- [ ] UT030 - Cập nhật phòng không tồn tại (404)
-- [ ] UT031 - Xóa mềm phòng thành công
-- [ ] UT032 - Xóa phòng không tồn tại (404)
+### ✅ Module 4: Room Management (Manager) (HOÀN THÀNH)
+**Files:** `backend/tests/unit/room.service.test.js`
+- [x] UT021 - Lấy danh sách phòng thành công (có phân trang)
+- [x] UT022 - Lọc phòng theo roomTypeId
+- [x] UT023 - Lọc phòng theo status
+- [x] UT024 - Lấy chi tiết phòng theo ID
+- [x] UT025 - Lấy phòng không tồn tại (404)
+- [x] UT026 - Tạo phòng mới thành công
+- [x] UT027 - Tạo phòng trùng tên (409)
+- [x] UT028 - Tạo phòng với room_type_id không hợp lệ (400)
+- [x] UT029 - Cập nhật phòng thành công
+- [x] UT030 - Cập nhật phòng không tồn tại (404)
+- [x] UT031 - Xóa mềm phòng thành công
+- [x] UT032 - Xóa phòng không tồn tại (404)
 
 ---
 
@@ -302,7 +292,7 @@
 
 ---
 
-### ⬜ Module 20: Upload & Image Security (MỚI BỔ SUNG) - CHƯA TEST
+### ⬜ Module 20: Upload & Image Security - CHƯA TEST
 **Files:** `backend/src/routes/upload.route.js`, `backend/src/middlewares/upload.middleware.js`
 
 **Test Cases cần viết:**
@@ -314,7 +304,7 @@
 
 ---
 
-### ⬜ Module 21: Auth Middleware & Guard (MỚI BỔ SUNG) - CHƯA TEST
+### ⬜ Module 21: Auth Middleware & Guard - CHƯA TEST
 **Files:** `backend/src/middlewares/auth.middleware.js`
 
 **Test Cases cần viết:**
@@ -325,7 +315,7 @@
 
 ---
 
-### ⬜ Module 22: Password Validation Utils (MỚI BỔ SUNG) - CHƯA TEST
+### ⬜ Module 22: Password Validation Utils - CHƯA TEST
 **Files:** `frontend/src/utils/passwordValidation.js`
 
 **Test Cases cần viết:**
@@ -400,35 +390,12 @@
 
 ---
 
-## Thứ Tự Ưu Tiên Test (Priority Roadmap)
-
-### 🔴 Priority 1 (Critical) - Thực hiện trước
-1. **Room Management (Backend)** - Quản lý phòng
-2. **Reservation (Customer)** - Luồng đặt phòng
-3. **Check-in / Check-out (Receptionist)** - Nghiệp vụ lễ tân
-4. **Payment** - Thanh toán
-5. **Auth Middleware & Guard** - Bảo mật phân quyền API
-
-### 🟡 Priority 2 (High) - Thực hiện tiếp theo
-6. **Room Type Management**
-7. **Housekeeping**
-8. **Staff Tasks**
-9. **Upload & Image Security**
-10. **Profile & Password Validation**
-11. **Customer Feedback**
-
-### 🟢 Priority 3 (Medium) - Thực hiện sau cùng
-12. **Admin Accounts / Roles / Dashboard**
-13. **Policies & Room Inventory**
-14. **Frontend UI Integration Pages**
-
----
-
 ## File Test Hiện Có
 
 | File | Module | Số TC | Trạng thái |
 |------|--------|-------|------------|
 | `backend/tests/unit/auth.service.test.js` | Customer Auth | 17 | ✅ Pass |
+| `backend/tests/unit/room.service.test.js` | Room Management | 12 | ✅ Pass |
 | `backend/tests/unit/date.utils.test.js` | Date Utils | 4 | ✅ Pass |
 | `frontend/src/pages/__tests__/LoginPage.test.jsx` | Login UI | 3 | ✅ Pass |
 | `frontend/src/components/__tests__/AppHeader.test.jsx` | AppHeader | 1 | ✅ Pass |
