@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Unit Test - Customer Auth Module</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #002060;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .summary-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 12px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .summary-card h4 {
+            margin: 0 0 5px 0;
+            color: #555;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .summary-card .number {
+            font-size: 22px;
+            font-weight: bold;
+            color: #002060;
+        }
+
+        .summary-card .number.pass {
+            color: #006633;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        th, td {
+            border: 1px solid #d0d7de;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        /* 1. Header màu xanh nước biển đậm theo yêu cầu */
+        th {
+            background-color: #002060;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            padding: 10px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Alignment */
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+
+        /* Style các thẻ Method giống ảnh */
+        .method-pill {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            min-width: 60px;
+        }
+
+        .method-post {
+            background-color: #fff2cc;
+            color: #b45f06;
+            border: 1px solid #ffe599;
+        }
+
+        .method-get {
+            background-color: #fce5cd;
+            color: #cc0000;
+            border: 1px solid #f4cccc;
+        }
+
+        .method-put {
+            background-color: #d9ead3;
+            color: #274e13;
+            border: 1px solid #b6d7a8;
+        }
+
+        .method-delete {
+            background-color: #ead1dc;
+            color: #741b47;
+            border: 1px solid #d5a6bd;
+        }
+
+        /* Style các thẻ Status giống ảnh (Xanh lá đậm pill) */
+        .status-pill {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            min-width: 60px;
+        }
+
+        .status-pass {
+            background-color: #006633;
+            color: #ffffff;
+        }
+
+        .status-fail {
+            background-color: #b71c1c;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>BÁO CÁO KẾT QUẢ UNIT TEST - CUSTOMER AUTH MODULE</h1>
+        <p>Dự án: WDP101 | Ngày cập nhật: <span>2026-07-25</span> | Người thực hiện: QuanNM</p>
+    </div>
+
+    <div class="summary-box">
+        <div class="summary-card">
+            <h4>Tổng Số Test Cases</h4>
+            <div class="number">20</div>
+        </div>
+        <div class="summary-card">
+            <h4>Đã Đạt (Passed)</h4>
+            <div class="number pass">20 (100%)</div>
+        </div>
+        <div class="summary-card">
+            <h4>Thất Bại (Failed)</h4>
+            <div class="number" style="color: #b71c1c;">0 (0%)</div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table id="test-report-table">
+            <thead>
+                <tr>
+                    <th>Test Case ID</th>
+                    <th>Module</th>
+                    <th>API</th>
+                    <th>Method</th>
+                    <th>Description</th>
+                    <th>Pre-condition</th>
+                    <th>Input</th>
+                    <th>Steps</th>
+                    <th>Expected Result</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Tester</th>
+                    <th>Test Date</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Customer Auth Backend Unit Tests (UT001 - UT017) -->
+                <tr>
+                    <td class="text-center">UT001</td>
+                    <td rowspan="17" class="text-center" style="font-weight: bold; vertical-align: middle; background-color: #ffffff;">Customer Auth</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Đăng ký tài khoản mới thành công</td>
+                    <td class="text-left">Email & login_account chưa tồn tại</td>
+                    <td class="text-left">full_name, email, login_account, password, confirm_password, accepted_terms=true</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Tạo tài khoản thành công (Status 201)</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td class="text-left">Trả về JWT Token</td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT002</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Thiếu full_name</td>
+                    <td></td>
+                    <td class="text-left">email, login_account, password, accepted_terms</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Báo lỗi 400 Full name is required</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT003</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Email không đúng định dạng</td>
+                    <td></td>
+                    <td class="text-left">email="invalid-email"</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Báo lỗi 400 A valid email address is required</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT004</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">login_account dưới 4 ký tự</td>
+                    <td></td>
+                    <td class="text-left">login_account="abc"</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Báo lỗi 400 Login account must be 4-30 characters</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT005</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Mật khẩu không đạt yêu cầu bảo mật</td>
+                    <td></td>
+                    <td class="text-left">password="123"</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Báo lỗi 400 Password does not meet security requirements</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td class="text-left">Cần chữ hoa, thường, số, ký tự đặc biệt</td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT006</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Mật khẩu xác nhận không khớp</td>
+                    <td></td>
+                    <td class="text-left">password="Password123!", confirm_password="Password456!"</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Báo lỗi 400 Password confirmation does not match</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT007</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Chưa tích chọn đồng ý điều khoản</td>
+                    <td></td>
+                    <td class="text-left">accepted_terms=false</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Báo lỗi 400 You must agree to the terms and conditions</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT008</td>
+                    <td class="text-center">register</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Đăng ký trùng Email đã tồn tại</td>
+                    <td class="text-left">Email đã có trong hệ thống</td>
+                    <td class="text-left">email="customer@example.com"</td>
+                    <td class="text-left">Gửi POST /api/auth/register</td>
+                    <td class="text-left">Báo lỗi 409 Email address is already registered</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT009</td>
+                    <td class="text-center">login</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Đăng nhập thành công với thông tin hợp lệ</td>
+                    <td class="text-left">Tài khoản active</td>
+                    <td class="text-left">login_account, password</td>
+                    <td class="text-left">Gửi POST /api/auth/login</td>
+                    <td class="text-left">Đăng nhập thành công 200 + Trả về JWT Token</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT010</td>
+                    <td class="text-center">login</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Thiếu tài khoản hoặc mật khẩu</td>
+                    <td></td>
+                    <td class="text-left">login_account</td>
+                    <td class="text-left">Gửi POST /api/auth/login</td>
+                    <td class="text-left">Báo lỗi 400 Login account or email and password are required</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT011</td>
+                    <td class="text-center">login</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Tài khoản không tồn tại</td>
+                    <td class="text-left">Tài khoản chưa đăng ký</td>
+                    <td class="text-left">login_account="nonexistent"</td>
+                    <td class="text-left">Gửi POST /api/auth/login</td>
+                    <td class="text-left">Báo lỗi 401 Invalid email or password</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT012</td>
+                    <td class="text-center">login</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Nhập sai mật khẩu</td>
+                    <td class="text-left">Tài khoản tồn tại</td>
+                    <td class="text-left">password="Wrongpass!"</td>
+                    <td class="text-left">Gửi POST /api/auth/login</td>
+                    <td class="text-left">Báo lỗi 401 Invalid email or password</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td class="text-left">Ghi Security Log FAILED_LOGIN</td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT013</td>
+                    <td class="text-center">login</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Tài khoản bị khóa (inactive)</td>
+                    <td class="text-left">User status="inactive"</td>
+                    <td class="text-left">login_account, password</td>
+                    <td class="text-left">Gửi POST /api/auth/login</td>
+                    <td class="text-left">Báo lỗi 403 This account is not active</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT014</td>
+                    <td class="text-center">requestPasswordReset</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Yêu cầu gửi mail đặt lại mật khẩu</td>
+                    <td class="text-left">Email tồn tại</td>
+                    <td class="text-left">identifier="test@example.com"</td>
+                    <td class="text-left">Gửi POST /api/auth/forgot-password</td>
+                    <td class="text-left">Trả về 200 Password reset email has been sent</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT015</td>
+                    <td class="text-center">requestPasswordReset</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Yêu cầu reset mật khẩu cho email không tồn tại</td>
+                    <td class="text-left">Email chưa đăng ký</td>
+                    <td class="text-left">identifier="notfound@example.com"</td>
+                    <td class="text-left">Gửi POST /api/auth/forgot-password</td>
+                    <td class="text-left">Báo lỗi 404 No account found with this email</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT016</td>
+                    <td class="text-center">resetPassword</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Đặt lại mật khẩu với token không hợp lệ / hết hạn</td>
+                    <td></td>
+                    <td class="text-left">token="invalid_token", password</td>
+                    <td class="text-left">Gửi POST /api/auth/reset-password</td>
+                    <td class="text-left">Báo lỗi 400 Reset link is invalid or expired</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT017</td>
+                    <td class="text-center">resetPassword</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Đặt lại mật khẩu mới thành công</td>
+                    <td class="text-left">Token hợp lệ và còn hạn</td>
+                    <td class="text-left">token="valid_token", password, confirm_password</td>
+                    <td class="text-left">Gửi POST /api/auth/reset-password</td>
+                    <td class="text-left">Cập nhật password_hash thành công (Status 200)</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+
+                <!-- Customer Auth Frontend UI Unit Tests (UT018 - UT020) -->
+                <tr>
+                    <td class="text-center">UT018</td>
+                    <td rowspan="3" class="text-center" style="font-weight: bold; vertical-align: middle; background-color: #ffffff;">Customer Auth UI</td>
+                    <td class="text-center">LoginPage</td>
+                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
+                    <td class="text-left">Frontend UI - Render form đăng nhập chuẩn</td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-left">Render &lt;LoginPage /&gt;</td>
+                    <td class="text-left">Hiển thị đủ heading, input login account, password, button</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">Medium</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td class="text-left">React Testing Library</td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT019</td>
+                    <td class="text-center">LoginPage</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Frontend UI - Hiển thị thông báo lỗi khi sai mật khẩu</td>
+                    <td></td>
+                    <td class="text-left">Wrong login credentials</td>
+                    <td class="text-left">Click Login button</td>
+                    <td class="text-left">Hiển thị dòng lỗi Invalid email or password trên UI</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">UT020</td>
+                    <td class="text-center">LoginPage</td>
+                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
+                    <td class="text-left">Frontend UI - Lưu token vào localStorage khi đăng nhập thành công</td>
+                    <td></td>
+                    <td class="text-left">Valid login credentials</td>
+                    <td class="text-left">Click Login button</td>
+                    <td class="text-left">Lưu hotelify_token vào localStorage và chuyển hướng</td>
+                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
+                    <td class="text-center">High</td>
+                    <td class="text-center">QuanNM</td>
+                    <td class="text-center">2026-07-25</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
