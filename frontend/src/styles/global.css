@@ -40,8 +40,7 @@ button:disabled {
   gap: 32px;
   padding: 0 27px;
   background: #ffffff;
-  border: 3px solid #168ff3;
-  border-bottom-width: 0;
+  border: 1px solid #E8E4DB;
 }
 
 .header-brand {
@@ -2842,7 +2841,7 @@ button:disabled {
   align-items: stretch;
   padding: 18px 16px;
   background: #ffffff;
-  border: 3px solid #168ff3;
+  border: 1px solid #E8E4DB;
   overflow: hidden;
 }
 
@@ -2876,7 +2875,7 @@ button:disabled {
   min-height: calc(100dvh - 42px);
   overflow: hidden;
   border-radius: 14px;
-  background: #d9edf9;
+  background: #F5F2EB;
 }
 
 .login-visual img {
@@ -3239,7 +3238,7 @@ button:disabled {
   min-height: 100vh;
   min-height: 100dvh;
   padding: 20px;
-  border: 3px solid #168ff3;
+  border: 1px solid #E8E4DB;
   background: #ffffff;
 }
 
@@ -3248,7 +3247,7 @@ button:disabled {
   height: 417px;
   overflow: hidden;
   border-radius: 18px;
-  background: #d9edf9;
+  background: #F5F2EB;
 }
 
 .register-hero img {

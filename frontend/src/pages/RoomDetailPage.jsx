@@ -30,7 +30,7 @@ const formatSubmittedDate = (value) => {
 };
 
 const getInitials = (name) =>
-  String(name || 'Hotelify customer')
+  String(name || 'Khách hàng Hotelify')
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
@@ -188,208 +188,326 @@ const RoomDetailPage = () => {
   const canBook = Boolean(availability?.canBook);
 
   return (
-    <section className="room-detail-page" aria-label="Chi tiết phòng">
-      <Link to={queryString ? `/booking?${queryString}` : '/'} className="room-back-link">
-        <ArrowLeft size={18} />
-        {queryString ? 'Quay lại kết quả' : 'Trang chủ'}
-      </Link>
-
-      <div className="room-detail-hero">
-        <img src={room.image} alt={room.name} />
+    <section className="min-h-screen bg-[#FDFBF7] dark:bg-[#0A1120] pb-24 transition-colors duration-300" aria-label="Chi tiết phòng">
+      {/* Top Back Link & Navigation */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-12 pt-8 pb-4">
+        <Link
+          to={queryString ? `/booking?${queryString}` : '/listRoom'}
+          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#525966] dark:text-gray-300 hover:text-[#92703E] dark:hover:text-[#D4AF37] transition-all py-2.5 px-4 rounded-full bg-white dark:bg-white/5 border border-[#E8E4DB] dark:border-white/10 shadow-sm hover:shadow hover:-translate-y-0.5"
+        >
+          <ArrowLeft size={16} className="text-[#C5A880]" />
+          <span>{queryString ? 'Quay lại kết quả tìm kiếm' : 'Danh sách phòng'}</span>
+        </Link>
       </div>
 
-      <div className="room-detail-layout">
-        <article className="room-detail-main">
-          <span>Hotelify room</span>
-          <h1>{room.name}</h1>
-          <div className="room-result-meta">
-            <span><CalendarDays size={18} />{room.area}</span>
-            <span><Users size={18} />{room.guests}</span>
-            <span><BedDouble size={18} />{room.beds}</span>
+      {/* Luxury Hero Showcase Banner */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-12 mb-12">
+        <div className="relative h-[45vh] sm:h-[60vh] w-full overflow-hidden rounded-[36px] shadow-2xl border border-[#E8E4DB] dark:border-white/10 group">
+          <img
+            src={room.image}
+            alt={room.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1120] via-transparent to-transparent flex flex-col justify-end p-8 sm:p-12">
+            <span className="text-xs uppercase tracking-[0.25em] font-bold text-shimmer-gold mb-2 font-mono">
+              ✦ KHÔNG GIAN PHÒNG HIỆN ĐẠI & TIỆN NGHI ✦
+            </span>
+            <h1 className="font-display text-4xl sm:text-6xl font-extrabold tracking-tight text-3d-white">
+              {room.name}
+            </h1>
           </div>
-          <p>{room.description}</p>
+        </div>
+      </div>
 
-          <div className="room-detail-features">
-            {(room.facilities.length > 0 ? room.facilities : ['Wi-Fi', 'Điều hòa', 'Dọn phòng', 'Vật tư phòng']).map((item) => (
-              <span key={item}>
-                <CheckCircle2 size={17} />
-                {item}
-              </span>
-            ))}
-          </div>
-        </article>
-
-        <aside className="room-detail-sidebar">
-          <section className="room-detail-booking">
-            <h2>Thông tin đặt phòng</h2>
-            {search ? (
-              <>
-                <div>
-                  <span>Ngày đến</span>
-                  <strong>{formatDate(search.checkIn)}</strong>
-                </div>
-                <div>
-                  <span>Ngày đi</span>
-                  <strong>{formatDate(search.checkOut)}</strong>
-                </div>
-                <div>
-                  <span>Khách</span>
-                  <strong>{search.adults} người lớn, {search.children} trẻ em</strong>
-                </div>
-                <div>
-                  <span>Số phòng cần</span>
-                  <strong>{search.requiredRooms} phòng</strong>
-                </div>
-              <div>
-                <span>Phòng còn</span>
-                <strong>{availability?.availableRooms || 0} phòng</strong>
+      {/* Detail Layout Grid */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Left Column: Room Info & Amenities (7 cols) */}
+        <div className="lg:col-span-7 space-y-10">
+          <div className="luxury-glass-card bg-[#FFFDF9] dark:bg-[#161B26] p-8 sm:p-10 rounded-3xl border border-[#E8E4DB] dark:border-white/10 shadow-xl space-y-6">
+            <div className="flex flex-wrap items-center gap-3 border-b border-[#E8E4DB] dark:border-white/10 pb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#F5F2EB] dark:bg-white/5 text-[#1A1D24] dark:text-gray-200 text-sm font-semibold border border-[#E8E4DB] dark:border-white/10">
+                <CalendarDays size={18} className="text-[#C5A880]" />
+                <span>{room.area}</span>
               </div>
-              <label className="room-detail-request">
-                <span>Yêu cầu thêm</span>
-                <textarea
-                  rows={3}
-                  value={specialRequest}
-                  maxLength={500}
-                  placeholder="Ví dụ: phòng tầng cao, nhận phòng sớm..."
-                  onChange={(event) => setSpecialRequest(event.target.value)}
-                />
-              </label>
-              <p className={search.isAssignable ? '' : 'is-warning'}>{search.message}</p>
-              <DateRangePicker
-                adults={search.adults}
-                children={search.children}
-                className="room-detail-date-picker"
-                onApply={handleDetailDateApply}
-                roomId={room.id}
-                triggerLabel="Thời gian lưu trú"
-                triggerText="Đổi ngày"
-                value={{ checkIn: search.checkIn, checkOut: search.checkOut }}
-              />
-              <button type="button" disabled={!canBook || isBooking} onClick={handleCreateBooking}>
-                {isBooking ? 'Đang đặt...' : canBook ? 'Đặt phòng' : 'Không đủ điều kiện'}
-              </button>
-              {bookingMessage ? <p className="room-detail-booking-message">{bookingMessage}</p> : null}
-            </>
-          ) : (
-              <>
-                <p>Chọn ngày và số khách ở trang tìm phòng để kiểm tra tình trạng còn phòng.</p>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#F5F2EB] dark:bg-white/5 text-[#1A1D24] dark:text-gray-200 text-sm font-semibold border border-[#E8E4DB] dark:border-white/10">
+                <Users size={18} className="text-[#C5A880]" />
+                <span>{room.guests}</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#F5F2EB] dark:bg-white/5 text-[#1A1D24] dark:text-gray-200 text-sm font-semibold border border-[#E8E4DB] dark:border-white/10">
+                <BedDouble size={18} className="text-[#C5A880]" />
+                <span>{room.beds}</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="font-display text-2xl font-extrabold text-3d-dark dark:text-3d-white">
+                Trải Nghiệm Lưu Trú
+              </h2>
+              <p className="font-sans text-base text-[#525966] dark:text-gray-300 leading-relaxed font-normal">
+                {room.description}
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-[#E8E4DB] dark:border-white/10">
+              <h3 className="font-display text-xl font-bold text-[#1A1D24] dark:text-white">
+                Tiện Nghi & Đặc Quyền Riêng
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {(room.facilities.length > 0 ? room.facilities : ['Wi-Fi tốc độ cao', 'Điều hòa tự động', 'Dọn phòng 24/7', 'Vật tư cao cấp', 'Bữa sáng VIP', 'Ban công hướng biển']).map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm font-medium text-[#525966] dark:text-gray-200 bg-[#F5F2EB]/60 dark:bg-white/5 p-3 rounded-xl border border-[#E8E4DB]/50 dark:border-white/5">
+                    <CheckCircle2 size={16} className="text-[#C5A880] shrink-0" />
+                    <span className="truncate">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Customer Reviews Section */}
+          <div className="luxury-glass-card bg-[#FFFDF9] dark:bg-[#161B26] p-8 sm:p-10 rounded-3xl border border-[#E8E4DB] dark:border-white/10 shadow-xl space-y-8">
+            <div className="flex items-center justify-between border-b border-[#E8E4DB] dark:border-white/10 pb-6">
+              <div>
+                <span className="text-xs uppercase tracking-widest font-bold text-shimmer-gold font-mono block mb-1">
+                  ✦ Ý KIẾN KHÁCH HÀNG ✦
+                </span>
+                <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-3d-dark dark:text-3d-white">
+                  Đánh Giá Trải Nghiệm
+                </h2>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div key={review.id} className="p-5 rounded-2xl bg-white dark:bg-black/20 border border-[#E8E4DB] dark:border-white/5 space-y-3 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8B6B3D] text-[#0F131C] font-bold flex items-center justify-center text-sm shadow-inner overflow-hidden">
+                          {review.customerAvatar ? (
+                            <img src={review.customerAvatar} alt={review.customerName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{getInitials(review.customerName)}</span>
+                          )}
+                        </div>
+                        <div>
+                          <strong className="font-display font-bold text-sm text-[#1A1D24] dark:text-white block">{review.customerName}</strong>
+                          <small className="text-xs text-gray-400 font-sans">{formatSubmittedDate(review.submittedAt)}</small>
+                        </div>
+                      </div>
+                      <div className="flex items-center text-[#D4AF37] text-sm font-bold tracking-wider" aria-label={`${review.rating} sao`}>
+                        {'★'.repeat(Math.max(0, Math.min(5, Number(review.rating || 0))))}
+                      </div>
+                    </div>
+                    <p className="text-sm text-[#525966] dark:text-gray-300 leading-relaxed pl-13">
+                      {review.text}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center rounded-2xl bg-[#F5F2EB]/50 dark:bg-white/5 border border-dashed border-[#C5A880]/30 text-gray-500 font-medium">
+                  Chưa có đánh giá nào cho căn phòng này. Hãy là người đầu tiên chia sẻ trải nghiệm!
+                </div>
+              )}
+            </div>
+
+            {/* Review Form */}
+            <form onSubmit={handleReviewSubmit} className="pt-6 border-t border-[#E8E4DB] dark:border-white/10 space-y-5">
+              <div className="flex items-center gap-2">
+                <Star size={20} className="text-[#C5A880]" />
+                <h3 className="font-display text-xl font-bold text-[#1A1D24] dark:text-white">Viết Bình Luận Của Bạn</h3>
+              </div>
+
+              {!isLoggedIn ? (
+                <div className="p-6 rounded-2xl bg-[#F5F2EB] dark:bg-white/5 border border-[#E8E4DB] dark:border-white/10 text-center space-y-3">
+                  <p className="text-sm text-[#525966] dark:text-gray-300 font-medium">Quý khách vui lòng đăng nhập vào hệ thống để gửi bình luận và đánh giá sao.</p>
+                  <Link to="/login" className="inline-block px-6 py-2 rounded-xl bg-[#0F131C] dark:bg-[#D4AF37] text-white dark:text-[#0F131C] font-semibold text-xs shadow-sm hover:bg-[#1A2234]">
+                    Đăng nhập ngay
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="w-full sm:w-1/3">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#525966] dark:text-gray-300 mb-1.5">
+                      Đánh Giá Sao
+                    </label>
+                    <select
+                      value={reviewForm.rating}
+                      onChange={(event) => setReviewForm((currentForm) => ({ ...currentForm, rating: event.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#E8E4DB] dark:border-white/15 bg-white dark:bg-black/30 text-sm font-semibold text-[#1A1D24] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    >
+                      {[5, 4, 3, 2, 1].map((rating) => (
+                        <option value={rating} key={rating}>
+                          {rating} sao {rating === 5 ? '✦ Tuyệt vời' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#525966] dark:text-gray-300 mb-1.5">
+                      Nội Dung Bình Luận
+                    </label>
+                    <textarea
+                      value={reviewForm.feedbackText}
+                      rows={4}
+                      maxLength={1000}
+                      placeholder="Chia sẻ cảm nhận của bạn về tiện nghi, dịch vụ và tầm nhìn của căn phòng..."
+                      onChange={(event) =>
+                        setReviewForm((currentForm) => ({ ...currentForm, feedbackText: event.target.value }))
+                      }
+                      className="w-full px-4 py-3 rounded-2xl border border-[#E8E4DB] dark:border-white/15 bg-white dark:bg-black/30 text-sm font-normal text-[#1A1D24] dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingReview}
+                    className="px-8 py-3 rounded-xl bg-[#0F131C] dark:bg-[#D4AF37] text-white dark:text-[#0F131C] font-semibold text-xs shadow-md hover:bg-[#1A2234] disabled:opacity-50"
+                  >
+                    {isSubmittingReview ? 'Đang gửi đánh giá...' : 'Gửi bình luận'}
+                  </button>
+                </div>
+              )}
+
+              {reviewMessage ? <p className="text-sm font-semibold text-[#92703E] dark:text-[#D4AF37] pt-2">{reviewMessage}</p> : null}
+            </form>
+          </div>
+        </div>
+
+        {/* Right Column: Booking Box & Other Rooms Sidebar (5 cols) */}
+        <div className="lg:col-span-5 space-y-8">
+          <div className="luxury-glass-card bg-[#FFFDF9] dark:bg-[#161B26] p-8 rounded-3xl border border-[#E8E4DB] dark:border-white/10 shadow-2xl sticky top-28 space-y-6">
+            <div className="border-b border-[#E8E4DB] dark:border-white/10 pb-4">
+              <span className="text-xs uppercase tracking-widest font-bold text-shimmer-gold font-mono block mb-1">
+                ✦ ĐẶT PHÒNG TRỰC TUYẾN ✦
+              </span>
+              <h2 className="font-display text-2xl font-extrabold text-3d-dark dark:text-3d-white">
+                Yêu Cầu Đặt Phòng
+              </h2>
+            </div>
+
+            {search ? (
+              <div className="space-y-4 text-sm font-medium">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F5F2EB]/70 dark:bg-white/5 border border-[#E8E4DB]/50 dark:border-white/5">
+                  <span className="text-[#525966] dark:text-gray-400">Ngày đến</span>
+                  <strong className="text-[#1A1D24] dark:text-white font-bold">{formatDate(search.checkIn)}</strong>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F5F2EB]/70 dark:bg-white/5 border border-[#E8E4DB]/50 dark:border-white/5">
+                  <span className="text-[#525966] dark:text-gray-400">Ngày đi</span>
+                  <strong className="text-[#1A1D24] dark:text-white font-bold">{formatDate(search.checkOut)}</strong>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F5F2EB]/70 dark:bg-white/5 border border-[#E8E4DB]/50 dark:border-white/5">
+                  <span className="text-[#525966] dark:text-gray-400">Khách lưu trú</span>
+                  <strong className="text-[#1A1D24] dark:text-white font-bold">{search.adults} lớn, {search.children} trẻ em</strong>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F5F2EB]/70 dark:bg-white/5 border border-[#E8E4DB]/50 dark:border-white/5">
+                  <span className="text-[#525966] dark:text-gray-400">Số lượng cần</span>
+                  <strong className="text-[#1A1D24] dark:text-white font-bold">{search.requiredRooms} phòng</strong>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F5F2EB]/70 dark:bg-white/5 border border-[#E8E4DB]/50 dark:border-white/5">
+                  <span className="text-[#525966] dark:text-gray-400">Phòng trống</span>
+                  <strong className="text-[#D4AF37] font-bold">{availability?.availableRooms || 0} phòng</strong>
+                </div>
+
+                <div className="pt-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#525966] dark:text-gray-300 mb-1.5">
+                    Yêu cầu đặc biệt (Ghi chú nhận phòng sớm, tầng cao, yên tĩnh...)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={specialRequest}
+                    maxLength={500}
+                    placeholder="Ghi chú thêm cho bộ phận đón tiếp..."
+                    onChange={(event) => setSpecialRequest(event.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#E8E4DB] dark:border-white/15 bg-white dark:bg-black/30 text-xs text-[#1A1D24] dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C5A880]"
+                  />
+                </div>
+
+                <p className={`text-xs font-semibold ${search.isAssignable ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+                  {search.message}
+                </p>
+
+                <div className="pt-2">
+                  <DateRangePicker
+                    adults={search.adults}
+                    children={search.children}
+                    className="w-full"
+                    onApply={handleDetailDateApply}
+                    roomId={room.id}
+                    triggerLabel="Thời gian lưu trú"
+                    triggerText="Đổi thời gian khác"
+                    value={{ checkIn: search.checkIn, checkOut: search.checkOut }}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  disabled={!canBook || isBooking}
+                  onClick={handleCreateBooking}
+                  className="w-full py-3.5 rounded-2xl bg-[#0F131C] dark:bg-[#D4AF37] text-white dark:text-[#0F131C] font-semibold text-sm shadow-md hover:bg-[#1A2234] disabled:opacity-50 flex items-center justify-center gap-2 group mt-4"
+                >
+                  <span>{isBooking ? 'Đang xử lý đặt phòng...' : canBook ? 'Xác nhận đặt phòng' : 'Hết phòng trống'}</span>
+                  {canBook ? <span className="text-xs font-bold group-hover:translate-x-0.5 transition-transform">↗</span> : null}
+                </button>
+
+                {bookingMessage ? <p className="text-xs font-semibold text-red-500 text-center pt-2">{bookingMessage}</p> : null}
+              </div>
+            ) : (
+              <div className="space-y-5 text-center py-4">
+                <p className="text-sm text-[#525966] dark:text-gray-300 font-medium leading-relaxed">
+                  Quý khách vui lòng chọn ngày đến, ngày đi và số lượng khách để kiểm tra tình trạng phòng trống chính xác.
+                </p>
                 <DateRangePicker
                   adults="2"
                   children="0"
-                  className="room-detail-date-picker"
+                  className="w-full"
                   onApply={handleDetailDateApply}
                   roomId={room.id}
                   triggerLabel="Thời gian lưu trú"
-                  triggerText="Đặt phòng"
+                  triggerText="Chọn Ngày Lưu Trú"
                   value={{ checkIn: '', checkOut: '' }}
                 />
-                <Link to={`/booking?roomId=${room.id}`}>Tìm phòng nâng cao</Link>
-              </>
+                <div className="pt-2">
+                  <Link
+                    to={`/booking?roomId=${room.id}`}
+                    className="inline-block text-xs font-bold uppercase tracking-wider text-[#C5A880] hover:underline"
+                  >
+                    Tìm kiếm phòng nâng cao ↗
+                  </Link>
+                </div>
+              </div>
             )}
-          </section>
+          </div>
 
-          <section className="room-other-card" aria-label="Phòng khác">
-            <h2>Phòng khác</h2>
-            <div className="room-other-list">
-              {otherRooms.map((otherRoom) => (
-                <Link
-                  to={`/rooms/${otherRoom.id}${queryString ? `?${queryString}` : ''}`}
-                  className="room-other-item"
-                  key={otherRoom.id}
-                >
-                  <img src={otherRoom.image} alt={otherRoom.name} />
-                  <span>
-                    <strong>{otherRoom.name}</strong>
-                    <small>{otherRoom.area} · {otherRoom.beds}</small>
-                  </span>
-                </Link>
-              ))}
+          {/* Other Rooms Suggestion */}
+          {otherRooms.length > 0 ? (
+            <div className="luxury-glass-card bg-[#FFFDF9] dark:bg-[#161B26] p-7 rounded-3xl border border-[#E8E4DB] dark:border-white/10 shadow-lg space-y-5">
+              <h3 className="font-display text-xl font-extrabold text-3d-dark dark:text-3d-white border-b border-[#E8E4DB] dark:border-white/10 pb-3">
+                Các Hạng Phòng Khác
+              </h3>
+              <div className="space-y-4">
+                {otherRooms.map((otherRoom) => (
+                  <Link
+                    to={`/rooms/${otherRoom.id}${queryString ? `?${queryString}` : ''}`}
+                    key={otherRoom.id}
+                    className="flex items-center gap-4 p-3 rounded-2xl bg-white dark:bg-black/20 border border-[#E8E4DB]/60 dark:border-white/5 hover:border-[#C5A880] transition-all group shadow-sm"
+                  >
+                    <img src={otherRoom.image} alt={otherRoom.name} className="w-20 h-16 object-cover rounded-xl shrink-0 group-hover:scale-105 transition-transform" />
+                    <div className="min-w-0 flex-1">
+                      <strong className="font-display font-bold text-sm text-[#1A1D24] dark:text-white group-hover:text-[#C5A880] transition-colors truncate block">
+                        {otherRoom.name}
+                      </strong>
+                      <small className="text-xs text-[#525966] dark:text-gray-400 font-sans block mt-0.5">
+                        {otherRoom.area} · {otherRoom.beds}
+                      </small>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </section>
-        </aside>
-      </div>
-
-      <section className="room-review-section" aria-label="Đánh giá phòng">
-        <div className="room-review-list">
-          <header>
-            <span>Đánh giá</span>
-            <h2>Nhận xét của khách hàng</h2>
-          </header>
-
-          {reviews.length > 0 ? (
-            reviews.map((review) => (
-              <article className="room-review-item" key={review.id}>
-                <div className="room-review-avatar">
-                  {review.customerAvatar ? (
-                    <img src={review.customerAvatar} alt={review.customerName} />
-                  ) : (
-                    <span>{getInitials(review.customerName)}</span>
-                  )}
-                </div>
-                <div>
-                  <header>
-                    <strong>{review.customerName}</strong>
-                    <small>{formatSubmittedDate(review.submittedAt)}</small>
-                  </header>
-                  <div className="room-review-stars" aria-label={`${review.rating} sao`}>
-                    {'★'.repeat(Math.max(0, Math.min(5, Number(review.rating || 0))))}
-                  </div>
-                  <p>{review.text}</p>
-                </div>
-              </article>
-            ))
-          ) : (
-            <div className="room-review-empty">Chưa có đánh giá nào cho phòng này.</div>
-          )}
+          ) : null}
         </div>
-
-        <form className="room-review-form" onSubmit={handleReviewSubmit}>
-          <header>
-            <Star size={22} />
-            <h2>Bình luận về phòng</h2>
-          </header>
-
-          {!isLoggedIn ? (
-            <div className="room-review-login">
-              <p>Bạn cần đăng nhập để bình luận về phòng.</p>
-              <Link to="/login">Đăng nhập</Link>
-            </div>
-          ) : (
-            <>
-              <label>
-                <span>Số sao</span>
-                <select
-                  value={reviewForm.rating}
-                  onChange={(event) => setReviewForm((currentForm) => ({ ...currentForm, rating: event.target.value }))}
-                >
-                  {[5, 4, 3, 2, 1].map((rating) => (
-                    <option value={rating} key={rating}>
-                      {rating} sao
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>Bình luận</span>
-                <textarea
-                  value={reviewForm.feedbackText}
-                  rows={5}
-                  maxLength={1000}
-                  placeholder="Chia sẻ trải nghiệm của bạn sau khi lưu trú..."
-                  onChange={(event) =>
-                    setReviewForm((currentForm) => ({ ...currentForm, feedbackText: event.target.value }))
-                  }
-                />
-              </label>
-              <button type="submit" disabled={isSubmittingReview}>
-                {isSubmittingReview ? 'Đang gửi...' : 'Gửi bình luận'}
-              </button>
-            </>
-          )}
-
-          {reviewMessage ? <p className="room-review-message">{reviewMessage}</p> : null}
-        </form>
-      </section>
+      </div>
     </section>
   );
 };

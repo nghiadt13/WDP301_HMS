@@ -1,24 +1,29 @@
 const mongoose = require('mongoose');
 
 const asyncHandler = require('../utils/async-handler');
+const { normalizeRoomName } = require('../utils/room.utils');
 
-const bannerItems = Array.from({ length: 9 }, (_, index) => {
-  const number = String(index + 1).padStart(2, '0');
-  const imageNumber = index + 1 === 8 ? '8' : number;
-  const cacheVersion = index + 1 === 8 ? '?v=2' : '';
+const bannerUrls = [
+  'https://paddingtonbayviewhalong.com/vnt_upload/weblink/sanh_khach_san_1.jpg',
+  'https://paddingtonbayviewhalong.com/vnt_upload/weblink/sanh_khach_san.jpg',
+  'https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_03.jpg',
+  'https://paddingtonbayviewhalong.com/vnt_upload/weblink/sanh_khach_san_5.jpg',
+  'https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_02.jpg',
+  'https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_04.jpg',
+  'https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_05.jpg'
+];
 
-  return {
-    id: `banner-${number}`,
-    src: `https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_${imageNumber}.jpg${cacheVersion}`,
-    alt: `Paddington Bayview Ha Long banner ${number}`
-  };
-});
+const bannerItems = bannerUrls.map((src, index) => ({
+  id: `banner-${String(index + 1).padStart(2, '0')}`,
+  src,
+  alt: `Khu nghỉ dưỡng Vịnh Hạ Long banner ${index + 1}`
+}));
 
 const lobbyContent = {
-  eyebrow: 'Paddington Bayview Ha Long',
-  title: 'Khong gian sanh khach san',
+  eyebrow: 'Khu Nghỉ Dưỡng Vịnh Hạ Long',
+  title: 'Không Gian Sảnh Khách Sạn',
   description:
-    'Trai nghiem khu sanh rong, sang va sang trong voi cac goc tiep khach duoc thiet ke cho ca nghi duong lan cong tac.',
+    'Trải nghiệm khu sảnh rộng, sáng và sang trọng với các góc tiếp khách được thiết kế cho cả nghỉ dưỡng lẫn công tác.',
   images: [
     ['lobby-1', 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/sanh_khach_san_1.jpg'],
     ['lobby-5', 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/sanh_khach_san_5.jpg'],
@@ -27,16 +32,16 @@ const lobbyContent = {
   ].map(([id, src], index) => ({
     id,
     src,
-    alt: `Paddington Bayview Ha Long lobby ${index + 1}`
+    alt: `Sảnh Khách Sạn Vịnh Hạ Long ${index + 1}`
   }))
 };
 
 const roomIntro = {
-  title: 'LOAI PHONG',
+  title: 'HỆ THỐNG PHÒNG NGHỈ',
   description:
-    'Voi vi tri dac dia ben bo Vinh Ha Long, Hotelify so huu cac hang phong nghi sang trong, tien nghi va phu hop voi nhieu nhu cau luu tru.',
+    'Với vị trí đắc địa bên bờ Vịnh Hạ Long, Hotelify sở hữu các hạng phòng nghỉ sang trọng, tiện nghi và phù hợp với nhiều nhu cầu lưu trú.',
   image: 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/banner_03.jpg',
-  alt: 'Paddington Bayview Ha Long room view'
+  alt: 'Toàn cảnh phòng nghỉ Vịnh Hạ Long'
 };
 
 const mapHomeContentItem = (item) => ({
@@ -48,7 +53,7 @@ const mapHomeContentItem = (item) => ({
   description: item.description || ''
 });
 
-const displayRoomName = (roomName = '') => roomName.replace(/^PHONG\b/i, 'PHONG');
+const displayRoomName = (roomName = '') => normalizeRoomName(roomName);
 
 const roomDisplayOrder = [
   'PHONG DELUXE',
@@ -73,7 +78,7 @@ const mapHomeRoom = (roomType) => {
     alt: displayRoomName(roomType.name),
     name: displayRoomName(roomType.name),
     area: roomType.area || features[0] || '',
-    guests: roomType.guests || features[1] || (roomType.capacity ? `${roomType.capacity} Guests` : ''),
+    guests: roomType.guests || features[1] || (roomType.capacity ? `${roomType.capacity} Khách` : ''),
     beds: roomType.beds || features[2] || roomType.bed_type || '',
     description: roomType.description || ''
   };

@@ -36,7 +36,7 @@ const formatShortDate = (value) => {
 };
 
 const formatMonth = (date) =>
-  new Intl.DateTimeFormat('en-US', {
+  new Intl.DateTimeFormat('vi-VN', {
     month: 'long',
     year: 'numeric'
   }).format(date);
@@ -69,11 +69,12 @@ const DateRangePicker = ({
   adults = '1',
   children = '0',
   className = '',
+  customTrigger = null,
   disabled = false,
   inline = false,
   onApply,
   roomId = '',
-  triggerLabel = 'Select dates',
+  triggerLabel = 'Chọn ngày lưu trú',
   triggerText = '',
   value = { checkIn: '', checkOut: '' }
 }) => {
@@ -197,7 +198,7 @@ const DateRangePicker = ({
     <div className="date-range-month" key={toDateKey(monthDate)}>
       <h3>{formatMonth(monthDate)}</h3>
       <div className="date-range-weekdays">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((weekday) => (
+        {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((weekday) => (
           <span key={weekday}>{weekday}</span>
         ))}
       </div>
@@ -236,18 +237,28 @@ const DateRangePicker = ({
   return (
     <div className={`date-range-picker${inline ? ' date-range-picker-inline' : ''} ${className}`}>
       {!inline ? (
-        <button
-          className="date-range-trigger"
-          type="button"
-          disabled={disabled}
-          onClick={() => setIsOpen((current) => !current)}
-        >
-          <CalendarDays size={18} />
-          <span>
-            <small>{triggerLabel}</small>
-            <strong>{displayText}</strong>
-          </span>
-        </button>
+        customTrigger ? (
+          customTrigger({
+            open: () => setIsOpen((current) => !current),
+            isOpen,
+            displayText,
+            checkIn: draft.checkIn || value.checkIn,
+            checkOut: draft.checkOut || value.checkOut
+          })
+        ) : (
+          <button
+            className="date-range-trigger"
+            type="button"
+            disabled={disabled}
+            onClick={() => setIsOpen((current) => !current)}
+          >
+            <CalendarDays size={18} />
+            <span>
+              <small>{triggerLabel}</small>
+              <strong>{displayText}</strong>
+            </span>
+          </button>
+        )
       ) : null}
 
       {inline || isOpen ? (
@@ -283,7 +294,7 @@ const DateRangePicker = ({
               {hasUnavailableInRange ? ' - Khoảng ngày này có ngày hết phòng.' : ''}
             </span>
             <button type="button" disabled={!draft.checkIn || !draft.checkOut || hasUnavailableInRange} onClick={handleDone}>
-              Done
+              Xác nhận
             </button>
           </footer>
         </div>

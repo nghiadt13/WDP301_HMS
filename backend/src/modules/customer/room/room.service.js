@@ -59,15 +59,15 @@ const buildOccupancy = (query) => {
   const children = parsePositiveInteger(query.children, 0);
 
   if (!checkIn || !checkOut) {
-    throw createHttpError('Please choose valid check-in and check-out dates.');
+    throw createHttpError('Vui lòng chọn ngày nhận phòng và trả phòng hợp lệ.');
   }
 
   if (checkOut <= checkIn) {
-    throw createHttpError('Check-out date must be after check-in date.');
+    throw createHttpError('Ngày trả phòng phải sau ngày nhận phòng.');
   }
 
   if (adults < 1) {
-    throw createHttpError('At least 1 adult is required to book a room.');
+    throw createHttpError('Cần ít nhất 1 người lớn để đặt phòng.');
   }
 
   const adultRoomCount = Math.ceil(adults / ADULTS_PER_ROOM);
@@ -87,8 +87,8 @@ const buildOccupancy = (query) => {
     childrenPerRoom: CHILDREN_PER_ROOM,
     isAssignable,
     message: isAssignable
-      ? `Can fit ${adults} adult(s) and ${children} child(ren) in ${requiredRooms} room(s).`
-      : 'Children cannot occupy a room without an adult. Please increase adults or reduce children.'
+      ? `Có thể bố trí ${adults} người lớn và ${children} trẻ em trong ${requiredRooms} phòng.`
+      : 'Trẻ em không thể ở phòng riêng mà không có người lớn. Vui lòng tăng số người lớn hoặc giảm số trẻ em.'
   };
 };
 
@@ -120,7 +120,7 @@ const mapRoomType = (roomType, availability = null) => {
     image: images[0] || '',
     images,
     area: roomType.area || features[0] || '',
-    guests: roomType.guests || features[1] || (roomType.capacity ? `${roomType.capacity} Guests` : ''),
+    guests: roomType.guests || features[1] || (roomType.capacity ? `${roomType.capacity} Khách` : ''),
     beds: roomType.beds || features[2] || roomType.bed_type || '',
     facilities: Array.isArray(roomType.facilities) ? roomType.facilities : [],
     price: Number(roomType.base_price || roomType.price || 0),
@@ -145,7 +145,7 @@ const sortRoomTypes = (roomTypes) => {
   });
 };
 
-const mapReview = async (db, feedback, roomName = 'Hotelify Room') => {
+const mapReview = async (db, feedback, roomName = 'Phòng Khách Sạn Hotelify') => {
   const customer = feedback.customer_id
     ? await db.collection('users').findOne({ _id: feedback.customer_id }, { projection: { full_name: 1, avatar: 1 } })
     : null;
@@ -154,7 +154,7 @@ const mapReview = async (db, feedback, roomName = 'Hotelify Room') => {
     id: String(feedback._id),
     reservationId: feedback.reservation_id ? String(feedback.reservation_id) : '',
     title: roomName,
-    customerName: customer?.full_name || 'Hotelify customer',
+    customerName: customer?.full_name || 'Khách hàng Hotelify',
     customerAvatar: customer?.avatar || '',
     rating: Number(feedback.rating || 0),
     text: feedback.feedback_text || '',
@@ -283,9 +283,9 @@ const listRooms = asyncHandler(async (_req, res) => {
   res.send({
     hero: {
       image: 'https://paddingtonbayviewhalong.com/vnt_upload/weblink/slide_1.jpg',
-      title: 'PHONG NGHI',
+      title: 'DANH SÁCH PHÒNG NGHỈ',
       description:
-        'Hotelify offers elegant room types with real room inventory for every stay need.'
+        'Hệ thống phòng nghỉ sang trọng, tiện nghi cao cấp cùng dịch vụ phòng chu đáo, mang đến kỳ nghỉ dưỡng tuyệt vời cho bạn và gia đình.'
     },
     rooms
   });

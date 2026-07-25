@@ -15,11 +15,11 @@ export const kpis = [
 ];
 
 export const bookings = [
-  ['#BK-2041', 'Nguyễn Minh Anh', 'Deluxe King', '305', '27 Th06 - 29 Th06', 'Đã đặt cọc', 'Sắp đến'],
-  ['#BK-2042', 'Trần Quang Huy', 'Superior Twin', '210', '27 Th06 - 28 Th06', 'Chưa thanh toán', 'Chờ xử lý'],
-  ['#BK-2043', 'Lê Hoàng Nam', 'Family Suite', '402', '26 Th06 - 30 Th06', 'Đã thanh toán', 'Đã nhận phòng'],
-  ['#BK-2044', 'Phạm Thu Hà', 'Standard Room', '118', '25 Th06 - 27 Th06', 'Đã thanh toán', 'Đã trả phòng'],
-  ['#BK-2045', 'Khách vãng lai', 'Standard Room', '126', '27 Th06 - 28 Th06', 'Đặt cọc tại quầy', 'Khách vãng lai'],
+  ['#BK-2041', 'Nguyễn Minh Anh', 'Phòng Deluxe King', '305', '27 Th06 - 29 Th06', 'Đã đặt cọc', 'Sắp đến'],
+  ['#BK-2042', 'Trần Quang Huy', 'Phòng Superior Twin', '210', '27 Th06 - 28 Th06', 'Chưa thanh toán', 'Chờ xử lý'],
+  ['#BK-2043', 'Lê Hoàng Nam', 'Phòng Family Suite', '402', '26 Th06 - 30 Th06', 'Đã thanh toán', 'Đã nhận phòng'],
+  ['#BK-2044', 'Phạm Thu Hà', 'Phòng Tiêu Chuẩn', '118', '25 Th06 - 27 Th06', 'Đã thanh toán', 'Đã trả phòng'],
+  ['#BK-2045', 'Khách vãng lai', 'Phòng Tiêu Chuẩn', '126', '27 Th06 - 28 Th06', 'Đặt cọc tại quầy', 'Khách vãng lai'],
 ];
 
 export const roomStatus = [
