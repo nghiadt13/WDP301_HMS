@@ -14,13 +14,12 @@ const roomTypeService = {
   async create(data) {
     const existing = await RoomType.findOne({ name: data.name, is_active: { $ne: false } });
     if (existing) throw { status: 409, message: 'Room type name already exists' };
-    
     // Automatically set display order if not provided
     if (data.display_order === undefined) {
       const count = await RoomType.countDocuments({ is_active: { $ne: false } });
       data.display_order = count + 1;
     }
-    
+
     return await RoomType.create(data);
   },
 
