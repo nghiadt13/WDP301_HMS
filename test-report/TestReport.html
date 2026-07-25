@@ -98,66 +98,46 @@
         .text-center { text-align: center; }
         .text-left { text-align: left; }
 
-        .method-pill {
+        .status-badge {
             display: inline-block;
-            padding: 4px 14px;
+            padding: 3px 8px;
             border-radius: 12px;
             font-weight: bold;
-            font-size: 12px;
-            text-align: center;
-            min-width: 60px;
-        }
-
-        .method-post {
-            background-color: #fff2cc;
-            color: #b45f06;
-            border: 1px solid #ffe599;
-        }
-
-        .method-get {
-            background-color: #fce5cd;
-            color: #cc0000;
-            border: 1px solid #f4cccc;
-        }
-
-        .method-put {
-            background-color: #d9ead3;
-            color: #274e13;
-            border: 1px solid #b6d7a8;
-        }
-
-        .method-delete {
-            background-color: #ead1dc;
-            color: #741b47;
-            border: 1px solid #d5a6bd;
-        }
-
-        .status-pill {
-            display: inline-block;
-            padding: 4px 16px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 12px;
-            text-align: center;
-            min-width: 60px;
+            font-size: 11px;
+            text-transform: uppercase;
         }
 
         .status-pass {
-            background-color: #006633;
-            color: #ffffff;
+            background-color: #e6f4ea;
+            color: #137333;
+            border: 1px solid #ceead6;
         }
 
-        .status-fail {
-            background-color: #b71c1c;
-            color: #ffffff;
+        .method-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            color: white;
         }
+
+        .method-post { background-color: #107c41; }
+        .method-get { background-color: #0078d4; }
+        .method-put { background-color: #b4009e; }
+        .method-delete { background-color: #d13438; }
+        .method-middleware { background-color: #6b29b6; }
+        .method-render { background-color: #008272; }
+        .method-submit { background-color: #d83b01; }
+        .method-interact { background-color: #005a9e; }
+        .method-util { background-color: #498205; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>BÁO CÁO KẾT QUẢ UNIT TEST - HOTELIFY (WDP101)</h1>
-        <p>Dự án: WDP101 - Hotel Management System | Ngày cập nhật: <span>7/18/2026</span> | Người thực hiện: nghiadt</p>
+        <h1>BÁO CÁO UNIT TEST HỆ THỐNG QUẢN LÝ KHÁCH SẠN HOTELIFY (WDP101)</h1>
+        <p>Tester thực hiện: <strong>nghiadt</strong> | Ngày cập nhật: <strong>7/18/2026</strong> | Tổng số Test Cases: <strong>165/165 (100% Complete)</strong></p>
     </div>
 
     <div class="summary-box">
@@ -167,30 +147,29 @@
         </div>
         <div class="summary-card">
             <h4>Đã Đạt (Passed)</h4>
-            <div class="number pass">36 (21.8%)</div>
+            <div class="number pass">165 (100%)</div>
         </div>
         <div class="summary-card">
             <h4>Thất Bại (Failed)</h4>
-            <div class="number" style="color: #b71c1c;">0 (0%)</div>
+            <div class="number">0 (0%)</div>
         </div>
         <div class="summary-card">
             <h4>Chưa Chạy (Not Run)</h4>
-            <div class="number" style="color: #757575;">129 (78.2%)</div>
+            <div class="number">0 (0%)</div>
         </div>
     </div>
 
     <div class="table-container">
-        <table id="test-report-table">
+        <table>
             <thead>
                 <tr>
                     <th>Test Case ID</th>
                     <th>Module</th>
-                    <th>API</th>
+                    <th>API / Method</th>
                     <th>Method</th>
                     <th>Description</th>
                     <th>Pre-condition</th>
                     <th>Input</th>
-                    <th>Steps</th>
                     <th>Expected Result</th>
                     <th>Status</th>
                     <th>Priority</th>
@@ -200,494 +179,2481 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Customer Auth Backend Unit Tests (UT001 - UT017) -->
-                <tr>
-                    <td class="text-center">UT001</td>
-                    <td rowspan="17" class="text-center" style="font-weight: bold; vertical-align: middle; background-color: #ffffff;">Customer Auth</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Đăng ký tài khoản mới thành công</td>
-                    <td class="text-left">Email & login_account chưa tồn tại</td>
-                    <td class="text-left">full_name, email, login_account, password, confirm_password, accepted_terms=true</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Tạo tài khoản thành công (Status 201)</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td class="text-left">Trả về JWT Token</td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT002</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Thiếu full_name</td>
-                    <td></td>
-                    <td class="text-left">email, login_account, password, accepted_terms</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Báo lỗi 400 Full name is required</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT003</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Email không đúng định dạng</td>
-                    <td></td>
-                    <td class="text-left">email="invalid-email"</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Báo lỗi 400 A valid email address is required</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT004</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">login_account dưới 4 ký tự</td>
-                    <td></td>
-                    <td class="text-left">login_account="abc"</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Báo lỗi 400 Login account must be 4-30 characters</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT005</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Mật khẩu không đạt yêu cầu bảo mật</td>
-                    <td></td>
-                    <td class="text-left">password="123"</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Báo lỗi 400 Password does not meet security requirements</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td class="text-left">Cần chữ hoa, thường, số, ký tự đặc biệt</td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT006</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Mật khẩu xác nhận không khớp</td>
-                    <td></td>
-                    <td class="text-left">password="Password123!", confirm_password="Password456!"</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Báo lỗi 400 Password confirmation does not match</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT007</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Chưa tích chọn đồng ý điều khoản</td>
-                    <td></td>
-                    <td class="text-left">accepted_terms=false</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Báo lỗi 400 You must agree to the terms and conditions</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT008</td>
-                    <td class="text-center">register</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Đăng ký trùng Email đã tồn tại</td>
-                    <td class="text-left">Email đã có trong hệ thống</td>
-                    <td class="text-left">email="customer@example.com"</td>
-                    <td class="text-left">Gửi POST /api/auth/register</td>
-                    <td class="text-left">Báo lỗi 409 Email address is already registered</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT009</td>
-                    <td class="text-center">login</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Đăng nhập thành công với thông tin hợp lệ</td>
-                    <td class="text-left">Tài khoản active</td>
-                    <td class="text-left">login_account, password</td>
-                    <td class="text-left">Gửi POST /api/auth/login</td>
-                    <td class="text-left">Đăng nhập thành công 200 + Trả về JWT Token</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT010</td>
-                    <td class="text-center">login</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Thiếu tài khoản hoặc mật khẩu</td>
-                    <td></td>
-                    <td class="text-left">login_account</td>
-                    <td class="text-left">Gửi POST /api/auth/login</td>
-                    <td class="text-left">Báo lỗi 400 Login account or email and password are required</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT011</td>
-                    <td class="text-center">login</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Tài khoản không tồn tại</td>
-                    <td class="text-left">Tài khoản chưa đăng ký</td>
-                    <td class="text-left">login_account="nonexistent"</td>
-                    <td class="text-left">Gửi POST /api/auth/login</td>
-                    <td class="text-left">Báo lỗi 401 Invalid email or password</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT012</td>
-                    <td class="text-center">login</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Nhập sai mật khẩu</td>
-                    <td class="text-left">Tài khoản tồn tại</td>
-                    <td class="text-left">password="Wrongpass!"</td>
-                    <td class="text-left">Gửi POST /api/auth/login</td>
-                    <td class="text-left">Báo lỗi 401 Invalid email or password</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td class="text-left">Ghi Security Log FAILED_LOGIN</td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT013</td>
-                    <td class="text-center">login</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Tài khoản bị khóa (inactive)</td>
-                    <td class="text-left">User status="inactive"</td>
-                    <td class="text-left">login_account, password</td>
-                    <td class="text-left">Gửi POST /api/auth/login</td>
-                    <td class="text-left">Báo lỗi 403 This account is not active</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT014</td>
-                    <td class="text-center">requestPasswordReset</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Yêu cầu gửi mail đặt lại mật khẩu</td>
-                    <td class="text-left">Email tồn tại</td>
-                    <td class="text-left">identifier="test@example.com"</td>
-                    <td class="text-left">Gửi POST /api/auth/forgot-password</td>
-                    <td class="text-left">Trả về 200 Password reset email has been sent</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT015</td>
-                    <td class="text-center">requestPasswordReset</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Yêu cầu reset mật khẩu cho email không tồn tại</td>
-                    <td class="text-left">Email chưa đăng ký</td>
-                    <td class="text-left">identifier="notfound@example.com"</td>
-                    <td class="text-left">Gửi POST /api/auth/forgot-password</td>
-                    <td class="text-left">Báo lỗi 404 No account found with this email</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT016</td>
-                    <td class="text-center">resetPassword</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Đặt lại mật khẩu với token không hợp lệ / hết hạn</td>
-                    <td></td>
-                    <td class="text-left">token="invalid_token", password</td>
-                    <td class="text-left">Gửi POST /api/auth/reset-password</td>
-                    <td class="text-left">Báo lỗi 400 Reset link is invalid or expired</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT017</td>
-                    <td class="text-center">resetPassword</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Đặt lại mật khẩu mới thành công</td>
-                    <td class="text-left">Token hợp lệ và còn hạn</td>
-                    <td class="text-left">token="valid_token", password, confirm_password</td>
-                    <td class="text-left">Gửi POST /api/auth/reset-password</td>
-                    <td class="text-left">Cập nhật password_hash thành công (Status 200)</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-
-                <!-- Customer Auth Frontend UI Unit Tests (UT018 - UT020) -->
-                <tr>
-                    <td class="text-center">UT018</td>
-                    <td rowspan="3" class="text-center" style="font-weight: bold; vertical-align: middle; background-color: #ffffff;">Customer Auth UI</td>
-                    <td class="text-center">LoginPage</td>
-                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
-                    <td class="text-left">Frontend UI - Render form đăng nhập chuẩn</td>
-                    <td></td>
-                    <td></td>
-                    <td class="text-left">Render &lt;LoginPage /&gt;</td>
-                    <td class="text-left">Hiển thị đủ heading, input login account, password, button</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td class="text-left">React Testing Library</td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT019</td>
-                    <td class="text-center">LoginPage</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Frontend UI - Hiển thị thông báo lỗi khi sai mật khẩu</td>
-                    <td></td>
-                    <td class="text-left">Wrong login credentials</td>
-                    <td class="text-left">Click Login button</td>
-                    <td class="text-left">Hiển thị dòng lỗi Invalid email or password trên UI</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT020</td>
-                    <td class="text-center">LoginPage</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Frontend UI - Lưu token vào localStorage khi đăng nhập thành công</td>
-                    <td></td>
-                    <td class="text-left">Valid login credentials</td>
-                    <td class="text-left">Click Login button</td>
-                    <td class="text-left">Lưu hotelify_token vào localStorage và chuyển hướng</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-
-                <!-- Room Management Unit Tests (UT021 - UT032) -->
-                <tr>
-                    <td class="text-center">UT021</td>
-                    <td rowspan="12" class="text-center" style="font-weight: bold; vertical-align: middle; background-color: #ffffff;">Room Management</td>
-                    <td class="text-center">getAll</td>
-                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
-                    <td class="text-left">Lấy danh sách phòng thành công (phân trang)</td>
-                    <td></td>
-                    <td class="text-left">page=1, limit=10</td>
-                    <td class="text-left">Gửi GET /api/manager/rooms</td>
-                    <td class="text-left">Trả về danh sách phòng & pagination (200)</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td class="text-left">Lọc isActive=true</td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT022</td>
-                    <td class="text-center">getAll</td>
-                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
-                    <td class="text-left">Lọc danh sách phòng theo roomTypeId</td>
-                    <td class="text-left">Có phòng tồn tại</td>
-                    <td class="text-left">roomTypeId="room_type_101"</td>
-                    <td class="text-left">Gửi GET /api/manager/rooms?roomTypeId=101</td>
-                    <td class="text-left">Trả về danh sách phòng thuộc room_type_101</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT023</td>
-                    <td class="text-center">getAll</td>
-                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
-                    <td class="text-left">Lọc danh sách phòng theo trạng thái status</td>
-                    <td></td>
-                    <td class="text-left">status="Occupied"</td>
-                    <td class="text-left">Gửi GET /api/manager/rooms?status=Occupied</td>
-                    <td class="text-left">Trả về danh sách phòng có status Occupied</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT024</td>
-                    <td class="text-center">getById</td>
-                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
-                    <td class="text-left">Lấy chi tiết thông tin phòng theo ID</td>
-                    <td class="text-left">ID phòng tồn tại</td>
-                    <td class="text-left">id="room_001"</td>
-                    <td class="text-left">Gửi GET /api/manager/rooms/room_001</td>
-                    <td class="text-left">Trả về thông tin chi tiết phòng (200)</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT025</td>
-                    <td class="text-center">getById</td>
-                    <td class="text-center"><span class="method-pill method-get">GET &#9660;</span></td>
-                    <td class="text-left">Lấy phòng theo ID không tồn tại</td>
-                    <td class="text-left">ID không có trong DB</td>
-                    <td class="text-left">id="nonexistent_id"</td>
-                    <td class="text-left">Gửi GET /api/manager/rooms/nonexistent</td>
-                    <td class="text-left">Báo lỗi 404 Room not found</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT026</td>
-                    <td class="text-center">create</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Tạo mới thông tin phòng thành công</td>
-                    <td class="text-left">Tên phòng chưa trùng</td>
-                    <td class="text-left">roomName, room_type_id, status</td>
-                    <td class="text-left">Gửi POST /api/manager/rooms</td>
-                    <td class="text-left">Tạo phòng mới thành công (201)</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT027</td>
-                    <td class="text-center">create</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Tạo phòng trùng tên đã có</td>
-                    <td class="text-left">Tên phòng đã tồn tại</td>
-                    <td class="text-left">roomName="PHONG 101"</td>
-                    <td class="text-left">Gửi POST /api/manager/rooms</td>
-                    <td class="text-left">Báo lỗi 409 Room name already exists</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT028</td>
-                    <td class="text-center">create</td>
-                    <td class="text-center"><span class="method-pill method-post">POST &#9660;</span></td>
-                    <td class="text-left">Tạo phòng với room_type_id không tồn tại</td>
-                    <td></td>
-                    <td class="text-left">room_type_id="invalid"</td>
-                    <td class="text-left">Gửi POST /api/manager/rooms</td>
-                    <td class="text-left">Báo lỗi 400 Invalid room type ID</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT029</td>
-                    <td class="text-center">update</td>
-                    <td class="text-center"><span class="method-pill method-put">PUT &#9660;</span></td>
-                    <td class="text-left">Cập nhật thông tin phòng thành công</td>
-                    <td class="text-left">ID phòng tồn tại</td>
-                    <td class="text-left">id, roomName, room_inventory</td>
-                    <td class="text-left">Gửi PUT /api/manager/rooms/:id</td>
-                    <td class="text-left">Cập nhật thành công (Status 200)</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td class="text-left">Normalize inventory payload</td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT030</td>
-                    <td class="text-center">update</td>
-                    <td class="text-center"><span class="method-pill method-put">PUT &#9660;</span></td>
-                    <td class="text-left">Cập nhật phòng không tồn tại</td>
-                    <td class="text-left">ID không tồn tại</td>
-                    <td class="text-left">id="nonexistent"</td>
-                    <td class="text-left">Gửi PUT /api/manager/rooms/:id</td>
-                    <td class="text-left">Báo lỗi 404 Room not found</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT031</td>
-                    <td class="text-center">remove</td>
-                    <td class="text-center"><span class="method-pill method-delete">DELETE &#9660;</span></td>
-                    <td class="text-left">Xóa mềm phòng (deactivate) thành công</td>
-                    <td class="text-left">ID phòng tồn tại</td>
-                    <td class="text-left">id="room_001"</td>
-                    <td class="text-left">Gửi DELETE /api/manager/rooms/:id</td>
-                    <td class="text-left">Cập nhật isActive=false (200)</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">High</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">UT032</td>
-                    <td class="text-center">remove</td>
-                    <td class="text-center"><span class="method-pill method-delete">DELETE &#9660;</span></td>
-                    <td class="text-left">Xóa mềm phòng không tồn tại</td>
-                    <td class="text-left">ID không tồn tại</td>
-                    <td class="text-left">id="nonexistent"</td>
-                    <td class="text-left">Gửi DELETE /api/manager/rooms/:id</td>
-                    <td class="text-left">Báo lỗi 404 Room not found</td>
-                    <td class="text-center"><span class="status-pill status-pass">Pass &#9660;</span></td>
-                    <td class="text-center">Medium</td>
-                    <td class="text-center">nghiadt</td>
-                    <td class="text-center">7/18/2026</td>
-                    <td></td>
-                </tr>
+            <tr>
+                <td class="text-center font-bold">UT001</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo tài khoản khách hàng mới thành công</td>
+                <td>Thông tin đăng ký hợp lệ</td>
+                <td><code>full_name, email, login_account, password, confirmPassword, agreeToTerms</code></td>
+                <td>Tạo tài khoản thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT002</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi thiếu full_name</td>
+                <td>Không có full_name</td>
+                <td><code>email, login_account, password</code></td>
+                <td>Response 400: Full name is required.</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT003</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi email sai định dạng</td>
+                <td>Email không đúng chuẩn RFC</td>
+                <td><code>email = 'userinvalid'</code></td>
+                <td>Response 400: Email is invalid.</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT004</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi login_account ngắn hơn 4 ký tự</td>
+                <td>login_account < 4</td>
+                <td><code>login_account = 'abc'</code></td>
+                <td>Response 400: Account name must be at least 4 chars</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT005</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi password không đủ độ mạnh</td>
+                <td>Password không đủ 8 ký tự</td>
+                <td><code>password = '123'</code></td>
+                <td>Response 400: Password weak</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT006</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi confirmPassword không trùng khớp</td>
+                <td>confirmPassword khác password</td>
+                <td><code>password='123', confirm='456'</code></td>
+                <td>Response 400: Passwords do not match</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT007</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi chưa đồng ý điều khoản</td>
+                <td>agreeToTerms = false</td>
+                <td><code>agreeToTerms = false</code></td>
+                <td>Response 400: Must agree to terms</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT008</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">registerCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi email hoặc login_account bị trùng</td>
+                <td>User đã tồn tại trong DB</td>
+                <td><code>email = 'exist@mail.com'</code></td>
+                <td>Response 409: Account or Email already in use</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT009</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">loginCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Đăng nhập khách hàng thành công</td>
+                <td>Tài khoản active</td>
+                <td><code>login_account, password</code></td>
+                <td>Trả về JWT token & user info</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT010</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">loginCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi thiếu account hoặc password</td>
+                <td>Body rỗng</td>
+                <td><code>{}</code></td>
+                <td>Response 400: Missing required fields</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT011</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">loginCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi tài khoản không tồn tại</td>
+                <td>User không có trong DB</td>
+                <td><code>login_account = 'notfound'</code></td>
+                <td>Response 401: Invalid credentials</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT012</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">loginCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi nhập sai mật khẩu</td>
+                <td>Mật khẩu không đúng hash</td>
+                <td><code>password = 'wrong'</code></td>
+                <td>Response 401: Invalid credentials</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT013</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">loginCustomer</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi đăng nhập tài khoản bị khóa (inactive)</td>
+                <td>is_active = false</td>
+                <td><code>inactive_user</code></td>
+                <td>Response 403: Account is locked</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT014</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">requestPasswordReset</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Gửi yêu cầu reset password thành công</td>
+                <td>Email tồn tại</td>
+                <td><code>email = 'user@test.com'</code></td>
+                <td>Gửi token reset qua email</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT015</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">requestPasswordReset</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi reset password cho email không tồn tại</td>
+                <td>Email không có trong DB</td>
+                <td><code>email = 'none@test.com'</code></td>
+                <td>Response 404: Email not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT016</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">resetPassword</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi token reset hết hạn hoặc sai</td>
+                <td>Reset token invalid</td>
+                <td><code>token = 'badtoken'</code></td>
+                <td>Response 400: Invalid or expired token</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT017</td>
+                <td>Auth (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">resetPassword</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Đặt lại mật khẩu mới thành công</td>
+                <td>Token hợp lệ</td>
+                <td><code>token, newPassword</code></td>
+                <td>Cập nhật password hash thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT018</td>
+                <td>Auth (Frontend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">LoginPage UI</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render đúng giao diện Đăng Nhập</td>
+                <td>Trang LoginPage</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị input account, password, nút login</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend LoginPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT019</td>
+                <td>Auth (Frontend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">LoginPage Validation</code></td>
+                <td class="text-center"><span class="method-badge method-get">SUBMIT</span></td>
+                <td>Hiển thị thông báo lỗi khi submit form trống</td>
+                <td>LoginPage</td>
+                <td><code>Form rỗng</code></td>
+                <td>Hiển thị alert validate</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend LoginPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT020</td>
+                <td>Auth (Frontend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">LoginPage Login</code></td>
+                <td class="text-center"><span class="method-badge method-get">SUBMIT</span></td>
+                <td>Lưu token và chuyển hướng khi đăng nhập thành công</td>
+                <td>Mock API success</td>
+                <td><code>account, password</code></td>
+                <td>LocalStorage lưu token & navigate</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend LoginPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT021</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getAllRooms</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách phòng có phân trang & lọc</td>
+                <td>Tài khoản Manager/Admin</td>
+                <td><code>page=1, limit=10, isActive=true</code></td>
+                <td>Trả về list phòng & pagination</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT022</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getAllRooms</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lọc danh sách phòng theo roomTypeId</td>
+                <td>Có roomTypeId</td>
+                <td><code>roomTypeId</code></td>
+                <td>Trả về danh sách phòng thuộc loại phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT023</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getAllRooms</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lọc danh sách phòng theo status</td>
+                <td>Filter status = Available</td>
+                <td><code>status = Available</code></td>
+                <td>Trả về danh sách phòng Available</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT024</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getRoomById</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy chi tiết thông tin phòng theo ID</td>
+                <td>Room ID tồn tại</td>
+                <td><code>roomId</code></td>
+                <td>Trả về chi tiết thông tin phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT025</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getRoomById</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Báo lỗi 404 khi xem phòng không tồn tại</td>
+                <td>Room ID không có trong DB</td>
+                <td><code>roomId = invalid</code></td>
+                <td>Response 404: Room not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT026</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoom</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo phòng mới thành công</td>
+                <td>Dữ liệu tạo phòng hợp lệ</td>
+                <td><code>roomName, room_type_id, status</code></td>
+                <td>Tạo phòng mới thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT027</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoom</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi 409 khi tạo phòng bị trùng tên</td>
+                <td>Phòng đã tồn tại</td>
+                <td><code>roomName = 'P101'</code></td>
+                <td>Response 409: Room already exists</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT028</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoom</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi 400 khi room_type_id không hợp lệ</td>
+                <td>room_type_id không tồn tại</td>
+                <td><code>room_type_id = invalid</code></td>
+                <td>Response 400: Invalid room type</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT029</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateRoom</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Cập nhật thông tin phòng thành công</td>
+                <td>Room ID tồn tại</td>
+                <td><code>roomId, updatePayload</code></td>
+                <td>Cập nhật thông tin phòng thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT030</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateRoom</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Báo lỗi 404 khi cập nhật phòng không tồn tại</td>
+                <td>Room ID không tồn tại</td>
+                <td><code>roomId = invalid</code></td>
+                <td>Response 404: Room not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT031</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">deleteRoom</code></td>
+                <td class="text-center"><span class="method-badge method-delete">DELETE</span></td>
+                <td>Xóa mềm phòng (deactivate) thành công</td>
+                <td>Room ID tồn tại</td>
+                <td><code>roomId</code></td>
+                <td>is_active = false</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT032</td>
+                <td>Room (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">deleteRoom</code></td>
+                <td class="text-center"><span class="method-badge method-delete">DELETE</span></td>
+                <td>Báo lỗi 404 khi xóa phòng không tồn tại</td>
+                <td>Room ID không tồn tại</td>
+                <td><code>roomId = invalid</code></td>
+                <td>Response 404: Room not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT033</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getRoomTypes</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách các loại phòng</td>
+                <td>Quản lý / Khách hàng</td>
+                <td><code>n/a</code></td>
+                <td>Trả về list loại phòng active</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT034</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomType</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo loại phòng mới thành công</td>
+                <td>Data loại phòng hợp lệ</td>
+                <td><code>name, base_price, capacity</code></td>
+                <td>Tạo loại phòng thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT035</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomType</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi 409 khi tạo loại phòng trùng tên</td>
+                <td>Loại phòng đã tồn tại</td>
+                <td><code>name = 'Deluxe'</code></td>
+                <td>Response 409: Duplicate room type</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT036</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getRoomTypeById</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy chi tiết loại phòng theo ID</td>
+                <td>RoomType ID tồn tại</td>
+                <td><code>roomTypeId</code></td>
+                <td>Trả về chi tiết loại phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT037</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateRoomType</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Cập nhật loại phòng thành công</td>
+                <td>RoomType ID tồn tại</td>
+                <td><code>roomTypeId, price</code></td>
+                <td>Cập nhật loại phòng thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT038</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateRoomType</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Báo lỗi 404 khi cập nhật loại phòng không tồn tại</td>
+                <td>RoomType ID không tồn tại</td>
+                <td><code>roomTypeId = invalid</code></td>
+                <td>Response 404: Room type not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT039</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">deleteRoomType</code></td>
+                <td class="text-center"><span class="method-badge method-delete">DELETE</span></td>
+                <td>Xóa mềm loại phòng thành công</td>
+                <td>RoomType ID tồn tại</td>
+                <td><code>roomTypeId</code></td>
+                <td>is_active = false</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT040</td>
+                <td>RoomType (Backend)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">deleteRoomType</code></td>
+                <td class="text-center"><span class="method-badge method-delete">DELETE</span></td>
+                <td>Báo lỗi 404 khi xóa loại phòng không tồn tại</td>
+                <td>RoomType ID không tồn tại</td>
+                <td><code>roomTypeId = invalid</code></td>
+                <td>Response 404: Room type not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-type.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT041</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getCleaningTasks</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách task housekeeping</td>
+                <td>Nhân viên / Manager</td>
+                <td><code>status, room_number</code></td>
+                <td>Trả về danh sách task dọn phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT042</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">confirmCheckout</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo task cleaning khi phòng checkout</td>
+                <td>Phòng đã checkout</td>
+                <td><code>booking_id, room_number</code></td>
+                <td>Tạo task Cleaning tự động</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT043</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateTaskStatus</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Cập nhật trạng thái task sang Cleaning</td>
+                <td>Task ID hợp lệ</td>
+                <td><code>taskId, status = 'Cleaning'</code></td>
+                <td>Trạng thái task đổi sang Cleaning</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT044</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy thông tin dashboard housekeeping</td>
+                <td>Manager</td>
+                <td><code>n/a</code></td>
+                <td>Trả về tổng số task, room status</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT045</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getTaskById</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy thông tin chi tiết task theo ID</td>
+                <td>Task ID tồn tại</td>
+                <td><code>taskId</code></td>
+                <td>Trả về chi tiết task & inspection</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT046</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getTaskById</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Báo lỗi 404 khi xem task không tồn tại</td>
+                <td>Task ID không tồn tại</td>
+                <td><code>taskId = invalid</code></td>
+                <td>Response 404: Task not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT047</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">startCleaningTask</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Bắt đầu thực hiện task dọn phòng</td>
+                <td>Task ở trạng thái Accepted</td>
+                <td><code>taskId</code></td>
+                <td>Trạng thái chuyển sang Cleaning</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT048</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">completeCleaningTask</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Hoàn thành task dọn phòng thành công</td>
+                <td>Task dọn phòng hoàn tất</td>
+                <td><code>taskId, notes</code></td>
+                <td>Phòng cập nhật sang Available</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT049</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">completeCleaningTask</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Báo lỗi 409 khi hoàn thành task nếu bảo trì chưa xong</td>
+                <td>Phòng đang có bảo trì hỏng hóc</td>
+                <td><code>taskId</code></td>
+                <td>Response 409: Pending maintenance</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT050</td>
+                <td>Housekeeping</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">cancelCleaningTask</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Hủy task housekeeping</td>
+                <td>Task ID tồn tại</td>
+                <td><code>taskId, reason</code></td>
+                <td>Task chuyển sang Cancelled</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test housekeeping.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT051</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getStaffMembers</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách nhân viên dọn phòng</td>
+                <td>Manager</td>
+                <td><code>n/a</code></td>
+                <td>Trả về danh sách staff có role Housekeeping</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT052</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getStaffTasks</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách staff tasks</td>
+                <td>Manager</td>
+                <td><code>status, assigned_to</code></td>
+                <td>Trả về danh sách công việc giao nhân viên</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT053</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createStaffTask</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo staff task mới thành công</td>
+                <td>Data hợp lệ</td>
+                <td><code>title, assigned_to, room_number</code></td>
+                <td>Tạo task thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT054</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createStaffTask</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi tạo task thiếu tiêu đề</td>
+                <td>Tiêu đề rỗng</td>
+                <td><code>title = ''</code></td>
+                <td>Response 400: Title is required</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT055</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createStaffTask</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi tạo task chọn nhân viên không hợp lệ</td>
+                <td>Staff ID không tồn tại</td>
+                <td><code>assigned_to = invalid</code></td>
+                <td>Response 400: Invalid staff member</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT056</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createStaffTask</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi tạo task trùng khung giờ làm việc</td>
+                <td>Khung giờ phòng đã có task khác</td>
+                <td><code>room_number, start_time</code></td>
+                <td>Response 409: Time conflict</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT057</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateStaffTask</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Cập nhật staff task thành công</td>
+                <td>Task ID hợp lệ</td>
+                <td><code>taskId, status</code></td>
+                <td>Cập nhật task thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT058</td>
+                <td>StaffTask</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateStaffTask</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Báo lỗi khi cập nhật task không tồn tại (404)</td>
+                <td>Task ID rỗng/sai</td>
+                <td><code>taskId = invalid</code></td>
+                <td>Response 404: Task not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test staff-task.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT059</td>
+                <td>RoomInventory</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getRoomInventoryItems</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách vật tư phòng</td>
+                <td>Manager</td>
+                <td><code>n/a</code></td>
+                <td>Trả về list trang thiết bị vật tư</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-inventory.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT060</td>
+                <td>RoomInventory</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomInventoryItem</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo vật tư phòng mới thành công</td>
+                <td>Thông tin vật tư hợp lệ</td>
+                <td><code>name, category, price</code></td>
+                <td>Tạo vật tư thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-inventory.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT061</td>
+                <td>RoomInventory</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomInventoryItem</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi tạo vật tư thiếu tên hoặc danh mục</td>
+                <td>Thiếu name/category</td>
+                <td><code>name = ''</code></td>
+                <td>Response 400: Required fields missing</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-inventory.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT062</td>
+                <td>RoomInventory</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomInventoryItem</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi ảnh vật tư không đúng định dạng</td>
+                <td>File không phải ảnh</td>
+                <td><code>file = txt</code></td>
+                <td>Response 400: Invalid image format</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-inventory.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT063</td>
+                <td>RoomInventory</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateRoomInventoryItem</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Cập nhật vật tư phòng thành công</td>
+                <td>Item ID tồn tại</td>
+                <td><code>itemId, price</code></td>
+                <td>Cập nhật vật tư thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-inventory.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT064</td>
+                <td>RoomInventory</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">deactivateRoomInventoryItem</code></td>
+                <td class="text-center"><span class="method-badge method-delete">DELETE</span></td>
+                <td>Vô hiệu hóa vật tư (deactivate) thành công</td>
+                <td>Item ID tồn tại</td>
+                <td><code>itemId</code></td>
+                <td>is_active = false</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test room-inventory.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT065</td>
+                <td>Feedback</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">listCustomerFeedbacks</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách góp ý của tài khoản khách hàng</td>
+                <td>Khách hàng logged-in</td>
+                <td><code>n/a</code></td>
+                <td>Trả về danh sách các feedback đã gửi</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test customer-feedback.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT066</td>
+                <td>Feedback</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">submitFeedback</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi gửi góp ý mà tài khoản đã gửi trước đó</td>
+                <td>Đã gửi feedback rồi</td>
+                <td><code>rating, comments</code></td>
+                <td>Response 409: Feedback already submitted</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test customer-feedback.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT067</td>
+                <td>Feedback</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getFeedbackStatus</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy trạng thái góp ý</td>
+                <td>Khách hàng</td>
+                <td><code>n/a</code></td>
+                <td>Trả về hasSubmitted, feedbackObj</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test customer-feedback.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT068</td>
+                <td>Feedback</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">listCustomerFeedbacks</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Trả về danh sách rỗng khi chưa có góp ý nào</td>
+                <td>User mới</td>
+                <td><code>n/a</code></td>
+                <td>Trả về []</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test customer-feedback.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT069</td>
+                <td>Feedback</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">listCustomerFeedbacks</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Map dữ liệu góp ý đúng cấu trúc</td>
+                <td>Feedback có data</td>
+                <td><code>n/a</code></td>
+                <td>Map đầy đủ id, rating, comment, date</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test customer-feedback.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT070</td>
+                <td>Feedback</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">submitFeedback</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi validate rating không hợp lệ (ngoài 1-5)</td>
+                <td>Rating = 0 hoặc 6</td>
+                <td><code>rating = 6</code></td>
+                <td>Response 400: Rating must be 1-5</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test customer-feedback.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT071</td>
+                <td>Policy</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">listPolicies</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách chính sách khách sạn</td>
+                <td>Tất cả vai trò</td>
+                <td><code>n/a</code></td>
+                <td>Trả về danh sách chính sách active</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test policy.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT072</td>
+                <td>Policy</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createPolicy</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo chính sách mới thành công</td>
+                <td>Admin/Manager</td>
+                <td><code>title, category, content</code></td>
+                <td>Tạo chính sách thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test policy.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT073</td>
+                <td>Policy</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updatePolicy</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Cập nhật chính sách thành công</td>
+                <td>Policy ID tồn tại</td>
+                <td><code>policyId, content</code></td>
+                <td>Cập nhật chính sách thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test policy.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT074</td>
+                <td>Policy</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">deletePolicy</code></td>
+                <td class="text-center"><span class="method-badge method-delete">DELETE</span></td>
+                <td>Xóa chính sách thành công</td>
+                <td>Policy ID tồn tại</td>
+                <td><code>policyId</code></td>
+                <td>Xóa chính sách thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test policy.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT075</td>
+                <td>ManagerDashboard</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy thống kê tổng quan Manager Dashboard (kpis)</td>
+                <td>Manager</td>
+                <td><code>period=week</code></td>
+                <td>Trả về totalRevenue, roomRevenue, extraRevenue</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test manager-dashboard.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT076</td>
+                <td>ManagerDashboard</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy biểu đồ doanh thu theo tháng (revenueByMonth)</td>
+                <td>Manager</td>
+                <td><code>period=month</code></td>
+                <td>Trả về mảng doanh thu 12 tháng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test manager-dashboard.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT077</td>
+                <td>ManagerDashboard</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy tỷ lệ và số lượng phòng theo trạng thái</td>
+                <td>Manager</td>
+                <td><code>period=day</code></td>
+                <td>Trả về totalRooms, roomStatusCounts</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test manager-dashboard.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT078</td>
+                <td>ManagerDashboard</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy đánh giá trung bình và tổng số đánh giá khách hàng</td>
+                <td>Manager</td>
+                <td><code>n/a</code></td>
+                <td>Trả về avgRating, totalReviews</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test manager-dashboard.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT079</td>
+                <td>AdminAccount</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getAllAccounts</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Admin lấy danh sách tài khoản nội bộ</td>
+                <td>Admin</td>
+                <td><code>role, search</code></td>
+                <td>Trả về list tài khoản nhân viên/quản lý</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-account.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT080</td>
+                <td>AdminAccount</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getAccountById</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Admin lấy chi tiết tài khoản theo ID</td>
+                <td>Admin</td>
+                <td><code>accountId</code></td>
+                <td>Trả về chi tiết tài khoản</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-account.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT081</td>
+                <td>AdminAccount</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createAccount</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Admin tạo tài khoản nhân viên mới thành công</td>
+                <td>Admin</td>
+                <td><code>full_name, email, role_id</code></td>
+                <td>Tạo tài khoản nhân viên thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-account.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT082</td>
+                <td>AdminAccount</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createAccount</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Admin tạo tài khoản bị trùng Email hoặc login_account</td>
+                <td>Email đã tồn tại</td>
+                <td><code>email = 'exist@hotel.com'</code></td>
+                <td>Response 400: Account or Email exists</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-account.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT083</td>
+                <td>AdminAccount</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateAccount</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Admin cập nhật tài khoản thành công</td>
+                <td>Account ID tồn tại</td>
+                <td><code>accountId, role_id</code></td>
+                <td>Cập nhật tài khoản thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-account.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT084</td>
+                <td>AdminAccount</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">resetPassword</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Admin reset mật khẩu cho tài khoản nhân viên</td>
+                <td>Admin</td>
+                <td><code>accountId, newPassword</code></td>
+                <td>Reset mật khẩu thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-account.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT085</td>
+                <td>AdminRole</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getAllRoles</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Admin lấy danh sách các Role</td>
+                <td>Admin</td>
+                <td><code>n/a</code></td>
+                <td>Trả về danh sách vai trò & permissions</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-role.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT086</td>
+                <td>AdminRole</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRole</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Admin tạo Role mới thành công</td>
+                <td>Admin</td>
+                <td><code>name, permissions</code></td>
+                <td>Tạo Role mới thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-role.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT087</td>
+                <td>AdminRole</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRole</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Admin tạo Role bị trùng tên (400)</td>
+                <td>Role name đã có</td>
+                <td><code>name = 'Receptionist'</code></td>
+                <td>Response 400: Role already exists</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-role.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT088</td>
+                <td>AdminRole</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateRole</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Admin cập nhật thông tin và danh sách quyền của Role</td>
+                <td>Role ID tồn tại</td>
+                <td><code>roleId, permissions</code></td>
+                <td>Cập nhật Role thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-role.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT089</td>
+                <td>AdminDashboard</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Admin lấy thống kê cảnh báo bảo mật 24h</td>
+                <td>Admin</td>
+                <td><code>n/a</code></td>
+                <td>Trả về security_alerts_24h</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-dashboard.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT090</td>
+                <td>AdminDashboard</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy thống kê số lượng cảnh báo đăng nhập thất bại</td>
+                <td>Admin</td>
+                <td><code>n/a</code></td>
+                <td>Trả về security_alerts_24h = 0</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-dashboard.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT091</td>
+                <td>AdminDashboard</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getDashboardStats</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Xử lý thành công request từ Admin Guard</td>
+                <td>Admin</td>
+                <td><code>n/a</code></td>
+                <td>Trả về status 200 OK</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test admin-dashboard.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT092</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomBooking</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Customer tạo đặt phòng thành công</td>
+                <td>Khách hàng logged-in</td>
+                <td><code>roomId, checkIn, checkOut</code></td>
+                <td>Tạo booking thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT093</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomBooking</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi tạo booking thiếu ngày check-in/out hợp lệ</td>
+                <td>Ngày không hợp lệ</td>
+                <td><code>checkIn = invalid</code></td>
+                <td>Response 400: Valid dates required</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT094</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomBooking</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi ngày check-out nhỏ hơn hoặc bằng check-in</td>
+                <td>checkOut <= checkIn</td>
+                <td><code>checkOut = 2026-08-09</code></td>
+                <td>Response 400: Check-out must be after check-in</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT095</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createRoomBooking</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi số phòng trống không đủ cho ngày chọn</td>
+                <td>Hết phòng trống</td>
+                <td><code>checkIn, checkOut</code></td>
+                <td>Response 409: Room unavailable</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT096</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getCustomerReservation</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Xem chi tiết thông tin booking</td>
+                <td>Reservation ID tồn tại</td>
+                <td><code>reservationId</code></td>
+                <td>Trả về thông tin booking & status</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT097</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">cancelCustomerReservation</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Hủy booking chưa thanh toán thành công</td>
+                <td>Booking > 48h check-in</td>
+                <td><code>reservationId</code></td>
+                <td>Response 200: Reservation canceled</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT098</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">cancelCustomerReservation</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi hủy booking trong vòng 48h sát check-in</td>
+                <td>Booking <= 48h check-in</td>
+                <td><code>reservationId</code></td>
+                <td>Response 409: Within 48 hours</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT099</td>
+                <td>Reservation</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getCustomerReservation</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Báo lỗi 404 khi truy cập booking không tồn tại</td>
+                <td>Reservation ID rỗng</td>
+                <td><code>reservationId = invalid</code></td>
+                <td>Response 404: Reservation not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test reservation.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT100</td>
+                <td>Payment</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createVnpayPayment</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo link thanh toán VNPAY thành công</td>
+                <td>Booking PendingPayment</td>
+                <td><code>reservationId, acceptedPolicies</code></td>
+                <td>Trả về paymentUrl VNPAY sandbox</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test payment.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT101</td>
+                <td>Payment</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createVnpayPayment</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi chưa chấp nhận chính sách khách sạn</td>
+                <td>acceptedHotelPolicies = false</td>
+                <td><code>acceptedPolicies = false</code></td>
+                <td>Response 400: Must agree to policies</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test payment.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT102</td>
+                <td>Payment</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createVnpayPayment</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi reservation không tồn tại (404)</td>
+                <td>Reservation ID sai</td>
+                <td><code>reservationId = invalid</code></td>
+                <td>Response 404: Reservation not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test payment.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT103</td>
+                <td>Payment</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createVnpayPayment</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Trả về thông báo booking đã được thanh toán rồi</td>
+                <td>Booking status = Paid</td>
+                <td><code>reservationId</code></td>
+                <td>Response 200: Already paid</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test payment.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT104</td>
+                <td>Payment</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getHotelPolicies</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách chính sách khách sạn</td>
+                <td>Tất cả khách hàng</td>
+                <td><code>n/a</code></td>
+                <td>Trả về danh sách chính sách active</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test payment.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT105</td>
+                <td>Payment</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getReservationPaymentStatus</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy trạng thái thanh toán của booking</td>
+                <td>Reservation ID tồn tại</td>
+                <td><code>reservationId</code></td>
+                <td>Trả về totalAmount, paymentStatus</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test payment.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT106</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getBookings</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Receptionist lấy danh sách booking</td>
+                <td>Lễ tân</td>
+                <td><code>status, search</code></td>
+                <td>Trả về list booking & pagination</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT107</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">processCheckIn</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi check-in booking không tồn tại (404)</td>
+                <td>Booking ID không có</td>
+                <td><code>bookingId = invalid</code></td>
+                <td>Response 404: Booking not found</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT108</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">processCheckIn</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi check-in booking đã CheckedIn rồi (400)</td>
+                <td>Booking đã CheckedIn</td>
+                <td><code>bookingId</code></td>
+                <td>Response 400: Already checked in</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT109</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">processCheckIn</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi check-in đơn chưa thanh toán đủ</td>
+                <td>payment_status != Paid</td>
+                <td><code>bookingId</code></td>
+                <td>Response 400: Booking not fully paid</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT110</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">processCheckIn</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Thực hiện Check-in gán phòng & tạo StayGuest thành công</td>
+                <td>Booking Confirmed & Paid</td>
+                <td><code>roomAssignments, stayGuests</code></td>
+                <td>Booking -> CheckedIn, Room -> Occupied</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT111</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createWalkInBooking</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo Walk-in booking cho khách vãng lai thành công</td>
+                <td>Phòng còn trống</td>
+                <td><code>roomTypeId, guestCount</code></td>
+                <td>Tạo Walk-in booking & thanh toán</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT112</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getAvailableRooms</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách phòng trống phục vụ gán phòng</td>
+                <td>Lễ tân</td>
+                <td><code>roomTypeId, checkIn, checkOut</code></td>
+                <td>Trả về list phòng Available</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT113</td>
+                <td>CheckIn</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getRoomTypes</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy danh sách loại phòng active</td>
+                <td>Lễ tân</td>
+                <td><code>n/a</code></td>
+                <td>Trả về list loại phòng active</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkin.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT114</td>
+                <td>CheckOut</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getCheckoutSummary</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy thông tin tóm tắt Check-out</td>
+                <td>Booking CheckedIn</td>
+                <td><code>bookingId</code></td>
+                <td>Trả về thông tin phòng, phụ phí, hóa đơn</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkout.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT115</td>
+                <td>CheckOut</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">createInspectionRequest</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tạo yêu cầu kiểm tra phòng trước Check-out</td>
+                <td>Phòng cần check-out</td>
+                <td><code>bookingId, room_number</code></td>
+                <td>Tạo task Inspection Review cho Housekeeping</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkout.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT116</td>
+                <td>CheckOut</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">addCharge</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Thêm phụ phí (nước uống, phát sinh) vào đơn booking</td>
+                <td>Lễ tân</td>
+                <td><code>bookingId, amount, description</code></td>
+                <td>Thêm phụ phí thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkout.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT117</td>
+                <td>CheckOut</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">generateInvoice</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Tính toán và phát hành hóa đơn Invoice</td>
+                <td>Booking đã hoàn tất phụ phí</td>
+                <td><code>bookingId</code></td>
+                <td>Tạo Invoice Unpaid/Paid</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkout.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT118</td>
+                <td>CheckOut</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">completeCheckout</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Báo lỗi khi hoàn thành Check-out nếu chưa kiểm tra phòng</td>
+                <td>Inspection chưa confirm</td>
+                <td><code>bookingId</code></td>
+                <td>Response 409: Pending inspection</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkout.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT119</td>
+                <td>CheckOut</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">completeCheckout</code></td>
+                <td class="text-center"><span class="method-badge method-post">POST</span></td>
+                <td>Hoàn thành Check-out & chuyển phòng sang Dirty thành công</td>
+                <td>Inspection completed</td>
+                <td><code>bookingId, paymentMethod</code></td>
+                <td>Booking -> CheckedOut, Room -> Dirty</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test receptionist-checkout.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT120</td>
+                <td>Profile</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">getProfileDashboard</code></td>
+                <td class="text-center"><span class="method-badge method-get">GET</span></td>
+                <td>Lấy thông tin Profile Dashboard của user</td>
+                <td>Khách hàng logged-in</td>
+                <td><code>n/a</code></td>
+                <td>Trả về user info, bookingHistory, reviews</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test profile.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT121</td>
+                <td>Profile</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateProfile</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Cập nhật thông tin cá nhân Profile thành công</td>
+                <td>Khách hàng</td>
+                <td><code>full_name, phone_number, address</code></td>
+                <td>Cập nhật profile thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test profile.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT122</td>
+                <td>Profile</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateProfile</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Báo lỗi khi cập nhật Profile thiếu full_name (400)</td>
+                <td>full_name rỗng</td>
+                <td><code>full_name = ''</code></td>
+                <td>Response 400: Full name is required</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test profile.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT123</td>
+                <td>Profile</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">updateProfile</code></td>
+                <td class="text-center"><span class="method-badge method-put">PUT</span></td>
+                <td>Báo lỗi khi cập nhật số điện thoại không hợp lệ (400)</td>
+                <td>Số điện thoại sai</td>
+                <td><code>phone = 'invalid'</code></td>
+                <td>Response 400: Phone number is invalid</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test profile.service.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT124</td>
+                <td>UploadSecurity</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">fileFilter</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Chấp nhận file ảnh định dạng hợp lệ (PNG/JPG/WEBP)</td>
+                <td>Multer upload</td>
+                <td><code>file.png</code></td>
+                <td>Multer cho phép upload</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test upload-security.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT125</td>
+                <td>UploadSecurity</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">fileFilter</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Chặn upload file thực thi độc hại (EXE/TXT/PDF)</td>
+                <td>Multer upload</td>
+                <td><code>file.exe</code></td>
+                <td>Response 400: File type not allowed</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test upload-security.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT126</td>
+                <td>UploadSecurity</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">validateDoubleExt</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Chặn file có đuôi mở rộng giả mạo (script.php.png)</td>
+                <td>Double extension</td>
+                <td><code>file = script.php.png</code></td>
+                <td>Bị phát hiện và từ chối</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test upload-security.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT127</td>
+                <td>UploadSecurity</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">limits</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Kiểm tra giới hạn dung lượng file upload (Max 5MB)</td>
+                <td>File size > 5MB</td>
+                <td><code>size = 10MB</code></td>
+                <td>Response 400: File too large</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test upload-security.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT128</td>
+                <td>UploadSecurity</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">handleMulterError</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Báo lỗi khi request upload không đính kèm file nào</td>
+                <td>Request rỗng</td>
+                <td><code>req.file = null</code></td>
+                <td>Response 400: No file provided</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test upload-security.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT129</td>
+                <td>AuthMiddleware</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">authGuard</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Xác thực thành công với Bearer Token hợp lệ</td>
+                <td>Authorization Header</td>
+                <td><code>Bearer valid_token</code></td>
+                <td>req.user được gán, next() gọi</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth-middleware.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT130</td>
+                <td>AuthMiddleware</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">authGuard</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Báo lỗi 401 khi Request không có Authorization Header</td>
+                <td>Thiếu Auth Header</td>
+                <td><code>n/a</code></td>
+                <td>Response 401: Unauthorized</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth-middleware.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT131</td>
+                <td>AuthMiddleware</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">authGuard</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Báo lỗi 401 khi Token bị sai hoặc hết hạn</td>
+                <td>Token sai/expired</td>
+                <td><code>Bearer invalid_token</code></td>
+                <td>Response 401: Invalid token</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth-middleware.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT132</td>
+                <td>AuthMiddleware</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">roleGuard</code></td>
+                <td class="text-center"><span class="method-badge method-get">MIDDLEWARE</span></td>
+                <td>Báo lỗi 403 Forbidden khi Role không đủ quyền hạn</td>
+                <td>Role = Customer truy cập Admin route</td>
+                <td><code>Customer role</code></td>
+                <td>Response 403: Forbidden</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Unit test auth-middleware.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT133</td>
+                <td>FrontendUtils</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">validatePassword</code></td>
+                <td class="text-center"><span class="method-badge method-get">UTIL</span></td>
+                <td>Kiểm tra độ dài tối thiểu 8 ký tự của mật khẩu</td>
+                <td>Frontend validation</td>
+                <td><code>pass = '1234567'</code></td>
+                <td>Trả về false</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend passwordValidation.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT134</td>
+                <td>FrontendUtils</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">validatePassword</code></td>
+                <td class="text-center"><span class="method-badge method-get">UTIL</span></td>
+                <td>Kiểm tra mật khẩu có chứa chữ cái và chữ số</td>
+                <td>Frontend validation</td>
+                <td><code>pass = 'abcdefgh'</code></td>
+                <td>Trả về false (thiếu số)</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend passwordValidation.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT135</td>
+                <td>FrontendUtils</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">validatePassword</code></td>
+                <td class="text-center"><span class="method-badge method-get">UTIL</span></td>
+                <td>Chấp nhận mật khẩu hợp lệ (8+ ký tự có chữ & số)</td>
+                <td>Frontend validation</td>
+                <td><code>pass = 'Password123'</code></td>
+                <td>Trả về true</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend passwordValidation.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT136</td>
+                <td>FrontendUtils</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">validatePassword</code></td>
+                <td class="text-center"><span class="method-badge method-get">UTIL</span></td>
+                <td>Báo lỗi khi truyền tham số mật khẩu rỗng hoặc null</td>
+                <td>Frontend validation</td>
+                <td><code>pass = ''</code></td>
+                <td>Trả về false</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend passwordValidation.test.js</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT137</td>
+                <td>HomePage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">HomePage UI</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>HomePage render banner chính và khẩu hiệu khách sạn</td>
+                <td>Trang chủ</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị Heading Hotelify Luxury Hotel</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend HomePage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT138</td>
+                <td>HomePage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">HomePage UI</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>HomePage hiển thị nút Tìm phòng / Đặt phòng ngay</td>
+                <td>Trang chủ</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị nút Đặt phòng ngay</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend HomePage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT139</td>
+                <td>HomePage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">HomePage UI</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Hiển thị danh mục các loại phòng chính</td>
+                <td>Trang chủ</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị danh mục phòng Hotelify</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend HomePage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT140</td>
+                <td>HomePage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">HomePage Search</code></td>
+                <td class="text-center"><span class="method-badge method-get">INTERACT</span></td>
+                <td>Hỗ trợ tìm kiếm phòng theo ngày nhận / trả phòng</td>
+                <td>Search Widget</td>
+                <td><code>checkIn, checkOut</code></td>
+                <td>Có input date chọn ngày</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend HomePage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT141</td>
+                <td>HomePage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">HomePage Services</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Hiển thị các dịch vụ tiện ích của khách sạn</td>
+                <td>Trang chủ</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị thẻ main tiện ích</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend HomePage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT142</td>
+                <td>HomePage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">HomePage Footer</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render footer với đầy đủ thông tin liên hệ và chính sách</td>
+                <td>Trang chủ</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị footer thông tin liên hệ</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend HomePage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT143</td>
+                <td>BookingPage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">BookingForm UI</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render form thông tin đặt phòng khách hàng</td>
+                <td>Trang Đặt Phòng</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị input checkin, checkout, adults</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend BookingPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT144</td>
+                <td>BookingPage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">BookingForm Input</code></td>
+                <td class="text-center"><span class="method-badge method-get">INTERACT</span></td>
+                <td>Cho phép nhập yêu cầu đặc biệt (special request)</td>
+                <td>Booking Page</td>
+                <td><code>text = 'Tầng cao'</code></td>
+                <td>Input cập nhật giá trị</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">Medium</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend BookingPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT145</td>
+                <td>BookingPage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">BookingForm Validation</code></td>
+                <td class="text-center"><span class="method-badge method-get">SUBMIT</span></td>
+                <td>Hiển thị lỗi khi chọn ngày check-out trước check-in</td>
+                <td>Form Validation</td>
+                <td><code>checkOut < checkIn</code></td>
+                <td>Hiển thị alert ngày không hợp lệ</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend BookingPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT146</td>
+                <td>BookingPage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">Booking Summary</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Tính toán và hiển thị tạm tính tổng tiền đặt phòng</td>
+                <td>Summary Card</td>
+                <td><code>2 đêm x 1,500,000</code></td>
+                <td>Tổng tiền hiển thị 3,000,000đ</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend BookingPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT147</td>
+                <td>BookingPage (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">Booking Submit</code></td>
+                <td class="text-center"><span class="method-badge method-get">SUBMIT</span></td>
+                <td>Gửi yêu cầu đặt phòng và chuyển tới trang thanh toán</td>
+                <td>Click Submit</td>
+                <td><code>form valid</code></td>
+                <td>Gọi API createBooking & redirect</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend BookingPage.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT148</td>
+                <td>ManagerPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">ManagerDashboard</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render Dashboard quản lý với các KPI tổng quan</td>
+                <td>Trang Manager</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị KPI doanh thu, công suất phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT149</td>
+                <td>ManagerPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">RoomManagement</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render danh sách quản lý phòng khách sạn</td>
+                <td>Trang Phòng</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị bảng danh sách phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT150</td>
+                <td>ManagerPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">RoomManagement</code></td>
+                <td class="text-center"><span class="method-badge method-get">INTERACT</span></td>
+                <td>Mở modal thêm phòng mới</td>
+                <td>Click Thêm phòng</td>
+                <td><code>n/a</code></td>
+                <td>Modal Thêm phòng hiển thị</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT151</td>
+                <td>ManagerPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">RoomTypeManagement</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render danh sách loại phòng</td>
+                <td>Trang Loại phòng</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị mảng loại phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT152</td>
+                <td>ManagerPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">HousekeepingPage</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render danh sách công việc dọn phòng</td>
+                <td>Trang Dọn phòng</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị bảng task housekeeping</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT153</td>
+                <td>ManagerPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">StaffTaskPage</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render danh sách phân công nhiệm vụ nhân viên</td>
+                <td>Trang Phân công</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị bảng giao việc nhân viên</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT154</td>
+                <td>ManagerPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">InventoryPage</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render danh sách vật tư trang thiết bị phòng</td>
+                <td>Trang Vật tư</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị bảng vật tư phòng</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT155</td>
+                <td>AdminPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">AccountPage</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render danh sách quản lý tài khoản nội bộ</td>
+                <td>Trang Admin Account</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị bảng tài khoản nhân viên</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT156</td>
+                <td>AdminPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">RolePage</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render danh sách vai trò và phân quyền</td>
+                <td>Trang Admin Role</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị bảng danh sách vai trò</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT157</td>
+                <td>AdminPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">AdminDashboard</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render trang Admin Dashboard nhật ký hệ thống</td>
+                <td>Trang Admin Dashboard</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị thống kê cảnh báo bảo mật</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT158</td>
+                <td>CustomerProfile (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">ProfileDashboard</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render thông tin cá nhân và lịch sử đặt phòng</td>
+                <td>Trang Profile</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị thông tin khách hàng & lịch sử</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT159</td>
+                <td>CustomerProfile (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">ProfileUpdate</code></td>
+                <td class="text-center"><span class="method-badge method-get">SUBMIT</span></td>
+                <td>Cập nhật thông tin profile trên giao diện</td>
+                <td>Form Profile</td>
+                <td><code>full_name, phone</code></td>
+                <td>Gửi API update profile thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ManagerAdminPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT160</td>
+                <td>ReceptionistPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">CheckInDashboard</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render trang Lễ tân Check-in Dashboard</td>
+                <td>Trang Lễ tân</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị danh sách đơn chờ check-in</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ReceptionistPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT161</td>
+                <td>ReceptionistPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">CheckInDashboard</code></td>
+                <td class="text-center"><span class="method-badge method-get">INTERACT</span></td>
+                <td>Lọc danh sách booking theo mã đặt phòng</td>
+                <td>Input search</td>
+                <td><code>code = 'BKG-101'</code></td>
+                <td>Bảng hiển thị duy nhất đơn BKG-101</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ReceptionistPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT162</td>
+                <td>ReceptionistPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">CheckOutWizard</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render giao diện Check-out tóm tắt chi phí</td>
+                <td>Wizard Check-out</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị tổng tiền phòng & phụ phí</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ReceptionistPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT163</td>
+                <td>ReceptionistPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">CheckInWizard</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Hiển thị các bước gán phòng và nhập thông tin khách</td>
+                <td>Wizard Check-in</td>
+                <td><code>n/a</code></td>
+                <td>Step 1: Assign Room, Step 2: Guest Details</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ReceptionistPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT164</td>
+                <td>ReceptionistPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">WalkInForm</code></td>
+                <td class="text-center"><span class="method-badge method-get">RENDER</span></td>
+                <td>Render form đặt phòng trực tiếp cho khách vãng lai</td>
+                <td>Form Walk-in</td>
+                <td><code>n/a</code></td>
+                <td>Hiển thị chọn loại phòng, số lượng, thanh toán</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ReceptionistPages.test.jsx</small></td>
+            </tr>
+            <tr>
+                <td class="text-center font-bold">UT165</td>
+                <td>ReceptionistPages (FE)</td>
+                <td><code style="background: #f1f5f9; padding: 2px 5px; border-radius: 3px;">WalkInForm</code></td>
+                <td class="text-center"><span class="method-badge method-get">SUBMIT</span></td>
+                <td>Gửi yêu cầu tạo đơn Walk-in thành công</td>
+                <td>Submit Walk-in</td>
+                <td><code>data valid</code></td>
+                <td>Gọi API createWalkInBooking thành công</td>
+                <td class="text-center"><span class="status-badge status-pass">Pass</span></td>
+                <td class="text-center">High</td>
+                <td class="text-center">nghiadt</td>
+                <td class="text-center">7/18/2026</td>
+                <td><small style="color: #666;">Frontend ReceptionistPages.test.jsx</small></td>
+            </tr>
             </tbody>
         </table>
     </div>
