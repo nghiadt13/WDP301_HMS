@@ -46,7 +46,10 @@ const checkinService = {
         startOfDay.setUTCHours(0, 0, 0, 0);
         const endOfDay = new Date(parsedDate);
         endOfDay.setUTCHours(23, 59, 59, 999);
-        filter.check_in_date = { $gte: startOfDay, $lte: endOfDay };
+        filter.$or = [
+          { check_in_date: { $gte: startOfDay, $lte: endOfDay } },
+          { check_out_date: { $gte: startOfDay, $lte: endOfDay } }
+        ];
       }
     } else if (!query.date && !query.search) {
       // Default to today if no date and no search
@@ -55,7 +58,10 @@ const checkinService = {
       startOfDay.setUTCHours(0, 0, 0, 0);
       const endOfDay = new Date(today);
       endOfDay.setUTCHours(23, 59, 59, 999);
-      filter.check_in_date = { $gte: startOfDay, $lte: endOfDay };
+      filter.$or = [
+        { check_in_date: { $gte: startOfDay, $lte: endOfDay } },
+        { check_out_date: { $gte: startOfDay, $lte: endOfDay } }
+      ];
     }
 
     // Search filter with regex sanitization to prevent ReDoS
@@ -66,10 +72,17 @@ const checkinService = {
       const users = await User.find(userFilter).select('_id');
       const userIds = users.map(u => u._id);
 
-      filter.$or = [
+      const searchConditions = [
         { booking_code: { $regex: escapedSearch, $options: 'i' } },
         { customer_id: { $in: userIds } }
       ];
+
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: searchConditions }];
+        delete filter.$or;
+      } else {
+        filter.$or = searchConditions;
+      }
     }
 
     const [bookings, total] = await Promise.all([

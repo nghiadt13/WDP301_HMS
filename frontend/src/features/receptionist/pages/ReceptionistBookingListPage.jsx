@@ -95,7 +95,7 @@ const ReceptionistBookingListPage = () => {
         </div>
 
         <div className="filter-group">
-          <label htmlFor="date-select">Ngày nhận phòng:</label>
+          <label htmlFor="date-select">Ngày nhận/trả phòng:</label>
           <input
             id="date-select"
             type="date"
