@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Inbox, Calendar, Megaphone, BedDouble, Sparkles, Package, Wallet, Star, LogIn, ChevronDown, BrushCleaning, FileText, Grid, ClipboardCheck } from 'lucide-react';
+import { Home, BedDouble, Sparkles, Package, Star, LogIn, ChevronDown, BrushCleaning, FileText, Grid, ClipboardCheck } from 'lucide-react';
 import { managerApi } from '../services/manager-api.js';
 
 const FEEDBACK_SEEN_STORAGE_KEY = 'hotelify_manager_seen_feedback_ids';
@@ -8,16 +8,12 @@ const FEEDBACK_SEEN_EVENT = 'hotelify-manager-feedback-seen';
 
 const sidebarItems = [
   { icon: Home, label: 'Bảng điều khiển', to: '/manager' },
-  { icon: Inbox, label: 'Hộp thư' },
-  { icon: Calendar, label: 'Lịch' },
-  { icon: Megaphone, label: 'Chiến dịch', hasSub: true },
   { icon: BedDouble, label: 'Loại phòng', hasSub: true, matchPath: '/manager/rooms' },
   { icon: Grid, label: 'Quản lý phòng', hasSub: true, matchPath: '/manager/physical-rooms' },
   { icon: BrushCleaning, label: 'Maintenance', to: '/manager/housekeeping/schedule' },
   { icon: Sparkles, label: 'Nhiệm vụ nhân viên', to: '/manager/staff-task' },
   { icon: Package, label: 'Vật tư phòng', to: '/manager/room-inventory' },
   { icon: FileText, label: 'Chính sách', to: '/manager/policies' },
-  { icon: Wallet, label: 'Tài chính', hasSub: true },
   { icon: Star, label: 'Ý kiến khách hàng', to: '/manager/feedback', notificationKey: 'feedback' },
   { icon: LogIn, label: 'Đăng ký & Đăng nhập' },
 ];

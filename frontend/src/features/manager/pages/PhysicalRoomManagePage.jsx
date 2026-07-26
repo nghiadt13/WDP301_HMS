@@ -28,8 +28,19 @@ const statusTones = {
   Maintenance: 'is-maintenance',
 };
 
-const PhysicalRoomManagePage = () => {
+const PhysicalRoomManagePage = ({ isReadOnly = false }) => {
   const navigate = useNavigate();
+  
+  const storedUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('hotelify_user') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
+  const userRole = String(storedUser?.role?.name || storedUser?.role_name || storedUser?.role || '').toLowerCase();
+  const isReceptionist = userRole.includes('receptionist');
+  const readOnly = isReadOnly || isReceptionist;
   
   // Queries
   const { data: roomsData, isLoading: roomsLoading, isError: roomsError, refetch: refetchRooms } = useRooms({ limit: 500 });
@@ -215,12 +226,16 @@ const PhysicalRoomManagePage = () => {
         {/* Left: Rooms Grid List */}
         <div className="rm-list-panel">
           <div className="rm-list-toolbar">
-            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>Quản lý danh sách phòng</h2>
-            <div className="rm-list-toolbar-actions">
-              <button type="button" className="rm-add-btn" onClick={() => navigate('/manager/rooms/add')}>
-                <Plus size={14} /> Thêm phòng mới
-              </button>
-            </div>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1f2937' }}>
+              {readOnly ? 'Sơ đồ trạng thái phòng' : 'Quản lý danh sách phòng'}
+            </h2>
+            {!readOnly && (
+              <div className="rm-list-toolbar-actions">
+                <button type="button" className="rm-add-btn" onClick={() => navigate('/manager/rooms/add')}>
+                  <Plus size={14} /> Thêm phòng mới
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Filtering Bar */}
@@ -313,14 +328,16 @@ const PhysicalRoomManagePage = () => {
                     {typeof selectedRoom.room_type_id === 'object' ? selectedRoom.room_type_id?.name : 'Chưa rõ'}
                   </span>
                 </h2>
-                <div className="rm-detail-actions">
-                  <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => handleEditRoom(selectedRoom)} title="Sửa thông tin phòng">
-                    <Pencil size={14} />
-                  </button>
-                  <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => handleDeleteRoomClick(selectedRoom)} title="Xóa phòng">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="rm-detail-actions">
+                    <button type="button" className="rm-icon-btn rm-icon-edit" onClick={() => handleEditRoom(selectedRoom)} title="Sửa thông tin phòng">
+                      <Pencil size={14} />
+                    </button>
+                    <button type="button" className="rm-icon-btn rm-icon-delete" onClick={() => handleDeleteRoomClick(selectedRoom)} title="Xóa phòng">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Status Section */}
@@ -330,20 +347,22 @@ const PhysicalRoomManagePage = () => {
                   <div className={`rm-status-badge ${statusTones[selectedRoom.status] || ''}`}>
                     {statusLabels[selectedRoom.status] || selectedRoom.status}
                   </div>
-                  <div className="rm-status-updater">
-                    <label style={{ fontSize: '13px', fontWeight: '600', color: '#4b5563' }}>Cập nhật trạng thái:</label>
-                    <select
-                      value={selectedRoom.status}
-                      onChange={(e) => handleStatusChange(selectedRoom._id, e.target.value)}
-                      className="rm-status-select"
-                    >
-                      <option value="Available">Trống (Available)</option>
-                      <option value="Occupied">Đang ở (Occupied)</option>
-                      <option value="Dirty">Chưa dọn (Dirty)</option>
-                      <option value="Cleaning">Đang dọn (Cleaning)</option>
-                      <option value="Maintenance">Bảo trì (Maintenance)</option>
-                    </select>
-                  </div>
+                  {!readOnly && (
+                    <div className="rm-status-updater">
+                      <label style={{ fontSize: '13px', fontWeight: '600', color: '#4b5563' }}>Cập nhật trạng thái:</label>
+                      <select
+                        value={selectedRoom.status}
+                        onChange={(e) => handleStatusChange(selectedRoom._id, e.target.value)}
+                        className="rm-status-select"
+                      >
+                        <option value="Available">Trống (Available)</option>
+                        <option value="Occupied">Đang ở (Occupied)</option>
+                        <option value="Dirty">Chưa dọn (Dirty)</option>
+                        <option value="Cleaning">Đang dọn (Cleaning)</option>
+                        <option value="Maintenance">Bảo trì (Maintenance)</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -356,14 +375,22 @@ const PhysicalRoomManagePage = () => {
                       <User size={16} />
                       <span>Khách đang cư trú</span>
                     </div>
-                    <input
-                      type="text"
-                      className="rm-guest-input"
-                      placeholder="Nhập tên khách cư trú..."
-                      value={selectedRoom.currentGuest || ''}
-                      onChange={(e) => handleGuestNameChange(selectedRoom._id, e.target.value)}
-                    />
-                    <small style={{ color: '#6b7280', display: 'block', marginTop: '4px' }}>Tên khách sẽ tự động cập nhật trong hệ thống.</small>
+                    {readOnly ? (
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', padding: '4px 0' }}>
+                        {selectedRoom.currentGuest || 'Khách vãng lai'}
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          className="rm-guest-input"
+                          placeholder="Nhập tên khách cư trú..."
+                          value={selectedRoom.currentGuest || ''}
+                          onChange={(e) => handleGuestNameChange(selectedRoom._id, e.target.value)}
+                        />
+                        <small style={{ color: '#6b7280', display: 'block', marginTop: '4px' }}>Tên khách sẽ tự động cập nhật trong hệ thống.</small>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="rm-guest-empty-card">
@@ -410,27 +437,33 @@ const PhysicalRoomManagePage = () => {
                               <td><span className="rm-room-inventory-cat-badge">{item.category}</span></td>
                               <td><span style={{ fontWeight: '600', color: '#0f172a' }}>{fmtPrice(item.price)}đ</span></td>
                               <td>
-                                <div className="rm-qty-editor">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRoomInventoryQtyChange(item, qty - 1)}
-                                    disabled={isUpdating || qty <= 0}
-                                    className="rm-qty-btn"
-                                  >
-                                    -
-                                  </button>
-                                  <span className="rm-qty-val">
-                                    {isUpdating ? '...' : qty}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRoomInventoryQtyChange(item, qty + 1)}
-                                    disabled={isUpdating}
-                                    className="rm-qty-btn"
-                                  >
-                                    +
-                                  </button>
-                                </div>
+                                {readOnly ? (
+                                  <div style={{ textAlign: 'center', fontWeight: '700', fontSize: '14px', color: '#1f2937' }}>
+                                    {qty}
+                                  </div>
+                                ) : (
+                                  <div className="rm-qty-editor">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRoomInventoryQtyChange(item, qty - 1)}
+                                      disabled={isUpdating || qty <= 0}
+                                      className="rm-qty-btn"
+                                    >
+                                      -
+                                    </button>
+                                    <span className="rm-qty-val">
+                                      {isUpdating ? '...' : qty}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRoomInventoryQtyChange(item, qty + 1)}
+                                      disabled={isUpdating}
+                                      className="rm-qty-btn"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                )}
                                 <div style={{ textAlign: 'center', marginTop: '4px' }}>
                                   <span className={`rm-stock-status-pill ${qty === 0 ? 'out_of_stock' : qty <= 5 ? 'low_stock' : 'in_stock'}`}>
                                     {qty === 0 ? 'Hết hàng' : qty <= 5 ? 'Sắp hết' : 'Còn hàng'}

@@ -5,9 +5,7 @@ const authorize = require('../../../middlewares/authorize.middleware');
 
 const router = express.Router();
 
-router.use(authMiddleware, authorize('manager'));
-
-router.get('/customer-feedbacks', customerFeedbackController.getCustomerFeedbacks);
-router.patch('/customer-feedbacks/:feedbackId/respond', customerFeedbackController.respondCustomerFeedback);
+router.get('/customer-feedbacks', authMiddleware, authorize('manager'), customerFeedbackController.getCustomerFeedbacks);
+router.patch('/customer-feedbacks/:feedbackId/respond', authMiddleware, authorize('manager'), customerFeedbackController.respondCustomerFeedback);
 
 module.exports = router;

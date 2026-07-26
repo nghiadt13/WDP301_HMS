@@ -219,6 +219,8 @@ const App = () => {
         <Route element={<ReceptionistProtectedRoute />}>
           <Route path="receptionist" element={<ReceptionistLayout />}>
             <Route index element={<ReceptionistDashboardPage />} />
+            <Route path="room-status" element={<PhysicalRoomManagePage isReadOnly={true} />} />
+            <Route path="physical-rooms" element={<PhysicalRoomManagePage isReadOnly={true} />} />
             <Route path="bookings" element={<ReceptionistBookingListPage />} />
             <Route path="bookings/:id" element={<ReceptionistBookingDetailPage />} />
             <Route path="walkin" element={<WalkinBookingForm />} />

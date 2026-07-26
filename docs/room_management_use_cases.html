@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functional Requirements - Manage Room Type & Manage Room</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #111111;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        .main-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 6px;
+        }
+        .header-section {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 2px solid #2F5597;
+            padding-bottom: 15px;
+        }
+        .main-title {
+            color: #1F4E79;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0 0 8px 0;
+        }
+        .sub-title {
+            color: #555555;
+            font-size: 14px;
+            margin: 0;
+        }
+        .module-heading {
+            background-color: #1F4E79;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 15px;
+            margin-top: 40px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+        .uc-wrapper {
+            margin-bottom: 45px;
+            page-break-inside: avoid;
+        }
+        .screen-title {
+            text-align: center;
+            color: #2F5597;
+            font-style: italic;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        /* Single Unified Table Style */
+        table.uc-single-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid #000000;
+            font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+            font-size: 13px;
+            margin-bottom: 40px;
+            background-color: #ffffff;
+        }
+        table.uc-single-table > tbody > tr > th {
+            background-color: #5B9BD5 !important;
+            color: #000000 !important;
+            border: 1.5px solid #000000;
+            padding: 6px 10px;
+            text-align: left;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        table.uc-single-table > tbody > tr > td {
+            border: 1.5px solid #000000;
+            padding: 6px 10px;
+            color: #000000;
+            vertical-align: middle;
+        }
+
+        /* Inner Flow Sub-table */
+        table.inner-flow-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+            font-size: 13px;
+            margin: 0;
+        }
+        table.inner-flow-table th {
+            background-color: #D9E1F2 !important;
+            color: #000000 !important;
+            border: 1px solid #000000;
+            padding: 5px 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        table.inner-flow-table td {
+            border: 1px solid #000000;
+            padding: 5px 8px;
+            color: #000000;
+            vertical-align: top;
+        }
+        .col-no {
+            width: 10%;
+            text-align: center !important;
+        }
+        .col-actor {
+            width: 22%;
+            text-align: center !important;
+        }
+        .col-action {
+            width: 68%;
+            text-align: left !important;
+        }
+
+        ul.uc-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        ul.uc-list li {
+            margin-bottom: 3px;
+        }
+        ul.uc-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-bar {
+            position: sticky;
+            top: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 10px 15px;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+        .btn {
+            background-color: #2F5597;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #1F4E79;
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: #2F5597;
+            border: 1px solid #2F5597;
+        }
+        .btn-outline:hover {
+            background-color: #F0F4F8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <div class="action-bar">
+        <span style="font-weight: bold; color: #1F4E79; font-size: 13px;">Unified Table Layout (Single Table per Use Case)</span>
+        <div>
+            <button class="btn btn-outline" onclick="window.print()">🖨️ Print / Save PDF</button>
+            <button class="btn" onclick="copyAllTables()">📋 Copy All Tables for Word</button>
+        </div>
+    </div>
+
+    <div class="header-section">
+        <h1 class="main-title">Software Requirement Specification (SRS)</h1>
+        <p class="sub-title">Functional Requirements: Manage Room Type & Manage Room Modules</p>
+    </div>
+
+    <!-- ==========================================
+         MODULE 1: MANAGE ROOM TYPE
+         ========================================== -->
+    <div class="module-heading">MODULE 1: MANAGE ROOM TYPE</div>
+
+    <!-- UC-001 -->
+    <div class="uc-wrapper" id="uc-001">
+        <div class="screen-title">Manage Room Type Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-001</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Manage Room Type</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to view room types, search room types by keyword, filter room types by status or capacity, and review room type configurations for inventory management.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager opens Room Type Management.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>Room type records may exist in the system.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Opens Room Type Management.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Loads room type statistics such as total room types and active room counts.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Displays room type list with code, name, base price, max capacity, and status.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Searches by keyword or filters room types by capacity or status.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Updates the room type list according to the filter.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If no room type exists, the system displays an empty-state message.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager clears filters to view all room type records.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">Manager can review room type details and select room types for editing or status modification.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- UC-002 -->
+    <div class="uc-wrapper" id="uc-002">
+        <div class="screen-title">Create Room Type Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-002</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Create Room Type</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to create a new room type by providing code, name, base price per night, guest capacity, amenities, and description.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager clicks the "Add New Room Type" button on Room Type Management screen.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>Manager is on Room Type Management screen.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Clicks "Add New Room Type" button.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Displays Create Room Type form with fields: Code, Name, Base Price, Max Adults, Max Children, Amenities, Description.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Fills in required room type details and submits form.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Validates input data (uniqueness of code/name, positive price and capacity values).</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Saves new room type record with default status "Active" and displays success notification.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If input validation fails (e.g. duplicate code, negative price), system displays validation error messages.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager clicks "Cancel" button; system discards inputs and returns to Room Type list.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">A new room type is saved in the system and becomes available for room creation and room pricing configuration.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- UC-003 -->
+    <div class="uc-wrapper" id="uc-003">
+        <div class="screen-title">Update Room Type Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-003</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Update Room Type</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to edit existing room type information including base price, capacity, amenities list, and description.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager clicks "Edit" action button on a room type record.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>Selected room type record exists in the system.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Clicks "Edit" button next to a room type.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Fetches room type details and loads them into the update form.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Modifies desired fields (e.g. Base Price, Capacity, Amenities) and submits form.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Validates updated data.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Updates room type record in database and displays success notification.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If validation fails, system highlights invalid fields with error messages.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager cancels editing; system discards changes and restores original values.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">Room type record is updated; future room assignments and booking calculations reflect new configurations.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- UC-004 -->
+    <div class="uc-wrapper" id="uc-004">
+        <div class="screen-title">Change Room Type Status Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-004</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Change Room Type Status</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to activate or deactivate a room type to control whether rooms of this type can be booked or assigned.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager toggles status switch or clicks "Deactivate/Activate" on a room type.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>Room type record exists in the system.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Clicks status toggle button for a specific room type.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Checks if active rooms or upcoming bookings are linked to this room type.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Displays a confirmation prompt asking manager to confirm status change.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Confirms status update action.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Updates room type status (Active &lt;-&gt; Inactive) and refreshes display list.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If active bookings exist for this room type, system displays a warning regarding existing reservations.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager cancels confirmation dialog; status remains unchanged.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">Room type status is updated, enabling or restricting future bookings and room creation.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ==========================================
+         MODULE 2: MANAGE ROOM
+         ========================================== -->
+    <div class="module-heading">MODULE 2: MANAGE ROOM</div>
+
+    <!-- UC-005 -->
+    <div class="uc-wrapper" id="uc-005">
+        <div class="screen-title">Manage Room List Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-005</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Manage Room List</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to view room inventory, search rooms by room number, filter rooms by room type, floor, or status (Available, Occupied, Maintenance, Dirty), and review room operations.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager opens Room Management screen.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>Room records exist in the system.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Opens Room Management screen.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Loads room summary metrics (Total Rooms, Available, Occupied, Out of Order).</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Displays room list with Room Number, Room Type, Floor, Price, and Operational Status.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Searches by Room Number or filters by Floor, Room Type, or Status.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Updates displayed room list according to selected criteria.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If no room matches filter criteria, system displays an empty-state message.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager clears filters to view all room inventory records.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">Manager can inspect room status, perform room creation, or trigger room editing/maintenance flow.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- UC-006 -->
+    <div class="uc-wrapper" id="uc-006">
+        <div class="screen-title">Add New Room Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-006</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Add New Room</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to register a new physical room into system inventory, assigning it to a Room Type, Floor number, and initial operational status.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager clicks "Add New Room" button on Room Management screen.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>At least one Active Room Type exists in the system.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Clicks "Add New Room" button.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Displays Add Room form with dropdown of active room types and floor selections.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Inputs Room Number, selects Room Type, Floor, enters notes, and submits form.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Validates uniqueness of Room Number and completeness of required selections.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Saves new room record with initial status "Available" and displays success notification.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If Room Number already exists, system displays "Room Number already exists" error message.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager cancels operation; system discards inputs and returns to Room List.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">New room is registered in inventory and becomes available for room assignment during check-in.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- UC-007 -->
+    <div class="uc-wrapper" id="uc-007">
+        <div class="screen-title">Update Room Information Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-007</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Update Room Information</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to edit existing room details, such as assigned Room Type, Floor number, or room notes.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager clicks "Edit" on a specific room row.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>Selected room record exists in the system.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Clicks "Edit" button next to a room.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Fetches room details and populates edit form fields.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Modifies desired room details (e.g. Floor, Room Type, Notes) and clicks Save.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Validates updated data.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Saves updated room details and shows success confirmation.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If room is currently Occupied, system restricts changing Room Type and displays notification.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager cancels edit; system restores original room details.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">Room attributes are updated in system records.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- UC-008 -->
+    <div class="uc-wrapper" id="uc-008">
+        <div class="screen-title">Change Room Operational Status Screen</div>
+        
+        <table class="uc-single-table" style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 13px; margin-bottom: 40px; background-color: #ffffff;">
+            <tr>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Code</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px;">UC-008</td>
+                <th style="width: 15%; background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">UC Name</th>
+                <td style="width: 35%; border: 1.5px solid #000000; padding: 6px 10px; font-weight: bold;">Change Room Operational Status</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Actor</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Description</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Allows the manager to manually set a room's operational status (e.g. mark as Maintenance / Out of Order, or return it to Available) with reason notes.</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Trigger Event</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">Manager selects a room and clicks "Change Operational Status".</td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 6px 10px; text-align: left; font-weight: bold;">Preconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 6px 10px;">
+                    <ul class="uc-list" style="margin: 0; padding-left: 20px;">
+                        <li>Manager is authenticated and authorized.</li>
+                        <li>Selected room record exists in the system.</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Main Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">1</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Selects room and chooses target operational status (e.g. Maintenance).</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Checks current room state (ensures room is not currently Occupied).</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Enters reason note for maintenance/out-of-order and confirms status update.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">4</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Saves new operational status and logs maintenance notes.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">5</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Updates room status indicator on Room Status Board and Room Management list.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Alternative Flow</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 0;">
+                    <table class="inner-flow-table" style="width: 100%; border-collapse: collapse; border: none; font-size: 13px; margin: 0;">
+                        <tr style="background-color: #D9E1F2;">
+                            <th class="col-no" style="width: 10%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">No.</th>
+                            <th class="col-actor" style="width: 22%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Performed by</th>
+                            <th class="col-action" style="width: 68%; border: 1px solid #000000; padding: 5px 8px; text-align: center; color: #000000; font-weight: bold;">Action</th>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">2a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">System</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">If room is currently Occupied, system displays an error alert preventing status change until check-out or room re-assignment.</td>
+                        </tr>
+                        <tr>
+                            <td class="col-no" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">3a</td>
+                            <td class="col-actor" style="border: 1px solid #000000; padding: 5px 8px; text-align: center;">Manager</td>
+                            <td class="col-action" style="border: 1px solid #000000; padding: 5px 8px; text-align: left;">Manager cancels status change modal; status remains unchanged.</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: #5B9BD5; color: #000000; border: 1.5px solid #000000; padding: 8px 10px; text-align: left; vertical-align: middle; font-weight: bold;">Postconditions</th>
+                <td colspan="3" style="border: 1.5px solid #000000; padding: 8px 10px;">Room status is updated, enabling or temporarily excluding room from check-in availability.</td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    function copyAllTables() {
+        const container = document.querySelector('.main-container');
+        const range = document.createRange();
+        range.selectNodeContents(container);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                alert('Success! All Use Case tables have been copied to clipboard.\n\nYou can now open Microsoft Word and press Ctrl+V to paste them directly!');
+            } else {
+                alert('Could not copy automatically. Please select all (Ctrl+A) and copy (Ctrl+C).');
+            }
+        } catch (err) {
+            alert('Could not copy automatically. Please select all (Ctrl+A) and copy (Ctrl+C).');
+        }
+        
+        selection.removeAllRanges();
+    }
+</script>
+
+</body>
+</html>

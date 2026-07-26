@@ -225,8 +225,8 @@ const ReceptionistDashboardPage = () => {
           <aside className="receptionist-side-column">
             <section className="receptionist-card">
               <div className="receptionist-card-heading compact">
-                <h2>Sơ đồ phòng</h2>
-                <button type="button"><Icon name="dots" size={16} /></button>
+                <h2 style={{ cursor: 'pointer' }} onClick={() => navigate('/receptionist/room-status')}>Sơ đồ phòng</h2>
+                <button type="button" onClick={() => navigate('/receptionist/room-status')} title="Xem sơ đồ phòng đầy đủ"><Icon name="dots" size={16} /></button>
               </div>
               <div className="receptionist-room-bars">
                 {roomStatus.map(([label, count, type]) => (

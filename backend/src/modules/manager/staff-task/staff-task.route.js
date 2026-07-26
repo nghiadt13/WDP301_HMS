@@ -5,13 +5,11 @@ const authorize = require('../../../middlewares/authorize.middleware');
 
 const router = express.Router();
 
-router.use(authMiddleware, authorize('manager'));
-
-router.get('/staff-members', staffTaskController.getStaffMembers);
-router.get('/staff-tasks', staffTaskController.getStaffTasks);
-router.post('/staff-tasks', staffTaskController.createStaffTask);
-router.put('/staff-tasks/:taskId', staffTaskController.updateStaffTask);
-router.patch('/staff-tasks/:taskId/close', staffTaskController.closeStaffTask);
-router.patch('/staff-tasks/:taskId/cancel', staffTaskController.cancelStaffTask);
+router.get('/staff-members', authMiddleware, authorize('manager'), staffTaskController.getStaffMembers);
+router.get('/staff-tasks', authMiddleware, authorize('manager'), staffTaskController.getStaffTasks);
+router.post('/staff-tasks', authMiddleware, authorize('manager'), staffTaskController.createStaffTask);
+router.put('/staff-tasks/:taskId', authMiddleware, authorize('manager'), staffTaskController.updateStaffTask);
+router.patch('/staff-tasks/:taskId/close', authMiddleware, authorize('manager'), staffTaskController.closeStaffTask);
+router.patch('/staff-tasks/:taskId/cancel', authMiddleware, authorize('manager'), staffTaskController.cancelStaffTask);
 
 module.exports = router;

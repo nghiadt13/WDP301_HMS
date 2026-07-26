@@ -1,8 +1,9 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BedDouble, LayoutDashboard, CalendarDays, UserCheck, LogOut, Home } from 'lucide-react';
+import { BedDouble, LayoutDashboard, CalendarDays, UserCheck, LogOut, Home, Grid } from 'lucide-react';
 
 const menuItems = [
   { label: 'Bảng điều khiển', icon: LayoutDashboard, path: '/receptionist' },
+  { label: 'Sơ đồ phòng', icon: Grid, path: '/receptionist/room-status' },
   { label: 'Danh sách đặt phòng', icon: CalendarDays, path: '/receptionist/bookings' },
   { label: 'Đặt phòng trực tiếp', icon: UserCheck, path: '/receptionist/walkin' },
 ];
